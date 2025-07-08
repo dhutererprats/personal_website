@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Attitude Dynamics Visualization - Niko Natsoulas</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="icon" href="images/favicon.ico" type="image/x-icon">
+    <style>
+        /* Page-specific tweaks that don't belong in global style.css */
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 20px; /* Reduced padding */
+            background-color: #f5f5f7;
+            width: 100%;
+            box-sizing: border-box;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .header-left { display:flex; align-items:center; }
+        .header-name { font-size:20px; font-weight:500; color:#1d1d1f; margin-right:20px; }
+        .home-button { padding:8px 16px; background-color:#0071e3; color:#fff; text-decoration:none; border-radius:18px; font-size:14px; transition:background-color .3s ease; }
+        .home-button:hover { background-color:#0077ed; }
+        .header-title { text-align:center; padding:10px 20px; }
+        .page-title { font-size:28px; font-weight:700; color:#1d1d1f; margin-bottom:0; }
+        .page-subtitle { font-size:16px; font-weight:400; color:#86868b; max-width:600px; margin:5px auto 0; }
+        .header-name{white-space:nowrap;}
+        .orbital-page-container{display:flex; flex-direction:column; align-items:center; width:100%; max-width:none; margin:0; padding:0;}
+        .orbital-page-container .header-container{width:100%; max-width:1200px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; padding:5px 20px; background-color:#f5f5f7; box-sizing:border-box;}
+        .orbital-elements{width:100%; max-width:1400px; margin:10px auto; padding:0 10px; box-sizing:border-box; display:flex; justify-content:center;}
+        #attitude-visualization{
+            flex:1; 
+            height:100%; 
+            min-width:400px; 
+            min-height:400px;
+            background-color:#111;
+        }
+        .visualization-container {
+            display: flex;
+            width: 100%;
+            height: calc(80vh - 100px);
+            background-color: #f0f0f0;
+            overflow: hidden;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .controls-overlay {
+            width: 250px;
+            height: 100%;
+            background-color: rgba(255,255,255,0.9);
+            padding: .5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+            box-sizing: border-box;
+        }
+        .controls-overlay h3 {
+            font-size: .9rem;
+            margin: .25rem 0;
+        }
+        .matrix-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+        }
+        .matrix-grid input {
+            width: 100%;
+            padding: 4px;
+            font-size: .8rem;
+            text-align: center;
+        }
+        .quat-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 4px;
+            margin-top: 4px;
+        }
+        .quat-grid input {
+            width: 100%;
+            padding: 4px;
+            font-size: .8rem;
+            text-align: center;
+        }
+        .apply-btn {
+            margin-top: 6px;
+            padding: 6px 10px;
+            background-color: #0071e3;
+            color:#fff;
+            border:none;
+            border-radius:6px;
+            cursor:pointer;
+            font-size:.8rem;
+        }
+        .apply-btn:hover {background-color:#0077ed;}
+        @media(max-width:768px){
+            .visualization-container{flex-direction:column; height:auto;}
+            #attitude-visualization{height:50vh;}
+            .controls-overlay{width:100%; height:auto; box-shadow:0 -2px 10px rgba(0,0,0,0.1);}        }
+        .instructions-container {
+            width: 100%;
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+            box-sizing: border-box;
+        }
+        
+        .instructions-container h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #333;
+        }
+        
+        .instructions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .instruction-card {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .instruction-card h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #0071e3;
+        }
+        
+        .instruction-card ul {
+            padding-left: 20px;
+            margin: 0;
+        }
+        
+        .instruction-card li {
+            margin-bottom: 6px;
+            line-height: 1.4;
+        }
+        
+        .scroll-indicator {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background-color: rgba(0, 113, 227, 0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            animation: pulse 2s infinite;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="orbital-page-container">
+        <header class="header-container">
+            <div class="header-left">
+                <span class="header-name">Niko Natsoulas</span>
+                <a href="index.html" class="home-button">Home</a>
+            </div>
+            <div class="header-title">
+                <h1 class="page-title">Attitude Dynamics</h1>
+                <p class="page-subtitle">Interactively explore spacecraft attitude with quaternions & DCMs</p>
+            </div>
+            <div class="header-right"></div>
+        </header>
+        <main>
+            <div class="orbital-elements">
+                <div class="visualization-container">
+                    <div id="attitude-visualization"></div>
+                    <div class="controls-overlay">
+                        <div class="quat-section">
+                            <h3>Quaternion (scalar-first)</h3>
+                            <div class="quat-grid">
+                                <input id="q0" type="number" step="any" value="1">
+                                <input id="q1" type="number" step="any" value="0">
+                                <input id="q2" type="number" step="any" value="0">
+                                <input id="q3" type="number" step="any" value="0">
+                            </div>
+                            <button class="apply-btn" id="apply-quat">Apply Quaternion</button>
+                        </div>
+                        <hr>
+                        <div class="dcm-section">
+                            <h3>Direction Cosine Matrix</h3>
+                            <div class="matrix-grid" id="dcm-grid">
+                                <!-- 9 inputs inserted by script for brevity -->
+                            </div>
+                            <button class="apply-btn" id="apply-dcm">Apply DCM</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="instructions-container">
+                <h2>How to Use This Visualization</h2>
+                <div class="instructions-grid">
+                    <div class="instruction-card">
+                        <h3>Mouse Interaction</h3>
+                        <ul>
+                            <li>Click and drag to rotate Sputnik freely</li>
+                            <li>Any mouse interaction will stop spinning if active</li>
+                        </ul>
+                    </div>
+                    <div class="instruction-card">
+                        <h3>Quaternion Controls</h3>
+                        <ul>
+                            <li>Enter values for the scalar-first quaternion [q₀, q₁, q₂, q₃]</li>
+                            <li>Click "Apply Quaternion" to update attitude</li>
+                            <li>Use "Zero All" or "Reset to Identity" for quick settings</li>
+                        </ul>
+                    </div>
+                    <div class="instruction-card">
+                        <h3>Direction Cosine Matrix</h3>
+                        <ul>
+                            <li>Enter values in the 3x3 DCM grid</li>
+                            <li>Click "Apply DCM" to update attitude</li>
+                            <li>Use the rotation generators for common DCMs</li>
+                            <li>Try different angles for X, Y, and Z axis rotations</li>
+                        </ul>
+                    </div>
+                    <div class="instruction-card">
+                        <h3>Angular Velocity (Spin)</h3>
+                        <ul>
+                            <li><strong>Scroll down</strong> in the controls panel to find spin options</li>
+                            <li>Enter values in deg/s for rotation rates around each axis</li>
+                            <li>Use preset buttons for common rotation patterns</li>
+                            <li>Click "Start Spin" to begin continuous rotation</li>
+                            <li>DCM and quaternion values update in real-time during spin</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script type="module" src="attitude-visualization.js"></script>
+    
+    <!-- Add MathJax for rendering mathematical formulas -->
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <!-- Math explanations section -->
+    <section class="element-explanations">
+        <h2>Spacecraft Attitude Dynamics Concepts</h2>
+        <div class="explanation-grid">
+            <div class="explanation-item">
+                <h3>Quaternions</h3>
+                <p>Quaternions are a 4-parameter representation of attitude that avoids the singularities found in Euler angles.</p>
+                <p class="equation">$$\mathbf{q} = q_0 + q_1\mathbf{i} + q_2\mathbf{j} + q_3\mathbf{k} = [q_0, \vec{q}]$$</p>
+                <p>Where \(q_0\) is the scalar part and \(\vec{q} = [q_1, q_2, q_3]\) is the vector part. For rotation, these relate to axis-angle as:</p>
+                <p class="equation">$$q_0 = \cos\frac{\theta}{2}, \quad \vec{q} = \hat{\mathbf{n}}\sin\frac{\theta}{2}$$</p>
+                <p>Where \(\hat{\mathbf{n}}\) is the rotation axis and \(\theta\) is the rotation angle.</p>
+            </div>
+            
+            <div class="explanation-item">
+                <h3>Direction Cosine Matrix (DCM)</h3>
+                <p>DCM is a 3×3 rotation matrix that transforms vectors from one coordinate system to another.</p>
+                <p class="equation">$$\mathbf{C} = \begin{bmatrix} 
+                C_{11} & C_{12} & C_{13} \\
+                C_{21} & C_{22} & C_{23} \\
+                C_{31} & C_{32} & C_{33}
+                \end{bmatrix}$$</p>
+                <p>The columns represent the body coordinate axes expressed in the inertial frame.</p>
+                <p>From quaternions, the DCM can be computed as:</p>
+                <p class="equation">$$\mathbf{C} = (q_0^2 - \vec{q}^T\vec{q})\mathbf{I}_{3×3} + 2\vec{q}\vec{q}^T - 2q_0[\vec{q}×]$$</p>
+            </div>
+            
+            <div class="explanation-item">
+                <h3>Torque-Free Motion</h3>
+                <p>In the absence of external torques, angular momentum is conserved. For a rigid body, this means:</p>
+                <p class="equation">$$\dot{\mathbf{H}} = \mathbf{0}$$</p>
+                <p>Where \(\mathbf{H}\) is the angular momentum. In body coordinates, this leads to:</p>
+                <p class="equation">$$\mathbf{I}\dot{\boldsymbol{\omega}} + \boldsymbol{\omega} × (\mathbf{I}\boldsymbol{\omega}) = \mathbf{0}$$</p>
+                <p>Where \(\mathbf{I}\) is the moment of inertia tensor and \(\boldsymbol{\omega}\) is the angular velocity.</p>
+            </div>
+            
+            <div class="explanation-item">
+                <h3>Constant Angular Velocity</h3>
+                <p>For bodies with special inertia properties or specific initial conditions, \(\boldsymbol{\omega}\) can remain constant in body coordinates. Our simulation implements:</p>
+                <p class="equation">$$\dot{\boldsymbol{\omega}} = \mathbf{0}$$</p>
+                <p>This means the spacecraft rotates around a fixed axis with constant speed, even though the orientation changes continuously.</p>
+            </div>
+            
+            <div class="explanation-item">
+                <h3>Quaternion Kinematics</h3>
+                <p>For a rotating body with angular velocity \(\boldsymbol{\omega}\), the quaternion evolution is given by:</p>
+                <p class="equation">$$\dot{\mathbf{q}} = \frac{1}{2}\mathbf{q} \otimes \begin{bmatrix} 0 \\ \boldsymbol{\omega} \end{bmatrix}$$</p>
+                <p>Where \(\otimes\) is quaternion multiplication. This differential equation describes how the orientation changes with time.</p>
+            </div>
+            
+            <div class="explanation-item">
+                <h3>DCM Kinematics</h3>
+                <p>The equivalent differential equation for the DCM is:</p>
+                <p class="equation">$$\dot{\mathbf{C}} = -[\boldsymbol{\omega}×]\mathbf{C}$$</p>
+                <p>Where \([\boldsymbol{\omega}×]\) is the skew-symmetric matrix formed from angular velocity:</p>
+                <p class="equation">$$[\boldsymbol{\omega}×] = \begin{bmatrix} 
+                0 & -\omega_3 & \omega_2 \\
+                \omega_3 & 0 & -\omega_1 \\
+                -\omega_2 & \omega_1 & 0
+                \end{bmatrix}$$</p>
+            </div>
+            
+            <div class="explanation-item">
+                <h3>Euler's Rotation Theorem</h3>
+                <p>Any rotation can be expressed as a single rotation about some axis. This is the principle behind the axis-angle representation.</p>
+                <p class="equation">$$\mathbf{R}(\hat{\mathbf{n}}, \theta) = \mathbf{I} + \sin\theta[\hat{\mathbf{n}}×] + (1-\cos\theta)[\hat{\mathbf{n}}×]^2$$</p>
+                <p>This is the foundation of both quaternion and DCM representations.</p>
+            </div>
+            
+            <div class="explanation-item">
+                <h3>Body Frame Axes</h3>
+                <p>The red, green, and blue axes in the visualization represent the body-fixed coordinate frame:</p>
+                <ul style="padding-left: 20px;">
+                    <li>X-axis (red) - Body forward direction</li>
+                    <li>Y-axis (green) - Body upward direction</li>
+                    <li>Z-axis (blue) - Body right direction</li>
+                </ul>
+                <p>This right-handed coordinate system rotates with the spacecraft.</p>
+            </div>
+            
+            <div class="explanation-item">
+                <h3>Attitude Propagation</h3>
+                <p>For the constant angular velocity case, the quaternion at time \(t\) is:</p>
+                <p class="equation">$$\mathbf{q}(t) = \mathbf{q}(t_0) \otimes \exp\left(\frac{1}{2}\boldsymbol{\Omega}\Delta t\right)$$</p>
+                <p>Where \(\boldsymbol{\Omega}\) is a 4×4 matrix formed from angular velocity components and \(\Delta t = t - t_0\).</p>
+            </div>
+            
+            <div class="explanation-item">
+                <h3>Polhode Motion</h3>
+                <p>In torque-free rotation, the angular velocity vector traces a path called a polhode when viewed from the body frame.</p>
+                <p>For principal axis rotation (as simulated here), the polhode simplifies to a single point, meaning \(\boldsymbol{\omega}\) is constant in body coordinates.</p>
+            </div>
+        </div>
+    </section>
+    
+    <style>
+        .element-explanations {
+            width: 100%;
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 2rem;
+            background-color: #f5f5f7;
+            border-radius: 18px;
+            box-sizing: border-box;
+        }
+        
+        .element-explanations h2 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1d1d1f;
+            text-align: center;
+        }
+        
+        .explanation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .explanation-item {
+            background-color: #ffffff;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .explanation-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .explanation-item h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #1d1d1f;
+        }
+        
+        .explanation-item p {
+            font-size: 0.9rem;
+            color: #515154;
+            line-height: 1.4;
+        }
+        
+        .equation {
+            overflow-x: auto;
+            padding: 10px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .element-explanations {
+                padding: 1.5rem;
+            }
+        
+            .explanation-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</body>
+</html> 
