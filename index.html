@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Daniel Huterer Prats</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+    <link rel="icon" href="icons/astronaut.ico" type="image/x-icon"/>
+    <link rel="canonical" href="https://dhutererprats.github.io/"/>
+</head>
+<body>
+    <button class="theme-toggle" onclick="toggleTheme()">🌓 Toggle Theme</button>
+    <div class="homepage-container">
+        <header>
+            <div class="header-text">
+                <h1>Daniel Huterer Prats</h1>
+                <p class="location">
+                    <a href="https://www.google.com/maps/place/Boulder,+CO" target="_blank" rel="noopener noreferrer">
+                        <i class="fas fa-globe"></i>
+                        Boulder, CO
+                    </a>
+                </p>
+                <div class="social-links">
+                    <a href="mailto:dhp291@nyu.edu" aria-label="Email"><iconify-icon icon="mdi:email"></iconify-icon></a>
+                    <a href="https://github.com/dhutererprats" aria-label="GitHub"><iconify-icon icon="mdi:github"></iconify-icon></a>
+                    <a href="https://www.linkedin.com/in/dhutererprats/" aria-label="LinkedIn"><iconify-icon icon="mdi:linkedin"></iconify-icon></a>
+                </div>
+                <div class="quick-links">
+                    <!-- <a href="files/Daniel_Huterer_Prats_CV.pdf" download class="quick-link">
+                        <iconify-icon icon="mdi:file-document"></iconify-icon>
+                        Download CV
+                    </a> -->
+                    <a href="mailto:dahu1128@colorado.edu" class="cv-link" id="cv-link">
+                        Download CV
+                      </a>
+                      
+                </div>
+            </div>
+            <img src="Headshot-photo-NYU.png" alt="Daniel Huterer Prats" class="profile-image">
+        </header>
+
+        <main>
+            <section class="bio">
+                <p>I am a PhD student in Aerospace Engineering at the University of Colorado Boulder, working in the <a href="https://hanspeterschaub.info/AVS/index.html" target="_blank">Autonomous Vehicle Systems Laboratory</a> under Dr. Hanspeter Schaub.</p>
+                <p>My research focuses on applying deep reinforcement learning to autonomous spacecraft scheduling and inspection, particularly under strict operational constraints such as power, wheel momentum saturation, data storage, and illumination geometry.</p>
+                <p>Previously, I led mission design efforts for a green orbit transfer vehicle at Infinite Orbits, conducted maneuver simulations for the Emirates Mission to the Asteroid Belt at LASP, and co-authored research on space-based inspection and safety-aware planning.</p>
+                <p>My background spans physics, aerospace systems, and machine learning — across Europe, the Middle East, and the U.S. I’m passionate about pushing the boundaries of autonomy in orbit to support next-generation space exploration missions.</p>
+            </section>
+
+            <!-- <section class="work">
+                <h2>Work</h2>
+                <ul class="work-list">
+                    <li class="work-item">
+                        <div class="work-item-header">
+                            <img src="icons/avslabIcon.jpeg" alt="AVS Lab" />
+                            <div class="work-title">
+                                <span class="company-name">Autonomous Vehicle Systems Lab</span>
+                                <span class="role">Graduate Researcher</span>
+                            </div>
+                            <iconify-icon class="dropdown-arrow" icon="mdi:chevron-down"></iconify-icon>
+                        </div>
+                        <div class="work-item-content">
+                            <p>Developing a Basilisk-based RL simulation for RSO surveillance under complex constraints.</p>
+                            <p>Presented research at AMOS and the Planning & Scheduling for Space Workshop.</p>
+                        </div>
+                    </li>
+
+                    <li class="work-item">
+                        <div class="work-item-header">
+                            <img src="lasp_icon.jpg" alt="LASP" class="icon-logo">
+                            <div class="work-title">
+                                <span class="company-name">Laboratory for Atmospheric and Space Physics</span>
+                                <span class="role">GNC Engineer</span>
+                            </div>
+                            <iconify-icon class="dropdown-arrow" icon="mdi:chevron-down"></iconify-icon>
+                        </div>
+                        <div class="work-item-content">
+                            <p>Ran Monte Carlo simulations for the Emirates Mission to the Asteroid Belt (EMA).</p>
+                            <p>Evaluated gravity assist insertion and flyby performance across mission phases.</p>
+                        </div>
+                    </li>
+
+                    <li class="work-item">
+                        <div class="work-item-header">
+                            <img src="io_icon.png" alt="Infinite Orbits" class="icon-logo">
+                            <div class="work-title">
+                                <span class="company-name">Infinite Orbits</span>
+                                <span class="role">Main Systems Engineer</span>
+                            </div>
+                            <iconify-icon class="dropdown-arrow" icon="mdi:chevron-down"></iconify-icon>
+                        </div>
+                        <div class="work-item-content">
+                            <p>Led system design for European GEO transfer vehicle including CONOPS and FDIR.</p>
+                            <p>Managed a consortium of 8 space companies and presented at project milestones.</p>
+                        </div>
+                    </li>
+
+                </ul>
+            </section> -->
+            <section class="work">
+                <h2>Work</h2>
+                <ul class="work-list">
+              
+                  <!-- AVS Lab -->
+                  <li class="work-item">
+                    <div class="work-item-header">
+                      <img src="icons/avslabIcon.jpeg" alt="AVS Lab" class="icon-logo">
+                      <div class="work-title">
+                        <span class="company-name">Autonomous Vehicle Systems Lab</span>
+                        <span class="role">Graduate Researcher</span>
+                      </div>
+                      <iconify-icon class="dropdown-arrow" icon="mdi:chevron-down"></iconify-icon>
+                    </div>
+                    <div class="work-item-content">
+                      <p>Developing Basilisk-based RL simulation for RSO surveillance under power, FOV, and pointing constraints.</p>
+                      <p>Presented at AMOS 2025 and Planning & Scheduling for Space Workshop in Toulouse.</p>
+                    </div>
+                  </li>
+              
+                  <!-- LASP -->
+                  <li class="work-item">
+                    <div class="work-item-header">
+                      <img src="icons/lasp_icon.jpg" alt="LASP" class="icon-logo">
+                      <div class="work-title">
+                        <span class="company-name">Laboratory for Atmospheric and Space Physics</span>
+                        <span class="role">Mission Design Intern</span>
+                      </div>
+                      <iconify-icon class="dropdown-arrow" icon="mdi:chevron-down"></iconify-icon>
+                    </div>
+                    <div class="work-item-content">
+                      <p>Ran Monte Carlo simulations for the Emirates Mission to the Asteroid Belt (EMA).</p>
+                      <p>Supported trajectory design, gravity assist performance, and interplanetary phase planning.</p>
+                    </div>
+                  </li>
+              
+                  <!-- Infinite Orbits -->
+                  <li class="work-item">
+                    <div class="work-item-header">
+                      <img src="icons/io_icon.png" alt="Infinite Orbits" class="icon-logo">
+                      <div class="work-title">
+                        <span class="company-name">Infinite Orbits</span>
+                        <span class="role">Main Systems Engineer</span>
+                      </div>
+                      <iconify-icon class="dropdown-arrow" icon="mdi:chevron-down"></iconify-icon>
+                    </div>
+                    <div class="work-item-content">
+                      <p>Led system development of GEO Ryder OTV with consortium of 8 European companies.</p>
+                      <p>Designed safety concepts and FDIR architecture for a servicer docking with GEO clients for life extension.</p>
+                    </div>
+                  </li>
+              
+                  <!-- ALTEN -->
+                  <li class="work-item">
+                    <div class="work-item-header">
+                      <img src="icons/alten_icon.png" alt="ALTEN" class="icon-logo">
+                      <div class="work-title">
+                        <span class="company-name">ALTEN</span>
+                        <span class="role">Aerospace Consultant</span>
+                      </div>
+                      <iconify-icon class="dropdown-arrow" icon="mdi:chevron-down"></iconify-icon>
+                    </div>
+                    <div class="work-item-content">
+                      <p>Managed the Fast-Monitoring suite for ESSP, automating ground and satellite signal processing pipeline.</p>
+                      <p>Oversaw GNSS receiver tracking and performance metrics across entire European service region.</p>
+                    </div>
+                  </li>
+              
+                  <!-- UPC -->
+                  <li class="work-item">
+                    <div class="work-item-header">
+                      <img src="icons/Logo_UPC.svg.png" alt="UPC" class="icon-logo">
+                      <div class="work-title">
+                        <span class="company-name">UPC</span>
+                        <span class="role">Space Systems Project Lead</span>
+                      </div>
+                      <iconify-icon class="dropdown-arrow" icon="mdi:chevron-down"></iconify-icon>
+                    </div>
+                    <div class="work-item-content">
+                      <p>Led design of wildfire-tracking satellite over Australia, with focus on instrument and AOCS design.</p>
+                      <p>Developed sub-pixel resolution imaging concept to detect fires smaller than sensor resolution.</p>
+                    </div>
+                  </li>
+              
+                  <!-- NYUAD Rocketry -->
+                  <li class="work-item">
+                    <div class="work-item-header">
+                      <img src="icons/nyuad_icon.png.webp" alt="NYUAD" class="icon-logo">
+                      <div class="work-title">
+                        <span class="company-name">NYUAD</span>
+                        <span class="role">Rocketry Team Chief Engineer</span>
+                      </div>
+                      <iconify-icon class="dropdown-arrow" icon="mdi:chevron-down"></iconify-icon>
+                    </div>
+                    <div class="work-item-content">
+                      <p>Led development of Level-3 solid-fuel rocket for international competition.</p>
+                      <p>Oversaw propulsion, avionics, and structural integration; first UAE university to compete internationally.</p>
+                    </div>
+                  </li>
+              
+                  <!-- Galaxy Formation -->
+                  <li class="work-item">
+                    <div class="work-item-header">
+                        <img src="icons/cap3_icon.png" alt="CAP3-center" class="icon-logo">
+                        <div class="work-title">
+                        <span class="company-name">NYUAD Galaxy Formation Group (Center for Astro, Particle and Planetary Physics)</span>
+                        <span class="role">Undergraduate Researcher</span>
+                      </div>
+                      <iconify-icon class="dropdown-arrow" icon="mdi:chevron-down"></iconify-icon>
+                    </div>
+                    <div class="work-item-content">
+                      <p>Developed novel mapping technique to accelerate baryonic simulations from dark matter-only data.</p>
+                      <p>Reduced hydrodynamic sim times by 90%, enabling large-scale analysis of ‘missing’ dark matter structure.</p>
+                    </div>
+                  </li>
+              
+                  <!-- Exoplanet Atmospheres -->
+                  <li class="work-item">
+                    <div class="work-item-header">
+                        <img src="icons/nyuad_icon.png.webp" alt="NYUAD" class="icon-logo">
+                        <div class="work-title">
+                        <span class="company-name">NYUAD</span>
+                        <span class="role">Exoplanet Atmospheres Researcher</span>
+                      </div>
+                      <iconify-icon class="dropdown-arrow" icon="mdi:chevron-down"></iconify-icon>
+                    </div>
+                    <div class="work-item-content">
+                      <p>Developed ML-based data structures for modeling exoplanet atmospheres and JWST spectral profiles.</p>
+                      <p>Simulated atmospheric retrieval models for different planetary mass/radius classes.</p>
+                    </div>
+                  </li>
+              
+                </ul>
+              </section>
+              
+
+            <!-- <section class="projects">
+                <h2>Projects</h2>
+                <div class="project-item project-item-large">
+                    <img src="images/polaris_sim.jpg" alt="Polaris RL Simulation" />
+                    <p><strong>Polaris: RL Scheduling for RSO Imaging</strong></p>
+                    <p>Trained RL agents to prioritize and image RSOs under power, data, and control constraints in Basilisk.</p>
+                    <p><a href="https://amostech.com/TechnicalPapers/2025/Huterer_Prats_Polaris.pdf" target="_blank" class="underline">View abstract (AMOS 2025)</a></p>
+                </div>
+                <div class="project-item">
+                    <img src="images/RSO-inspection_illustration.png" alt="RSO Inspection Simulation">
+                    <p>Autonomous space-to-space imaging scheduler for RSO inspection under safety and illumination constraints.</p>
+                </div>
+                  
+                <div class="project-item">
+                    <img src="images/satellite_inspection.png" alt="Satellite Inspection" />
+                    <p>Developed a shielded SMDP planner for impulsive spacecraft maneuvers under relative motion dynamics.</p>
+                    <p><a href="https://planningworkshop2025.com/papers/huterer_prats_inspection" target="_blank" class="underline">View workshop paper</a></p>
+                </div>
+                <div class="project-item">
+                    <img src="images/Research_Paper_Thumbnail.png" alt="Autonomous Satellite Inspection in LEO">
+                    <p><strong>Autonomous Satellite Inspection in Low Earth Orbit<br>
+                    with Optimization-Based Safety Guarantees</strong></p>
+                    <p>
+                      <a href="https://hanspeterschaub.info/Papers/Stephenson2025a.pdf" 
+                         target="_blank" 
+                         rel="noopener noreferrer" 
+                         class="underline">
+                         📄 Download Paper
+                      </a>
+                    </p>
+                  </div>
+        
+            </section> -->
+            <section class="projects">
+                <h2>Projects</h2>
+              
+                <!-- Polaris -->
+                <div class="project-item expandable">
+                    <div class="image-container" onclick="toggleProject(this)">
+                      <img src="images/space_to_space_surveillance.png" alt="Space-to-Space Surveillance" />
+                      <div class="overlay">
+                        <div class="overlay-text">Space-to-Space Surveillance for SSA</div>
+                        <div class="expand-arrow">▼</div>
+                      </div>
+                    </div>
+                  
+                    <div class="project-description">
+                      <p><strong>RL-Driven Scheduling for Autonomous Space-to-Space Surveillance</strong></p>
+                      <p>This project introduces a reinforcement learning (RL)-based approach for autonomous inspection and imaging of Resident Space Objects (RSOs) from a spacecraft in orbit. Unlike Earth observation missions with predictable ground tracks, RSOs exhibit dynamic, evolving motion, requiring real-time scheduling decisions by the inspecting agent.</p>
+                  
+                      <p>The task is formulated as a Markov Decision Process (MDP), and the agent is trained in a high-fidelity Basilisk simulation. The RL agent dynamically selects imaging targets while managing LOS constraints, battery and reaction wheel states, and data limits. This autonomy enables persistent, priority-based surveillance without human intervention or ground-tasked commands.</p>
+                  
+                      <p>As space becomes more congested, this research offers a scalable, intelligent solution to Space Situational Awareness (SSA) and Space Domain Awareness (SDA). The project extends MDP-based scheduling, previously used in Earth observation, to the domain of active space-based surveillance—significantly improving responsiveness and operational coverage.</p>
+                  
+                      <p><strong>Project Phases:</strong></p>
+                      <ul>
+                        <li><strong>Phase 1:</strong> Single-target RL imaging with LOS, battery, and wheel saturation constraints.</li>
+                        <li><strong>Phase 2:</strong> Multi-RSO scheduling with dynamic, priority-based observation logic.</li>
+                        <li><strong>Phase 3:</strong> Integration of eclipse and solar constraints for realistic observability windows.</li>
+                      </ul>                      
+                  
+                      <p>The system is benchmarked against traditional optimization-based Earth Observation scheduling agents, evaluating imaging efficiency, resource balancing, and adaptability to dynamic conditions.</p>
+                    <!-- VIDEO -->
+                    <div class="media-block">
+                        <h4>🎥 Project Video</h4>
+
+                        <video controls>
+                        <source src="files/space_to_space_animation.mp4" type="video/mp4">
+                        Your browser does not support the video tag.
+                        </video>
+                    </div>
+                    
+                    <!-- ABSTRACT THUMBNAIL -->
+                    <div class="media-block abstract-thumbnail">
+                        <h4>📄 Abstract: Space-to-Space Surveillance</h4>
+                        <div class="thumbnail-hover">
+                        <img src="images/StSS_BostonAbstract.png" alt="Abstract Thumbnail" />
+                        <div class="hover-text">
+                            <a href="StSS_BostonAbstract.pdf" download>📥 Download Abstract</a>
+                        </div>
+                        </div>
+                    </div>
+                    </div>
+                  </div>
+                  
+              
+                <!-- RSO Inspection
+                <div class="project-item">
+                  <div class="image-container">
+                    <img src="images/RSO-inspection_illustration.png" alt="RSO Inspection" />
+                    <div class="overlay">
+                      <div class="overlay-text">RL-Based RSO Inspection</div>
+                    </div>
+                  </div>
+                  <p>Autonomous space-to-space imaging scheduler for RSO inspection under safety and illumination constraints.</p>
+                </div>
+              
+                <div class="project-item">
+                  <div class="image-container">
+                    <img src="images/Research_Paper_Thumbnail.png" alt="LEO Inspection" />
+                    <div class="overlay">
+                      <div class="overlay-text">LEO Inspection Research</div>
+                    </div>
+                  </div>
+                  <p><strong>Autonomous Satellite Inspection in Low Earth Orbit<br> with Optimization-Based Safety Guarantees</strong></p>
+                  <p><a href="https://hanspeterschaub.info/Papers/Stephenson2025a.pdf" target="_blank" class="underline">📄 Download Paper</a></p>
+                </div> -->
+              
+
+                <!-- RSO Inspection -->
+                <div class="project-item expandable">
+                    <div class="image-container" onclick="toggleProject(this)">
+                    <img src="images/RSO-inspection_illustration.png" alt="RSO Inspection" />
+                    <div class="overlay">
+                        <div class="overlay-text">RL-Based RSO Inspection</div>
+                        <div class="expand-arrow">▼</div>
+                    </div>
+                    </div>
+                
+                    <div class="project-description">
+                    <p>
+                        This project develops a reinforcement learning (RL)-based scheduler for autonomous Resident Space Object (RSO) inspection under strict safety and lighting constraints. It integrates spacecraft health management (battery, data storage, wheel desaturation) and environmental observability (eclipses, line-of-sight) into a high-fidelity Basilisk simulation.
+                    </p>
+                    <p>
+                        The motivation for this work stems from challenges encountered during my time at 
+                        <a href="#infinite-orbits" class="inline-link">Infinite Orbits</a>, where I led safety concept development for the docking and life-extension of a large GEO satellite client. Precise visual navigation during the final rendezvous phase required careful handling of lighting conditions — an experience that sparked this line of research into optimizing autonomous RSO inspection with real-world constraints.
+                    </p>
+                
+                    <!-- <p>
+                        The inspiration for this research stems from challenges I tackled while working at <a href="#infinite-orbits" class="inline-link">Infinite Orbits</a>, where I led safety concept design for rendezvous and docking with a large GEO satellite. Because visual navigation in these scenarios relies heavily on illumination conditions, I began exploring how RL agents could optimize RSO inspections in dynamic lighting environments, with spacecraft safety in mind.
+                    </p> -->
+                
+                    <p><strong>Key Features:</strong></p>
+                    <ul>
+                        <li><strong>Phase 1:</strong> Train RL agent for single-target imaging with LOS, battery, and wheel saturation constraints.</li>
+                        <li><strong>Phase 2:</strong> Enable multi-target scheduling using dynamic, priority-based task selection.</li>
+                        <li><strong>Phase 3:</strong> Integrate eclipse observability into target selection to optimize real-world inspection windows.</li>
+                    </ul>
+                
+                    <!-- Abstract Thumbnail -->
+                    <div class="media-block abstract-thumbnail">
+                        <h4>📄 Abstract: Autonomous Satellite Inspection</h4>
+                        <p>The most recent paper on this work is titled, "<strong>Autonomous Satellite Inspection in Low Earth Orbit with Optimization-Based Safety Guarantees</strong>". More research is being done to include the use of mutliple inspecting satellite working collaboratively as well as even further enhanced illumination constrained including glare and self-shadowing!</p>
+
+                        <div class="thumbnail-hover">
+                        <img src="images/Research_Paper_Thumbnail.png" alt="LEO Inspection Abstract" />
+                        <div class="hover-text">
+                            <a href="https://hanspeterschaub.info/Papers/Stephenson2025a.pdf" target="_blank">📥 Download Paper</a>
+                        </div>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+
+  
+                <!-- Astrophysics Paper -->
+                <div class="project-item">
+                  <div class="image-container">
+                    <img src="images/galaxies_lacking_dark_matter_thumbnail.png" alt="Dark Matter & Galaxy Formation" />
+                    <div class="overlay">
+                      <div class="overlay-text">Dark Matter & Galaxy Formation</div>
+                    </div>
+                  </div>
+                  <p>Co-authored paper on dwarf galaxy dark matter depletion published in MNRAS (2021).</p>
+                  <p>
+                    <a href="https://arxiv.org/pdf/2010.02245" target="_blank" class="underline">📄 View Paper</a>
+                  </p>
+                </div>
+              
+                <!-- MGA Genetic Algorithm -->
+                <div class="project-item expandable">
+                  <div class="image-container" onclick="toggleProject(this)">
+                    <img src="images/interplanetary_trajectory_final.png" alt="MGA Optimization" />
+                    <div class="overlay">
+                      <div class="overlay-text">Multi-Gravity Assist Trajectory Optimization</div>
+                      <div class="expand-arrow">▼</div>
+                    </div>
+                  </div>
+                  <div class="project-description">
+                    <p>Developed a genetic algorithm capable of optimizing complex interplanetary missions using gravity assists and impulsive maneuvers.</p>
+                    <p>The algorithm balances low ∆v and fast arrival time, avoiding pruning of non-intuitive solutions. Compared results with existing codes and real-world trajectories.</p>
+                    <p><a href="files/MGA_Paper.pdf" target="_blank" class="underline">📄 Download Paper</a></p>
+                  </div>
+                </div>
+              </section>
+              
+        </main>
+
+        <footer>
+            <p>© 2025 Daniel Huterer Prats. Built from scratch with care 🛰️</p>
+        </footer>
+    </div>
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute("data-theme") || "light";
+            html.setAttribute("data-theme", current === "dark" ? "light" : "dark");
+        }
+    </script>    
+    <script>
+        function toggleProject(el) {
+          const parent = el.closest('.project-item.expandable');
+          parent.classList.toggle('active');
+          const arrow = parent.querySelector('.expand-arrow');
+          arrow.textContent = parent.classList.contains('active') ? '▲' : '▼';
+        }
+      </script>
+      
+</body>
+
+</html>

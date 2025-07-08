@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Keplerian Orbital Elements - Niko Natsoulas</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="icon" href="images/favicon.ico" type="image/x-icon">
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="canonical" href="https://nicholasnatsoulas.com/orbital-elements.html">
+    <style>
+        .element-explanations {
+            margin-top: 3rem;
+            padding: 2rem;
+            background-color: #f5f5f7;
+            border-radius: 18px;
+        }
+        
+        .element-explanations h2 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1d1d1f;
+        }
+        
+        .explanation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .explanation-item {
+            background-color: #ffffff;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .explanation-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .explanation-item h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #1d1d1f;
+        }
+        
+        .explanation-item p {
+            font-size: 0.9rem;
+            color: #515154;
+            line-height: 1.4;
+        }
+        
+        @media (max-width: 768px) {
+            .element-explanations {
+                padding: 1.5rem;
+            }
+        
+            .explanation-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .equation {
+            overflow-x: auto;
+            padding: 10px 0;
+        }
+        
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 20px; /* Reduced padding */
+            background-color: #f5f5f7;
+            width: 100%;
+            box-sizing: border-box;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+        .header-name {
+            font-size: 20px;
+            font-weight: 500;
+            color: #1d1d1f;
+            margin-right: 20px;
+        }
+        .home-button {
+            padding: 8px 16px;
+            background-color: #0071e3;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 18px;
+            font-size: 14px;
+            font-weight: 400;
+            transition: background-color 0.3s ease;
+        }
+        .home-button:hover {
+            background-color: #0077ed;
+        }
+        .header-title {
+            text-align: center;
+            padding: 10px 20px; /* Reduced padding */
+        }
+        .page-title {
+            font-size: 28px; /* Reduced font size */
+            font-weight: 700;
+            color: #1d1d1f;
+            margin-bottom: 0; /* Removed bottom margin */
+        }
+        .page-subtitle {
+            font-size: 16px; /* Reduced font size */
+            font-weight: 400;
+            color: #86868b;
+            max-width: 600px;
+            margin: 5px auto 0; /* Adjusted margin */
+        }
+    </style>
+</head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-SMHMGJKP9F"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-SMHMGJKP9F');
+</script>
+<body>
+    <div class="orbital-page-container">
+        <header class="header-container">
+            <div class="header-left">
+                <span class="header-name">Niko Natsoulas</span>
+                <a href="index.html" class="home-button">Home</a>
+            </div>
+            <div class="header-title">
+                <h1 class="page-title">Keplerian Orbital Elements</h1>
+                <p class="page-subtitle">Interactive visualization of orbital elements</p>
+            </div>
+            <div class="header-right">
+                <!-- Add any right-aligned content if needed -->
+            </div>
+        </header>
+        
+        <main>
+            <style>
+                .orbital-page-container {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    width: 100%;
+                    max-width: none;
+                    margin: 0;
+                    padding: 0;
+                }
+
+                .orbital-page-container .header-container {
+                    width: 100%;
+                    max-width: 1200px;
+                    margin: 0 auto;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 5px 20px;
+                    background-color: #f5f5f7;
+                    box-sizing: border-box;
+                }
+
+                .orbital-elements {
+                    width: 100%;
+                    max-width: 1200px;
+                    margin: 10px auto;
+                    padding: 0 20px;
+                    box-sizing: border-box;
+                    display: flex;
+                    justify-content: center;
+                }
+
+                .visualization-container {
+                    display: flex;
+                    width: 100%;
+                    height: calc(80vh - 100px);
+                    background-color: #f0f0f0;
+                    overflow: hidden;
+                    border-radius: 10px;
+                    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                }
+
+                #orbit-visualization {
+                    flex: 1;
+                    height: 100%;
+                }
+
+                .controls-overlay {
+                    width: 300px;
+                    height: 100%;
+                    background-color: rgba(255, 255, 255, 0.9);
+                    padding: 0.5rem;
+                    overflow-y: auto;
+                    display: flex;
+                    flex-direction: column;
+                    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+                    box-sizing: border-box;
+                }
+
+                .view-controls, .orbital-controls {
+                    margin-bottom: 0.25rem;
+                }
+
+                .view-controls h3, .orbital-controls h3 {
+                    font-size: 0.8rem;
+                }
+
+                /* Media query for mobile devices */
+                @media (max-width: 768px) {
+                    .orbital-elements {
+                        padding: 0 10px;
+                    }
+
+                    .visualization-container {
+                        flex-direction: column;
+                        height: auto;
+                    }
+
+                    #orbit-visualization {
+                        height: 50vh;
+                    }
+
+                    .controls-overlay {
+                        width: 100%;
+                        height: auto;
+                        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+                    }
+                }
+            </style>
+            <section class="orbital-elements">
+                <div class="visualization-container">
+                    <div id="orbit-visualization"></div>
+                    <div class="controls-overlay">
+                        <div class="view-controls">
+                            <h3>View Controls</h3>
+                            <div class="autopan-toggle">
+                                <input type="checkbox" id="autopan-toggle" checked>
+                                <label for="autopan-toggle">Autopan</label>
+                            </div>
+                            <div class="slider-group">
+                                <label for="horizontal-angle">Horizontal Angle</label>
+                                <input type="range" id="horizontal-angle" min="-180" max="180" value="0">
+                                <span class="slider-value" id="horizontal-angle-value">0°</span>
+                            </div>
+                            <div class="slider-group">
+                                <label for="vertical-angle">Vertical Angle</label>
+                                <input type="range" id="vertical-angle" min="-180" max="180" value="0">
+                                <span class="slider-value" id="vertical-angle-value">0°</span>
+                            </div>
+                        </div>
+                        <div class="orbital-controls">
+                            <h3>Orbital Elements</h3>
+                            <div class="slider-group">
+                                <label for="semi-major-axis">Semi-major axis (a) [AU]</label>
+                                <input type="range" id="semi-major-axis" min="1" max="10" step="0.1" value="5">
+                                <span class="slider-value" id="semi-major-axis-value">5.0</span>
+                            </div>
+                            <div class="slider-group">
+                                <label for="eccentricity">Eccentricity (e)</label>
+                                <input type="range" id="eccentricity" min="0" max="0.99" step="0.01" value="0">
+                                <span class="slider-value" id="eccentricity-value">0.00</span>
+                            </div>
+                            <div class="slider-group">
+                                <label for="inclination">Inclination (i) [°]</label>
+                                <input type="range" id="inclination" min="0" max="180" step="1" value="0">
+                                <span class="slider-value" id="inclination-value">0°</span>
+                            </div>
+                            <div class="slider-group">
+                                <label for="raan">Right Ascension of Ascending Node (Ω) [°]</label>
+                                <input type="range" id="raan" min="0" max="360" step="1" value="0">
+                                <span class="slider-value" id="raan-value">0°</span>
+                            </div>
+                            <div class="slider-group">
+                                <label for="arg-periapsis">Argument of Periapsis (ω) [°]</label>
+                                <input type="range" id="arg-periapsis" min="0" max="360" step="1" value="0">
+                                <span class="slider-value" id="arg-periapsis-value">0°</span>
+                            </div>
+                            <div class="slider-group">
+                                <label for="true-anomaly">True Anomaly (ν) [°]</label>
+                                <input type="range" id="true-anomaly" min="0" max="360" step="1" value="0">
+                                <span class="slider-value" id="true-anomaly-value">0°</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <div class="scroll-prompt">
+                <p>Scroll down for explanations of the Keplerian Orbital Elements Framework <i class="fas fa-arrow-down"></i></p>
+                
+            </div>
+            
+            <section class="element-explanations">
+                <h2>Orbital Elements and Key Concepts</h2>
+                <div class="explanation-grid">
+                    <div class="explanation-item">
+                        <h3>Semi-major axis (a)</h3>
+                        <p>Half the longest diameter of the elliptical orbit. It determines the orbit's size and is directly related to the orbital period.</p>
+                        <p class="equation">$$T = 2\pi\sqrt{\frac{a^3}{\mu}}$$</p>
+                        <p>Where T is the orbital period and μ is the gravitational parameter.</p>
+                    </div>
+                    <div class="explanation-item">
+                        <h3>Eccentricity (e)</h3>
+                        <p>Describes the orbit's shape, ranging from 0 (circular) to 1 (parabolic). Values between 0 and 1 represent elliptical orbits.</p>
+                        <p class="equation">$$e = \sqrt{1 - \frac{b^2}{a^2}}$$</p>
+                        <p>Where b is the semi-minor axis.</p>
+                    </div>
+                    <div class="explanation-item">
+                        <h3>Inclination (i)</h3>
+                        <p>The angle between the orbital plane and the reference plane. Ranges from 0° to 180°.</p>
+                        <p class="equation">$$\cos i = \frac{\mathbf{h} \cdot \hat{\mathbf{z}}}{|\mathbf{h}||\hat{\mathbf{z}}|}$$</p>
+                        <p>Where h is the angular momentum vector and ẑ is the unit vector of the reference plane's normal.</p>
+                    </div>
+                    <div class="explanation-item">
+                        <h3>Right Ascension of Ascending Node (Ω)</h3>
+                        <p>Angle from the reference direction to the ascending node, measured in the reference plane. Ranges from 0° to 360°.</p>
+                        <p class="equation">$$\tan \Omega = \frac{\mathbf{n} \cdot \hat{\mathbf{y}}}{\mathbf{n} \cdot \hat{\mathbf{x}}}$$</p>
+                        <p>Where n is the node line vector, and x̂ and ŷ are unit vectors in the reference plane.</p>
+                    </div>
+                    <div class="explanation-item">
+                        <h3>Argument of Periapsis (ω)</h3>
+                        <p>Angle from the ascending node to the periapsis, measured in the orbital plane. Ranges from 0° to 360°.</p>
+                        <p class="equation">$$\cos \omega = \frac{\mathbf{n} \cdot \mathbf{e}}{|\mathbf{n}||\mathbf{e}|}$$</p>
+                        <p>Where e is the eccentricity vector.</p>
+                    </div>
+                    <div class="explanation-item">
+                        <h3>True Anomaly (ν)</h3>
+                        <p>Angle from the periapsis to the orbiting body's current position, measured in the direction of motion. Ranges from 0° to 360°.</p>
+                        <p class="equation">$$\cos \nu = \frac{\mathbf{e} \cdot \mathbf{r}}{|\mathbf{e}||\mathbf{r}|}$$</p>
+                        <p>Where r is the position vector of the orbiting body.</p>
+                    </div>
+                    <div class="explanation-item">
+                        <h3>Reference Plane</h3>
+                        <p>The light blue plane in the visualization, representing the fundamental plane of the coordinate system (e.g., Earth's equatorial plane).</p>
+                    </div>
+                    <div class="explanation-item">
+                        <h3>Orbital Plane</h3>
+                        <p>The light orange plane containing the orbit. Its orientation is defined by the inclination and RAAN.</p>
+                    </div>
+                    <div class="explanation-item">
+                        <h3>Line of Nodes</h3>
+                        <p>The intersection of the orbital plane and the reference plane. It connects the ascending and descending nodes.</p>
+                        <p class="equation">$$\mathbf{n} = \hat{\mathbf{z}} \times \mathbf{h}$$</p>
+                        <p>Where n is the node line vector, ẑ is the reference plane normal, and h is the angular momentum vector.</p>
+                    </div>
+                    <div class="explanation-item">
+                        <h3>Periapsis</h3>
+                        <p>The point of closest approach to the central body in an elliptical orbit. Marked by a dashed white line in the visualization.</p>
+                        <p class="equation">$$r_p = a(1-e)$$</p>
+                        <p>Where r<sub>p</sub> is the periapsis distance.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+        
+        <footer>
+            <p>&copy; 2024 Niko Natsoulas. All rights reserved.</p>
+            <div class="social-links">
+                <a href="mailto:nnatsoulas@gmail.com" aria-label="Email">
+                    <iconify-icon icon="mdi:email"></iconify-icon>
+                </a>
+                <a href="https://github.com/Natsoulas" aria-label="GitHub">
+                    <iconify-icon icon="mdi:github"></iconify-icon>
+                </a>
+                <a href="https://www.linkedin.com/in/nicholasnatsoulas/" aria-label="LinkedIn">
+                    <iconify-icon icon="mdi:linkedin"></iconify-icon>
+                </a>
+                <a href="https://www.researchgate.net/profile/Nicholas-Natsoulas" aria-label="ResearchGate">
+                    <iconify-icon icon="simple-icons:researchgate" width="16" height="16"></iconify-icon>
+                </a>
+            </div>
+        </footer>
+    </div>
+    <script type="module" src="orbit-visualization.js"></script>
+</body>
+</html>
