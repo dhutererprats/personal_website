@@ -452,3 +452,18 @@ footer {
 .work-item-header .iconify {
   transition: transform 0.3s ease;
 }
+
+.work-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  font-size: 1.05rem;
+  font-weight: 500;
+  gap: 0.4rem;
+  margin-left: 1rem;
+}
+
+.title-separator {
+  color: #999;
+  font-weight: 400;
+}
