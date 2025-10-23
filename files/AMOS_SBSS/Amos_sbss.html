@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RSO Space-to-Space Imaging with RL — AMOS</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="icons/astronaut.ico" type="image/x-icon"/>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <!-- MathJax for a few equations -->
+  <script>
+    window.MathJax = { tex: { inlineMath: [['$','$'], ['\\(','\\)']] } };
+  </script>
+  <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <style>
+    /* Page-local polish that respects your CSS variables */
+    :root{
+      --hero-img: url("files/AMOS_SBSS/group_picture_with_Schaub_and%20Mark.PNG"); /* swap if needed */
+    }
+    .page-container { max-width: 1100px; margin: 0 auto; padding: 1rem; }
+    .hero {
+      position: relative;
+      min-height: 52vh;
+      background:
+        linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.35)),
+        var(--hero-img) center/cover no-repeat;
+      color: #fff;
+      display: grid;
+      align-items: end;
+      padding: 2rem 1rem;
+    }
+    .hero-inner { max-width: 1100px; margin: 0 auto; }
+    .hero h1 { font-size: clamp(2rem, 3.4vw, 3rem); margin: 0 0 .25rem 0; }
+    .hero p { max-width: 800px; opacity: .95; }
+    .pill { display:inline-flex; gap:.5rem; align-items:center; padding:.35rem .7rem; border-radius:999px; border:1px solid rgba(255,255,255,.5); background: rgba(0,0,0,.3); backdrop-filter: blur(2px); }
+
+    .lede, .callout, .widget, .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1rem 1.2rem;
+    }
+    .lede { font-size: 1.08rem; line-height: 1.8; }
+    .toc { margin: 1rem 0; padding: .5rem .8rem; border-left: 3px solid var(--accent-color); }
+    .toc a { text-decoration: none; }
+    .grid-2 { display:grid; grid-template-columns: 1fr; gap: 1rem; }
+    @media (min-width: 900px){ .grid-2 { grid-template-columns: 1fr 1fr; } }
+    .subtle { opacity: .9; }
+    .section { margin-block: 1.5rem 2rem; }
+    .video-card video { width: 100%; height: auto; border-radius: 10px; display:block; }
+    .video-meta { display:flex; gap:.6rem; align-items:center; margin-top:.4rem; font-size:.95rem; }
+    .hr { border-top:1px solid var(--border-color); margin: 1.8rem 0; }
+    .badge { display:inline-flex; gap:.35rem; align-items:center; border:1px solid var(--border-color); border-radius:999px; padding:.25rem .55rem; font-size:.85rem; }
+    .link-row { display:flex; flex-wrap:wrap; gap:.6rem; align-items:center; }
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th, .data-table td { border:1px solid var(--border-color); padding:.5rem .6rem; text-align:left; }
+    .data-table thead th { background: var(--accent-weak, rgba(0,0,0,.03)); }
+    .quote { font-style: italic; opacity: .95; }
+    .yt-embed { aspect-ratio: 16/9; width: 100%; border: none; border-radius: 12px; }
+  </style>
+</head>
+
+<body>
+  <nav class="site-nav" aria-label="Primary">
+    <a href="index.html">Home</a>
+    <a href="research.html">Research</a>
+    <a href="about.html">About</a>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="hero-inner">
+      <div class="pill" title="Conference">
+        <iconify-icon icon="mdi:microphone"></iconify-icon> AMOS 2025 — Maui, HI
+      </div>
+      <h1>Reinforcement Learning for Space-to-Space Surveillance</h1>
+      <p class="subtle">Autonomous scheduling for resident space object (RSO) imaging in LEO — learned target selection, energy/storage management, and downlink timing using an actor-critic agent in the BSK-RL ecosystem.</p>
+    </div>
+  </header>
+
+  <main class="page-container">
+    <!-- TOC -->
+    <div class="toc">
+      <strong>On this page:</strong>
+      <ul>
+        <li><a href="#overview">Overview & motivation</a></li>
+        <li><a href="#videos">Scenario videos</a></li>
+        <li><a href="#pomdp">Formulation (POMDP)</a></li>
+        <li><a href="#approach">RL approach</a></li>
+        <li><a href="#results">Selected results</a></li>
+        <li><a href="#repro">Reproducibility & resources</a></li>
+        <li><a href="#refs">References & links</a></li>
+      </ul>
+    </div>
+
+    <!-- OVERVIEW -->
+    <section id="overview" class="section lede">
+      <p class="quote">
+        “Unlike Earth observation, space-to-space imaging has targets arriving from every direction at high relative rates, under tight visibility and illumination windows.” 
+      </p>
+      <p>
+        The work below shows an RL agent that learns to schedule images of RSOs while managing energy, reaction wheels, and storage. The agent exploits eclipse for downlink, preserves margins without hand-crafted rules, and delivers more useful imagery than a myopic heuristic — all in high-fidelity simulation (Basilisk + BSK-RL).
+      </p>
+      <div class="link-row" style="margin-top:.4rem">
+        <a class="badge" href="files/AMOS_SBSS/Huterer_AMOS_Paper_SBSS.pdf" target="_blank" rel="noopener">
+          <iconify-icon icon="mdi:file-pdf-box"></iconify-icon> Full paper (PDF)
+        </a>
+        <a class="badge" href="https://www.youtube.com/watch?v=Aas0z43uS9M" target="_blank" rel="noopener">
+          <iconify-icon icon="mdi:youtube"></iconify-icon> 3-min video summary
+        </a>
+      </div>
+    </section>
+
+    <!-- VIDEOS -->
+    <section id="videos" class="section">
+      <h2>Scenario videos</h2>
+      <div class="grid-2">
+        <div class="card video-card">
+          <h3>LEO–RSO setup (mission context)</h3>
+          <video controls playsinline preload="metadata" poster="" src="files/AMOS_SBSS/LEO-RSO%20set%20up.mov"></video>
+          <div class="video-meta"><span class="subtle">High-level geometry and constraints.</span></div>
+        </div>
+        <div class="card video-card">
+          <h3>Close-up policy behavior</h3>
+          <video controls playsinline preload="metadata" src="files/AMOS_SBSS/sea_close.mov"></video>
+          <div class="video-meta"><span class="subtle">Agent slews and images under LOS & illumination rules.</span></div>
+        </div>
+        <div class="card video-card">
+          <h3>World view</h3>
+          <video controls playsinline preload="metadata" src="files/AMOS_SBSS/sea_world.mov"></video>
+          <div class="video-meta"><span class="subtle">Global perspective across multiple orbits.</span></div>
+        </div>
+        <div class="card">
+          <h3>1-minute teaser (YouTube)</h3>
+          <iframe class="yt-embed" src="https://www.youtube.com/embed/Aas0z43uS9M" title="Space-to-Space RL overview" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+        </div>
+      </div>
+      <p class="subtle" style="margin-top:.6rem">
+        Tip: If a <code>.mov</code> doesn’t play in some browsers, consider converting to <code>.mp4</code> (H.264) and swapping the <code>src</code>.
+      </p>
+    </section>
+
+    <!-- POMDP -->
+    <section id="pomdp" class="section">
+      <h2>Formulation (POMDP)</h2>
+      <p>
+        Imaging and resource management are posed as a partially observable MDP. The spacecraft must pick between imaging, charging, desaturating, and downlinking while targets move fast and visibility/illumination change quickly.
+      </p>
+      <p><em>Dynamics and signals</em></p>
+      $$ s_{k+1} = f\!\big(s_k,\, u_k\big), \quad o_k = h(s_k,t_k),\quad a_k = \pi_\theta(o_k),\quad u_k = g(a_k) $$
+      <p class="subtle">
+        State $s_k$ includes energy, storage, reaction-wheel rates, and pointing; observation $o_k$ is what the on-board estimator provides; action $a_k$ selects a task (image/charge/desat/downlink) with duration; $u_k$ is the executed control in Basilisk.
+      </p>
+      <p><em>Objective</em></p>
+      $$ J(\theta) = \mathbb{E}\!\left[ \sum_{k=0}^{N-1} \gamma^k\, R(s_k,a_k,s_{k+1}) \right] $$
+      <p class="subtle">Rewards encourage imaging valuable, illuminated, in-LOS targets while maintaining margins and pushing data when downlink is available.</p>
+    </section>
+
+    <!-- APPROACH -->
+    <section id="approach" class="section">
+      <h2>RL approach</h2>
+      <ul>
+        <li><strong>Agent:</strong> advantage actor–critic with compact MLPs for on-board viability.</li>
+        <li><strong>Environment:</strong> BSK-RL ties the RL loop to Basilisk’s high-fidelity spacecraft sim.</li>
+        <li><strong>Actions:</strong> choose among 10 “image target” options (LOS-valid only) plus <em>charge</em>, <em>desat</em>, and <em>downlink</em>.</li>
+        <li><strong>Signals:</strong> battery fraction, storage usage, RW speeds, sun/eclipse flags, ground-station access, candidate target geometry/illumination.</li>
+        <li><strong>Training:</strong> on-policy rollouts across randomized catalogs and orbital phasing to promote generalization.</li>
+      </ul>
+      <div class="callout">
+        The agent learns habits operators like to see: image during good lighting, exploit eclipse to downlink, and keep margins without micromanagement.
+      </div>
+    </section>
+
+    <!-- RESULTS -->
+    <section id="results" class="section">
+      <h2>Selected results</h2>
+      <ul>
+        <li><strong>Generalization:</strong> policies carry over to new RSO catalogs and phasing.</li>
+        <li><strong>Resource-aware scheduling:</strong> frequent downlink during eclipse; energy and wheel margins maintained without hand-coded rules.</li>
+        <li><strong>Timeliness:</strong> more useful images delivered sooner than a myopic “closest-target” heuristic under the same constraints.</li>
+      </ul>
+    </section>
+
+    <!-- REPRODUCIBILITY -->
+    <section id="repro" class="section">
+      <h2>Reproducibility & resources</h2>
+      <p>
+        Training follows a standard rollout–update loop: run the current policy in <em>$n_{\text{env}}$</em> parallel environments for <em>$n_b$</em> episodes of length <em>$N$</em>, collect on-policy trajectories, then perform <em>$n_{\text{opt}}$</em> epochs of stochastic gradient updates on mini-batches from those data. Repeat until a training-step budget <em>$T$</em> is reached (updates $\approx T/(n_{\text{env}} n_b N)$).
+      </p>
+      <p>
+        In practice, a strong student desktop handles this—think several parallel sims for a few hours. Exact settings per experiment are in Table 4 of the paper; the open-source code and environment docs are linked below.
+      </p>
+      <div class="link-row" style="margin-top:.4rem">
+        <a class="badge" href="files/AMOS_SBSS/Huterer_AMOS_Paper_SBSS.pdf" target="_blank" rel="noopener">
+          <iconify-icon icon="mdi:file-pdf-box"></iconify-icon> Paper (PDF)
+        </a>
+        <a class="badge" href="https://avslab.github.io/bsk_rl/" target="_blank" rel="noopener" title="BSK-RL documentation">
+          <iconify-icon icon="mdi:book-open-variant"></iconify-icon> BSK-RL docs
+        </a>
+        <!-- TODO: replace # with the presentation recording URL when available -->
+        <a class="badge" href="#" title="Add link to talk recording">
+          <iconify-icon icon="mdi:filmstrip"></iconify-icon> Talk recording (add link)
+        </a>
+      </div>
+    </section>
+
+    <div class="hr"></div>
+    <!-- REFERENCES -->
+    <section id="refs" class="section">
+      <h3>References & links</h3>
+      <ul>
+        <li>Huterer Prats, D., Wheeler, C., Schaub, H. <em>Autonomous Scheduling for RSO Imaging Using RL under Operational and Visibility Constraints</em>, AMOS 2025. 
+          <a href="files/AMOS_SBSS/Huterer_AMOS_Paper_SBSS.pdf" target="_blank" rel="noopener">Download paper</a>
+        </li>
+        <li>Video summary (AVS Lab): 
+          <a href="https://www.youtube.com/watch?v=Aas0z43uS9M" target="_blank" rel="noopener">YouTube</a>
+        </li>
+        <li>BSK-RL framework: <a href="https://avslab.github.io/bsk_rl/" target="_blank" rel="noopener">docs</a></li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="page-container">
+    <p>© 2025 Daniel Huterer Prats • AVS Lab, CU Boulder</p>
+  </footer>
+</body>
+</html>
