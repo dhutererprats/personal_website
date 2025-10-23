@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>About Me — Daniel Hulterer Prats</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <link rel="icon" href="icons/astronaut.ico" type="image/x-icon"/>
+</head>
+<body>
+  <!-- theme toggle (reuses your existing JS) -->
+  <button class="theme-toggle" onclick="toggleTheme()">🌓 Toggle Theme</button>
+
+  <!-- site nav -->
+  <nav class="site-nav" aria-label="Primary">
+    <a href="index.html">Home</a>
+    <a href="research.html">Research</a>
+    <a href="about.html" class="active" aria-current="page">About Me</a>
+  </nav>
+
+  <div class="homepage-container">
+    <header>
+      <div class="header-text">
+        <h1>About Me</h1>
+        <p class="location">
+          <a href="https://www.google.com/maps/place/Boulder,+CO" target="_blank" rel="noopener noreferrer">
+            Boulder, CO
+          </a>
+        </p>
+      </div>
+      <!-- optional: use your existing headshot asset -->
+      <img src="Headshot-photo-NYU.png" alt="Daniel Huterer Prats" class="profile-image">
+    </header>
+
+    <main>
+      <section class="about">
+        <p>
+          Hi! I’m <strong>Daniel Hulterer Prats</strong>. I was born in Italy and moved to Austria when I was young, spending most of my childhood there before moving to Saudi Arabia, where I finished high school. I completed my undergraduate degree in Physics at <strong>New York University Abu Dhabi</strong> (with a semester in New York), then earned a master’s in <strong>Aerospace Science and Technology</strong> in Barcelona. After that, I spent a year in the aerospace industry in Toulouse, France—working as an aerospace consultant and as a <strong>GNC engineer</strong>, including as a lead engineer for a European Commission–led project. In the summer of 2024, I started my <strong>PhD in Colorado</strong> at the Autonomous Vehicle Systems Lab.
+        </p>
+
+        <p>
+          Outside of research, I love playing soccer—well, <em>football</em>—and I’ve played ever since I was a kid in Austria. I continued through high school in Saudi and as a student-athlete at NYU Abu Dhabi, and to this day I still enjoy pick-up games on the weekends. I also love exploring nature, scuba diving, I’m currently working on my pilot’s license, and I’m always excited to travel and experience different countries and cultures.
+        </p>
+      </section>
+    </main>
+
+    <footer>
+      <p>© 2025 Daniel Huterer Prats</p>
+    </footer>
+  </div>
+
+  <script>
+    // Reuse the same theme toggler you already have on index.html
+    function toggleTheme() {
+      const html = document.documentElement;
+      const current = html.getAttribute("data-theme") || "light";
+      html.setAttribute("data-theme", current === "dark" ? "light" : "dark");
+    }
+  </script>
+</body>
+</html>
