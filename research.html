@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Research — Daniel Huterer Prats</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <link rel="icon" href="icons/astronaut.ico" type="image/x-icon"/>
+  <link rel="canonical" href="https://dhutererprats.github.io/research.html"/>
+</head>
+<body>
+  <button class="theme-toggle" onclick="toggleTheme()">🌓 Toggle Theme</button>
+
+  <!-- New site nav -->
+  <nav class="site-nav" aria-label="Primary">
+    <a href="index.html" class="active" aria-current="page">Home</a>
+    <a href="research.html">Research</a>
+    <a href="about.html">About Me</a>
+  </nav>  
+
+  <div class="homepage-container">
+    <header>
+      <div class="header-text">
+        <h1>Research</h1>
+        <p class="location">
+          <a href="https://www.google.com/maps/place/Boulder,+CO" target="_blank" rel="noopener noreferrer">
+            <i class="fas fa-globe"></i>
+            Boulder, CO
+          </a>
+        </p>
+      </div>
+      <img src="Headshot-photo-NYU.png" alt="Daniel Huterer Prats" class="profile-image">
+    </header>
+
+    <main>
+      <section class="projects">
+        <h2>Selected Projects & Papers</h2>
+        <!-- Deep Dive Blog Post -->
+        <div class="project-item">
+            <a class="image-container" href="blog/robust-trajectory-rl.html">
+            <img src="images/blog/traj_compare.png"
+                alt="Trajectories under robust policies (Earth→Mars)"
+                loading="lazy" decoding="async"/>
+            <div class="overlay">
+                <div class="overlay-text">Deep Dive: Robust Interplanetary Trajectory Design with RL</div>
+                <div class="expand-arrow">↗</div>
+            </div>
+            </a>
+            <p>
+            A blog-style exploration of PPO for robust Earth→Mars low-thrust guidance,
+            with interactive visuals, equations, and code.
+            <a class="underline" href="blog/robust-trajectory-rl.html">Read the post</a>
+            </p>
+        </div>
+  
+
+        <!-- Polaris / Space-to-Space Surveillance (copied from Home) -->
+        <div class="project-item expandable">
+          <div class="image-container" onclick="toggleProject(this)">
+            <img src="images/space_to_space_surveillance.png" alt="Space-to-Space Surveillance" />
+            <div class="overlay">
+              <div class="overlay-text">Space-to-Space Surveillance for SSA</div>
+              <div class="expand-arrow">▼</div>
+            </div>
+          </div>
+          <div class="project-description">
+            <p><strong>RL-Driven Scheduling for Autonomous Space-to-Space Surveillance</strong></p>
+            <p>This project introduces a reinforcement learning (RL)-based approach for autonomous inspection and imaging of Resident Space Objects (RSOs) from a spacecraft in orbit. The agent is trained in a high-fidelity Basilisk simulation and dynamically selects imaging targets while managing LOS, battery/wheel states, and data limits.</p>
+            <div class="media-block">
+              <h4>🎥 Project Video</h4>
+              <video controls>
+                <source src="files/space_to_space_animation.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+              </video>
+            </div>
+            <div class="media-block abstract-thumbnail">
+              <h4>📄 Abstract: Space-to-Space Surveillance</h4>
+              <div class="thumbnail-hover">
+                <img src="images/StSS_BostonAbstract.png" alt="Abstract Thumbnail" />
+                <div class="hover-text">
+                  <a href="StSS_BostonAbstract.pdf" download>📥 Download Abstract</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RSO Inspection (copied from Home) -->
+        <div class="project-item expandable">
+          <div class="image-container" onclick="toggleProject(this)">
+            <img src="images/RSO-inspection_illustration.png" alt="RSO Inspection" />
+            <div class="overlay">
+              <div class="overlay-text">RL-Based RSO Inspection</div>
+              <div class="expand-arrow">▼</div>
+            </div>
+          </div>
+          <div class="project-description">
+            <p>Reinforcement learning scheduler for autonomous RSO inspection with safety and lighting constraints in a high-fidelity Basilisk simulation. Integrates battery, data storage, wheel desaturation, and eclipse/LOS observability.</p>
+            <div class="media-block abstract-thumbnail">
+              <h4>📄 Abstract: Autonomous Satellite Inspection</h4>
+              <div class="thumbnail-hover">
+                <img src="images/Research_Paper_Thumbnail.png" alt="LEO Inspection Abstract" />
+                <div class="hover-text">
+                  <a href="https://hanspeterschaub.info/Papers/Stephenson2025a.pdf" target="_blank" rel="noopener">📥 Download Paper</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dark Matter & Galaxy Formation (copied from Home) -->
+        <div class="project-item">
+          <div class="image-container">
+            <img src="images/galaxies_lacking_dark_matter_thumbnail.png" alt="Dark Matter & Galaxy Formation" />
+            <div class="overlay">
+              <div class="overlay-text">Dark Matter & Galaxy Formation</div>
+            </div>
+          </div>
+          <p>Co-authored paper on dwarf galaxy dark matter depletion published in MNRAS (2021).</p>
+          <p><a href="https://arxiv.org/pdf/2010.02245" target="_blank" rel="noopener" class="underline">📄 View Paper</a></p>
+        </div>
+
+        <!-- Multi-Gravity Assist GA (copied from Home) -->
+        <div class="project-item expandable" id="MGA">
+          <div class="image-container" onclick="toggleProject(this)">
+            <img src="images/interplanetary_trajectory_final.png" alt="MGA Optimization" />
+            <div class="overlay">
+              <div class="overlay-text">Multi-Gravity Assist Trajectory Optimization</div>
+              <div class="expand-arrow">▼</div>
+            </div>
+          </div>
+          <div class="project-description">
+            <p>Genetic algorithm for optimizing complex interplanetary missions using gravity assists and impulsive maneuvers. Balances low ∆v and fast arrival time without pruning non-intuitive solutions.</p>
+            <p><a href="files/MGA_Paper.pdf" target="_blank" rel="noopener" class="underline">📄 Download Paper</a></p>
+          </div>
+        </div>
+
+      </section>
+    </main>
+
+    <footer>
+      <p>© 2025 Daniel Huterer Prats. Built from scratch with care 🛰️</p>
+    </footer>
+  </div>
+
+  <script>
+    function toggleTheme() {
+      const html = document.documentElement;
+      const current = html.getAttribute("data-theme") || "light";
+      html.setAttribute("data-theme", current === "dark" ? "light" : "dark");
+    }
+    function toggleProject(el) {
+      const parent = el.closest('.project-item.expandable');
+      parent.classList.toggle('active');
+      const arrow = parent.querySelector('.expand-arrow');
+      arrow.textContent = parent.classList.contains('active') ? '▲' : '▼';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Deep Dive: Robust Interplanetary Trajectory Design with RL (PPO)</title>
+  <link rel="stylesheet" href="../style.css" />
+  <link rel="icon" href="../icons/astronaut.ico" type="image/x-icon"/>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <!-- MathJax for equations -->
+  <script>
+    window.MathJax = { tex: { inlineMath: [['$','$'], ['\\(','\\)']] } };
+  </script>
+  <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    /* Blog-page specific helpers that blend with your CSS variables */
+    .blog-container { max-width: 1000px; margin: 0 auto; padding: 1rem; }
+    .lede { font-size: 1.15rem; line-height: 1.8; background: var(--card-bg); padding: 1rem 1.25rem; border-radius: 12px; border: 1px solid var(--border-color); }
+    .toc { margin: 1rem 0; padding: 0.5rem 0.75rem; border-left: 3px solid var(--accent-color); }
+    .toc a { text-decoration: none; }
+    .callout { background: var(--accent-weak, rgba(0,0,0,0.03)); padding: 0.75rem 1rem; border-radius: 12px; border: 1px dashed var(--border-color); }
+    .figure { margin: 1.25rem 0; text-align: center; }
+    .figure img, .figure video, .figure canvas, .figure svg { max-width: 100%; border-radius: 12px; }
+    .badge { display:inline-block; padding: 0.15rem 0.5rem; font-size: 0.8rem; border-radius: 999px; border:1px solid var(--border-color); }
+    .grid-2 { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+    @media (min-width: 900px){ .grid-2 { grid-template-columns: 1fr 1fr; } }
+    .subtle { opacity: 0.9; }
+    .hr { border-top: 1px solid var(--border-color); margin: 1.5rem 0; }
+    .footnotes { font-size: 0.95rem; }
+
+    /* Interactive PPO visual */
+    .widget { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 1rem; }
+    .widget label { font-size: 0.9rem; }
+    .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 0.5rem; }
+
+    /* Impulse-timeline (bar strip) */
+    .impulse-strip{
+    display:flex; align-items:flex-end; gap:4px; margin-top:.5rem;
+    height:120px; padding:8px 10px; border-radius:10px;
+    background: linear-gradient(to top, transparent 23px, rgba(0,0,0,0.08) 24px, transparent 25px); /* gridline */
+    background-size: 100% 24px; border:1px solid var(--border-color);
+    }
+    .impulse{
+    width: 12px; height: 100%; background: rgba(0,0,0,0.06);
+    border-radius: 4px 4px 0 0; position: relative; overflow: hidden;
+    }
+    .impulse .fill{
+    position:absolute; left:0; right:0; bottom:0; height:0%;
+    background: var(--accent-color); transition: height 500ms ease;
+    }
+    .profile-legend{ display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.5rem; }
+
+
+    /* Code block styling fallback (inherits from your CSS) */
+    pre, code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+
+    .pill { display:inline-flex; align-items:center; gap:0.35rem; padding:0.3rem 0.6rem; border-radius:999px; border:1px solid var(--border-color); }
+    
+    /* Pretty, bordered tables */
+    .tbl{ width:100%; border-collapse: collapse; }
+    .tbl th, .tbl td{ border:1px solid var(--border-color); padding:.55rem .65rem; vertical-align: top; }
+    .tbl thead th{ background: var(--card-bg); }
+    .tbl tbody tr:nth-child(even){ background: rgba(0,0,0,0.03); }
+    .tbl caption{ caption-side: bottom; text-align:left; font-size:.9rem; padding-top:.4rem; }
+  </style>
+</head>
+<body>
+  <button class="theme-toggle" onclick="toggleTheme()">🌓 Toggle Theme</button>
+  <nav class="site-nav" aria-label="Primary">
+    <a href="../index.html">Home</a>
+    <a href="../research.html">Research</a>
+    <a href="../about.html">About Me</a>
+  </nav>
+
+  <div class="homepage-container blog-container">
+    <header>
+      <div class="header-text">
+        <h1>Deep Dive: Robust Interplanetary Trajectory Design with RL</h1>
+        <p class="subtle">How PPO learns closed-loop guidance that survives noise, execution errors, and missed thrust events.</p>
+        <div class="pill" title="Course/Context">
+          <iconify-icon icon="mdi:school"></iconify-icon>
+          ASEN 6519 – Decision Making under Uncertainty (Blog Post Assignment)
+        </div>
+      </div>
+      <img src="../images/blog/traj_compare.png"
+     alt="Earth–Mars trajectories under different robust policies"
+     class="profile-image" loading="eager" decoding="async"/>
+    </header>
+
+    <main>
+      <section class="lede">
+        <p>
+          This post takes the paper <em>“Reinforcement Learning for Robust Trajectory Design of Interplanetary Missions”</em> authored by Zavoli et al. as a launch pad and digs into how a
+          Proximal Policy Optimization (PPO) agent can produce <strong>closed-loop low-thrust guidance</strong> that remains effective even when the world deviates from the ideal textbook case—
+          e.g., navigation noise, thrust pointing/magnitude errors, and even <strong>missed thrust events (MTEs)</strong> for multiple guidance steps.
+        </p>
+        <p>
+          Compared to a traditional trajectory design report, this blog format adds interactive widgets and animations to build intuition about the algorithmic pieces (e.g., PPO’s clipped objective) and the induced
+          guidance behaviors (e.g., spreading thrust margins in anticipation of failures).
+        </p>
+      </section>
+
+      <div class="toc">
+        <strong>On this page:</strong>
+        <ul>
+          <li><a href="#mission">Mission setup & motivation</a></li>
+          <li><a href="#pomdp">From physics to a POMDP</a></li>
+          <li><a href="#ppo">PPO: objective & algorithm used</a></li>
+          <li><a href="#epsilon">Constraint tightening (ε-schedule)</a></li>
+          <li><a href="#knobs">Implementation knobs</a></li>
+          <li><a href="#hparams">PPO hyperparameters & schedules</a></li>
+          <li><a href="#arch">Network architecture (actor)</a></li>
+          <li><a href="#interactive">Interactive: PPO objective & burn schedules</a></li>
+          <li><a href="#results">Policy behavior</a> · <a href="#mc-results">Monte-Carlo results</a></li>
+          <li><a href="#compute">Compute & reproducibility</a></li>
+          <li><a href="#limitations">Limitations & next steps</a></li>
+          <li><a href="#refs">References & resources</a></li>
+        </ul>
+      </div>
+      
+
+      <section id="mission">
+        <h2>Mission setup & motivation</h2>      
+        <p>
+          The case study is a time-fixed Earth→Mars rendezvous under Sun gravity, modeled as an $N=40$-step sequence of impulses (Sims–Flanagan-like discretization). Each step is roughly nine days.
+          The goal is to <strong>maximize final mass</strong> while meeting terminal constraints on Mars-relative position and velocity. Uncertainties are injected as: (i) state/disturbance noise, (ii) observation (navigation) noise,
+          (iii) thrust execution errors (small-angle pointing + magnitude), and (iv) single- or multi-step <em>missed thrust events</em>.
+        </p>
+        <div class="callout">
+          <p class="subtle"><strong>Why a learned feedback law?</strong> In uncertain environments, open-loop optimal plans can erode quickly. A compact neural policy mapping observations to $\Delta v$ provides onboard closed-loop guidance that adapts on the fly—without re-solving an optimal control problem in flight.</p>
+        </div>
+      </section>
+
+      <section id="problem">
+        <h2>Problem setup & why robustness matters</h2>
+        <p>
+          Picture a small spacecraft leaving Earth, arcing around the Sun on a transfer
+          toward Mars. Every few days a guidance computer decides whether to fire the
+          thruster—just a nudge—or to coast. The mission isn’t only about getting there;
+          it’s about arriving on target with <em>as much propellant left as possible</em>.
+          This post studies a time-fixed Earth→Mars rendezvous, discretized into
+          \(N=40\) decision steps (about nine days each). The objective is to
+          <strong>maximize final mass</strong> while meeting terminal constraints on
+          Mars-relative position and velocity, despite four uncertainty sources:
+          (i) state/disturbance noise, (ii) observation (navigation) noise,
+          (iii) execution errors (small pointing/magnitude errors), and
+          (iv) single- or multi-step <em>missed-thrust events</em> (MTEs).
+        </p>
+      
+        <!-- Motivation animation -->
+        <div class="widget" style="overflow:hidden">
+          <canvas id="transferCanvas" width="720" height="360"
+                  aria-label="Sun–Earth–Mars schematic with transfer and burns"></canvas>
+          <p class="subtle" style="margin-top:.5rem">
+            Schematic (not to scale): Sun (center), Earth and Mars on circular orbits,
+            and a Hohmann-like transfer ellipse. Thruster plumes flash at discrete
+            decision steps; big pulses near the start/end evoke bang–off–bang,
+            while mid-course trims illustrate guidance corrections.
+          </p>
+        </div>
+      
+        <div class="callout">
+          <p class="subtle">
+            <strong>Why a learned feedback law?</strong> Open-loop optimal plans can erode
+            quickly under noise and execution errors. A compact neural policy mapping
+            observations to \( \Delta v \) delivers <em>closed-loop</em> guidance that adapts
+            on the fly—without re-solving an optimal control problem in flight.
+          </p>
+        </div>
+      </section>
+      
+
+
+      <section id="pomdp">
+        <h2>From physics to a POMDP</h2>
+        <p>
+          The guidance problem is cast as a <strong>Partially Observable Markov Decision Process (POMDP)</strong> so the policy can react to noisy navigation and imperfect actuation.
+        </p>
+      
+        <p><em>State, observations, actions, dynamics.</em></p>
+        $$ s_{k+1} = f\!\big(s_k,\; u_k,\; \omega^{(s)}_{k+1}\big) $$
+        $$ o_k = h\!\big(s_k,\; t_k,\; \omega^{(o)}_k\big), \qquad a_k = \pi_\theta(o_k), \qquad
+           u_k = g\!\big(a_k,\; \omega^{(a)}_k\big) $$
+      
+        <p><em>Reward and objective.</em></p>
+        $$ R_k \;=\; -\mu_k \;-\; \lambda_{eu}\,e_{u,k} \;-\; \lambda_{es}\,e_{s,k} $$
+        $$ J(\theta) \;=\; \mathbb{E}_{\tau\sim \pi_\theta}\!\left[\sum_{k=0}^{N-1}\gamma^k\,R_k\right] $$
+      
+        <div class="callout">
+          <strong>Why POMDP?</strong> A learned feedback law adapts online to noise, execution errors, and missed-thrust events—capabilities an open-loop plan lacks.
+        </div>
+      </section>
+      
+
+      <section id="ppo">
+        <h2>How PPO is used here</h2>
+        <p>
+          This section builds from the objective to the exact PPO loss used by the authors (Zavoli &amp; Federici). Explanations avoid “we” and emphasize the intuition behind each step.
+        </p>
+      
+        <h3>1) Goal</h3>
+        <p>The aim is to learn parameters \( \theta \) that maximize discounted return:</p>
+        $$ J(\theta) \;=\; \mathbb{E}\!\left[\sum_{k=0}^{N-1}\gamma^k\,R_k\right] $$
+      
+        <h3>2) Policy-gradient with an advantage baseline</h3>
+        <p>
+          Using the log-derivative trick and a baseline gives an estimator that scales with advantage \( \hat A_k \)
+          (how much better an action was than typical in that state):
+        </p>
+        $$ \nabla_\theta J(\theta)\;=\;\mathbb{E}\!\left[\sum_k \nabla_\theta \log \pi_\theta(a_k|s_k)\;\hat A_k\right] $$
+        <p>
+          Here \( \hat A_k \) is computed from value estimates (GAE is used to reduce variance),
+          \( \hat A_k \approx Q^\pi(s_k,a_k) - V^\pi(s_k) \).
+        </p>
+      
+        <h3>3) Proximal update via clipping</h3>
+        <p>
+          To avoid destructive parameter jumps, PPO uses the probability ratio
+          \( r_k(\theta)=\tfrac{\pi_\theta(a_k|s_k)}{\pi_{\theta_{\text{old}}}(a_k|s_k)} \) and clips it to stay within
+          \( [\,1-\epsilon,\;1+\epsilon\,] \):
+        </p>
+        $$ J^{\text{clip}}(\theta)=\mathbb{E}\!\left[\frac{1}{N}\sum_k
+          \min\!\big(r_k\,\hat A_k,\; \operatorname{clip}(r_k,1-\epsilon,1+\epsilon)\,\hat A_k\big)\right] $$
+        <p class="subtle">
+          Intuition: if \( \hat A_k&gt;0 \) and the new policy pushes \( r_k \) above \( 1+\epsilon \), the objective stops increasing—preventing an overly large update.
+        </p>
+      
+        <h3>4) Full PPO objective</h3>
+        <p>
+          PPO augments the clipped term with a value-regression loss and an entropy bonus:
+        </p>
+        $$ J^{\text{ppo}}(\theta) \;=\; J^{\text{clip}}(\theta)\;-\; c_1\,H(\theta) \;+\; c_2\,S(\theta) $$
+        <p>
+          where
+        </p>
+        $$ H(\theta)=\frac{1}{N}\sum_k \big(V_\theta(s_k)-\hat G_k\big)^2,\qquad
+           S(\theta)=\frac{1}{N}\sum_k \mathbb{E}_{a\sim \pi_\theta(\cdot|s_k)}[-\log \pi_\theta(a|s_k)] $$
+        <p class="subtle">
+          The authors linearly decay both the clip range \( \epsilon \) and learning rate during training to stabilize updates.
+        </p>
+      
+        <h3 id="ppo-build">5) Paper-specific implementation - What was actually used?</h3>
+        <ol>
+          <li><strong>Observations</strong>: noisy \((\mathbf r,\mathbf v,m)\) and a time/step index; channels are normalized to natural scales (e.g., 1 AU).</li>
+          <li><strong>Actions</strong>: 3-D impulsive \( \Delta\mathbf v \) sampled from a Gaussian and projected to a per-step magnitude bound set by thrust/mass.</li>
+          <li><strong>Dynamics &amp; uncertainty</strong>: two-body propagation with impulses; state/observation/control noise; single- and multi-step missed-thrust events.</li>
+          <li><strong>Reward</strong>: \( R_k = -\mu_k - \lambda_{eu}e_{u,k} - \lambda_{es}e_{s,k} \) with a two-stage \( \varepsilon \)-schedule on the terminal tolerance (loose early for exploration, tight later for accuracy). This curriculum was the most impactful trick reported by the authors.</li>
+          <li><strong>Networks</strong>: separate actor/critic MLPs (tanh). Hidden widths follow the paper’s heuristic (e.g., \( h_1=10n_{in},\; h_2=\sqrt{h_1h_3},\; h_3=10n_{out} \)); compact enough for on-board inference.</li>
+          <li><strong>Optimization</strong>: Learning rate and clip-range decay linearly, several epochs used per update and periodic Monte-Carlo evaluation are done which returns the best-performing checkpoint.</li>
+        </ol>
+      
+        <div class="callout">
+          <strong>Why this approach is useful for interplanetary guidance.</strong>
+          A policy gives closed-loop robustness without re-solving an optimal control problem onboard.
+          In clean cases it remains near-optimal; under uncertainty it spreads thrust and keeps margin—behavior that is difficult to hand-design with classical trackers.
+        </div>
+      </section>
+      
+
+      <section id="epsilon">
+        <h2>Tightening constraints with an $\varepsilon$-schedule</h2>
+        <p>
+          Reward shaping can accidentally encourage hacks. Here, a simple idea helps: start training with a <strong>looser terminal tolerance</strong> $\varepsilon$ so the policy learns to make progress, then <strong>tighten</strong> $\varepsilon$ halfway through training. This acts like curriculum learning for constraints and empirically stabilizes training.
+        </p>
+        <p>
+          At a high level, the per-step reward is of the form
+        </p>
+        <p>
+          $\displaystyle R_k = -\mu_k - \lambda_{\mathrm{eu}}\,e_{u,k-1} - \lambda_{\mathrm{es}}\,\max(0, e_{s,k} - \varepsilon)$
+        </p>
+        <p class="subtle">
+          where $\mu_k$ is normalized fuel use, $e_{u,k}$ penalizes exceeding stepwise $\|\Delta v\|$ bounds, and $e_{s,N}$ penalizes terminal position/velocity error.
+        </p>
+      </section>
+
+      <section id="knobs">
+        <h2>What made it work: implementation “knobs”</h2>
+        <ul>
+          <li><strong>Curriculum via an <em>ε</em>-schedule:</strong> start with looser terminal tolerances so the agent learns to make progress, then tighten mid-training.</li>
+          <li><strong>Normalization:</strong> nondimensionalize states and rewards to stabilize training and help generalization across scales.</li>
+          <li><strong>Policy/value nets:</strong> compact MLPs are sufficient here; actor outputs a mean and std for a Gaussian over Δv within per-step bounds.</li>
+          <li><strong>Optimization:</strong> linearly decay learning rate and clip range; tune with a lightweight search; keep batch/mini-batch sizes consistent with on-policy PPO.</li>
+        </ul>
+        <p class="subtle">These small choices add up: together with the ε-schedule they noticeably improved stability and final performance in my presentation experiments.</p>
+      </section>
+
+      <section id="figures">
+        <h2>Figures from the paper — what they show</h2>
+        <div class="grid-2">
+          <figure class="figure">
+            <img loading="lazy" src="../images/blog/fig2-deterministic.png"
+                 alt="Deterministic optimal vs learned unperturbed policy">
+            <figcaption><strong>Fig. 2.</strong> In the deterministic case, the learned unperturbed policy (blue) essentially overlays the indirect optimal solution (red dashed). Thrust bunches early and late (bang–off–bang).</figcaption>
+          </figure>
+      
+          <figure class="figure">
+            <img loading="lazy" src="../images/blog/fig3-trajectories.png"
+                 alt="Earth–Mars trajectories under different robust policies">
+            <figcaption><strong>Fig. 3.</strong> Training against different uncertainty families (state/obs/control noise, MTEs) yields slightly different arcs; robust policies distribute corrections and avoid saturating near arrival.</figcaption>
+          </figure>
+      
+          <figure class="figure">
+            <img loading="lazy" src="../images/blog/fig6-error-clouds.png"
+                 alt="Encounter error distributions for stochastic vs control-robust policies">
+            <figcaption><strong>Fig. 6.</strong> Mars-encounter error clouds tighten under a control-robust policy, reducing outliers versus a stochastic-only policy—evidence of margin management.</figcaption>
+          </figure>
+      
+          <figure class="figure">
+            <figcaption><strong>Table 3.</strong> Parameters of the different uncertainty models.</figcaption>
+            <table class="tbl">
+              <thead>
+                <tr><th>Uncertainty</th><th>Parameter</th><th>Value</th></tr>
+              </thead>
+              <tbody>
+                <tr><td rowspan="2">State</td><td>σ<sub>r,s</sub> (km)</td><td>1.0</td></tr>
+                <tr>                          <td>σ<sub>v,s</sub> (km/s)</td><td>0.05</td></tr>
+          
+                <tr><td rowspan="2">Observation</td><td>σ<sub>r,o</sub> (km)</td><td>1.0</td></tr>
+                <tr>                               <td>σ<sub>v,o</sub> (km/s)</td><td>0.05</td></tr>
+          
+                <tr><td rowspan="4">Control</td><td>σ<sub>ϕ</sub> (&deg;)</td><td>1.0</td></tr>
+                <tr>                        <td>σ<sub>ϑ</sub> (&deg;)</td><td>1.0</td></tr>
+                <tr>                        <td>σ<sub>ψ</sub> (&deg;)</td><td>1.0</td></tr>
+                <tr>                        <td>σ<sub>u</sub> (—)</td><td>0.05</td></tr>
+          
+                <tr><td>Single-step MTE</td><td>p<sub>mte</sub>, n<sub>mte</sub></td><td>0, 1</td></tr>
+                <tr><td>Multiple-step MTE</td><td>p<sub>mte</sub>, n<sub>mte</sub></td><td>0.1, 3</td></tr>
+              </tbody>
+            </table>
+            <style>
+                .table-notes {
+                  margin-top: .6rem;
+                  padding: .75rem 1rem;
+                  border: 1px dashed var(--border-color);
+                  border-radius: 10px;
+                  background: var(--card-bg);
+                  font-size: .94rem;
+                  line-height: 1.45;
+                }
+                .table-notes strong { font-weight: 600; }
+                .table-notes code { background: transparent; padding: 0; }
+              </style>
+              <div class="table-notes" style="margin-top:.6rem;padding:.6rem .9rem;border:1px dashed var(--border-color);border-radius:10px;background:var(--card-bg);font-size:.95rem;">
+                <strong>Notes — Table 3</strong>
+                <ul style="margin:.4rem 0 0 1rem;">
+                  <li><em>State noise</em>: <code>σ<sub>r,s</sub></code> (km), <code>σ<sub>v,s</sub></code> (km/s) — process/disturbance on dynamics.</li>
+                  <li><em>Observation noise</em>: <code>σ<sub>r,o</sub></code> (km), <code>σ<sub>v,o</sub></code> (km/s) — navigation/measurement error.</li>
+                  <li><em>Control errors</em>: pointing <code>σ<sub>φ</sub></code>, <code>σ<sub>ϑ</sub></code>, <code>σ<sub>ψ</sub></code> (deg); magnitude <code>σ<sub>u</sub></code> (fractional, e.g., 0.05 = 5%).</li>
+                  <li><em>Missed-thrust events (MTE)</em>: <code>p<sub>mte</sub></code> = per-step miss probability; <code>n<sub>mte</sub></code> = consecutive missed burns.</li>
+                  <li>All <code>σ</code> are 1-σ (Gaussian). Units: km, km/s, deg; probabilities unitless.</li>
+                </ul>
+              </div>
+              
+              
+          </figure>
+          
+        </div>
+      </section>
+      
+      
+
+      <section id="hparams">
+        <h2>PPO hyperparameters</h2>
+        <table class="tbl">
+          <thead>
+            <tr><th>Hyperparameter</th><th>Value</th><th>Eligibility / search space</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Discount factor \( \gamma \)</td><td>0.9999</td><td>{0.9, 0.95, 0.98, 0.99, 0.999, 0.9999, 1.0}</td></tr>
+            <tr><td>GAE factor \( \lambda \)</td><td>0.99</td><td>{0.8, 0.9, 0.92, 0.95, 0.98, 0.99, 1.0}</td></tr>
+            <tr><td>Initial learning rate \( \alpha_0 \)</td><td>\(2.5\times 10^{-4}\)</td><td>\([1\times10^{-5},\,1]\)</td></tr>
+            <tr><td>Initial clip range \( \varepsilon_0 \)</td><td>0.3</td><td>{0.1, 0.2, 0.3, 0.4}</td></tr>
+            <tr><td>Value-loss coeff \( c_1 \)</td><td>0.5</td><td>{0.5, 1.0, 5.0}</td></tr>
+            <tr><td>Entropy coeff \( c_2 \)</td><td>\(4.75\times10^{-8}\)</td><td>\([1\times10^{-8},\,0.1]\)</td></tr>
+            <tr><td>SGD epochs per update \( n_{\text{opt}} \)</td><td>30</td><td>{1, 5, 10, 20, 30, 50}</td></tr>
+          </tbody>
+        </table>
+      
+        <h3>Linear schedules used during training</h3>
+        <p>Both the learning rate and the clip range are decayed linearly over the total training step budget \(T\):</p>
+        $$ \alpha(t) = \alpha_0\!\left(1 - \frac{t}{T}\right), \qquad
+           \varepsilon(t) = \varepsilon_0\!\left(1 - \frac{t}{T}\right). $$
+        <p class="subtle">
+          Why this helps: early training benefits from larger steps and wider exploration; as convergence nears, shrinking the step size \( \alpha(t) \) and the effective trust region via smaller \( \varepsilon(t) \) reduces variance and prevents policy collapse. In practice, this behaves like using a progressively tighter KL budget around the incumbent policy.
+        </p>
+      </section>
+
+      <section id="arch">
+        <h2>Network architecture &amp; sizing (actor)</h2>
+        <p>
+          Actor network uses three hidden layers sized by the paper’s heuristic:
+        </p>
+        $$ h_1 = 10\,n_{\text{in}}, \qquad
+           h_3 = 10\,n_{\text{out}}, \qquad
+           h_2 = \left\lceil \sqrt{h_1\,h_3} \right\rceil. $$
+        <p class="subtle">Default below shows \(n_{\text{in}}=1\), \(n_{\text{out}}=3\) &rarr; <strong>1–10–18–30–3</strong>.</p>
+      
+        <div class="widget">
+          <div class="controls">
+            <div>
+              <label for="nin">\(n_{\text{in}}\) = <span id="ninLabel">1</span></label>
+              <input id="nin" type="range" min="1" max="8" step="1" value="1">
+            </div>
+            <div>
+              <label for="nout">\(n_{\text{out}}\) = <span id="noutLabel">3</span></label>
+              <input id="nout" type="range" min="1" max="6" step="1" value="3">
+            </div>
+          </div>
+          <canvas id="nnCanvas" width="900" height="260" style="margin-top:.75rem" aria-label="Actor network layout"></canvas>
+          <p class="subtle">Fully connected (edges omitted for clarity). Exact counts are printed; dots equal neurons.</p>
+        </div>
+      </section>
+      
+      
+      <section id="interactive" class="grid-2">
+        <div>
+          <h2>Interactive: PPO clipped objective</h2>
+          <p>
+            The PPO update multiplies the advantage by a <em>probability ratio</em> $r(\theta)=\pi_\theta(a|s)/\pi_{\theta_{\text{old}}}(a|s)$ and clips $r$ to $[1-\epsilon,\,1+\epsilon]$. Explore how clipping limits the update when advantages are large.
+          </p>
+          <!-- <div class="widget">
+            <canvas id="ppoCanvas" width="460" height="260" aria-label="PPO clipped objective plot"></canvas>
+            <div class="controls">
+              <div>
+                <label for="ratio">ratio r = <span id="rLabel">1.2</span></label>
+                <input id="ratio" type="range" min="0.5" max="1.5" step="0.01" value="1.2"/>
+              </div>
+              <div>
+                <label for="adv">advantage A = <span id="aLabel">1.0</span></label>
+                <input id="adv" type="range" min="-2" max="2" step="0.05" value="1"/>
+              </div>
+            </div>
+            <p class="subtle">Blue = unclipped $r\cdot A$; Orange = clipped $\min(rA, \mathrm{clip}(r)A)$ with $\epsilon=0.2$.</p>
+          </div> -->
+
+          <div id="ppo-demo" class="widget" aria-label="PPO objective demo">
+            <h2 style="margin-top:0">Interactive: PPO clipped objective</h2>
+            <canvas id="ppoPlot" width="520" height="300"></canvas>
+          
+            <div class="controls">
+              <div>
+                <label for="ppo-r">ratio r = <span id="ppo-r-val">1.20</span></label>
+                <input id="ppo-r" type="range" min="0.5" max="1.5" step="0.01" value="1.20"/>
+              </div>
+              <div>
+                <label for="ppo-A">advantage A = <span id="ppo-A-val">+1.00</span></label>
+                <input id="ppo-A" type="range" min="-2" max="2" step="0.05" value="1"/>
+              </div>
+              <div>
+                <label for="ppo-eps">clip ε = <span id="ppo-eps-val">0.20</span></label>
+                <input id="ppo-eps" type="range" min="0.05" max="0.40" step="0.01" value="0.20"/>
+              </div>
+            </div>
+          
+            <p class="subtle" style="margin:.6rem 0">
+              Blue = unclipped term \(r_tA_t\); red = clipped term \(\mathrm{clip}(r_t,1-\epsilon,1+\epsilon)\,A_t\);
+              thick black = PPO objective \(\min(\cdot)\). Shaded region is the **clipped plateau** (for \(A_t\!>\!0\) it’s to the right of \(1+\epsilon\); for \(A_t\!<\!0\) it’s to the left of \(1-\epsilon\)).
+            </p>
+          
+            <div style="margin-top:.6rem">
+              $$ J^{\text{clip}}(\theta)=\mathbb{E}\!\left[
+                \min\!\big(r_t(\theta)A_t,\ \operatorname{clip}(r_t(\theta),1-\epsilon,1+\epsilon)\,A_t\big)
+              \right] $$
+            </div>
+          
+            <div class="callout" style="margin-top:.6rem">
+              <strong>PPO objective function.</strong> The expectation is over on-policy trajectories.
+              The first term \(r_tA_t\) is the usual policy-gradient objective; the second term clips the ratio
+              to \([1-\epsilon,\,1+\epsilon]\). Taking the minimum yields a <em>conservative</em> update:
+              improvements are flattened beyond the clip bound (or below it when \(A_t\!<\!0\)), preventing
+              destructive jumps and giving smoother convergence (typical \(\epsilon\in[0.1,0.3]\)).
+            </div>
+          </div>
+          
+        </div>
+          <div>
+            <h2 id="impulses">Burn schedules by training uncertainty</h2>
+            <p>Click a case to show the paper’s per-step \( \|\Delta \mathbf v\| \) profile (40 steps). Captions interpret the pattern.</p>
+            <div class="widget">
+                <div class="profile-legend">
+                    <button id="btn-unp"  class="badge" onclick="setThrustCase('unp')">Unperturbed</button>
+                    <button id="btn-state" class="badge" onclick="setThrustCase('state')">State noise</button>
+                    <button id="btn-obs"   class="badge" onclick="setThrustCase('obs')">Observation noise</button>
+                    <button id="btn-ctr"   class="badge" onclick="setThrustCase('ctr')">Control noise</button>
+                    <button id="btn-mte1"  class="badge" onclick="setThrustCase('mte1')">MTE (single)</button>
+                    <button id="btn-mte2"  class="badge" onclick="setThrustCase('mte2')">MTE (multi)</button>
+                </div>
+                  
+          
+              <figure class="figure" style="margin-top:.6rem">
+                <img id="thrustImg" src="../images/blog/thrust_plot_unperturbed.png"
+                     alt="Per-step Δv magnitude, unperturbed policy" loading="eager">
+                <figcaption id="thrustCap" class="subtle" style="text-align:left; margin-top:.5rem"></figcaption>
+              </figure>
+            </div>
+          </div>
+          
+          
+      </section>
+
+      <section id="results">
+        <h2>What the trained policies actually do</h2>
+        <ul>
+          <li><strong>Near-optimal when clean:</strong> In unperturbed tests, the learned policy’s final mass is comparable to an indirect optimal method—evidence that PPO didn’t sacrifice too much efficiency to gain robustness.</li>
+          <li><strong>Robustness trade:</strong> With state/obs/control noise, the policy favors earlier partial corrections and avoids saturating $\|\Delta v\|$—leaving breathing room near rendezvous.</li>
+          <li><strong>MTEs are toughest:</strong> Multi-step missed-thrust episodes (late in the trajectory) degrade success rates most, motivating either more conservative policies or training curricula that include families of failure models.</li>
+        </ul>
+        <div class="figure">
+            <p>In clean (deterministic) tests without uncertainty the learned policy achieved final mass on par with an indirect optimal method (≈606 vs 604 kg), while under uncertainty it trades a little extra propellant for higher success—particularly by spreading thrust and reserving margin before the last steps. Single-step MTEs are challenging since they introduce potentially larger deviations from the course which then have to be recovered at an inopportune or less efficient location. This problem is further excarbated when considering multi-step MTEs which are the hardest (as would also be expected in real life).</p>
+          </div>
+        <div class="callout">
+          <p class="subtle">In short: PPO learns a feedback guidance law that is <em>adaptive</em> and <em>anticipatory</em>. You can see “margin management” behavior emerge—something that’s hard to encode directly with classical optimal control.</p>
+        </div>
+      </section>
+      <section id="mc-results">
+        <h3>Monte-Carlo results</h3>
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Policy</th>
+              <th>\(m_f\) mean [kg]</th><th>\(m_f\) std</th>
+              <th>\(e_r\) mean \([\times 10^{-3}]\)</th><th>\(e_r\) std</th>
+              <th>\(e_v\) mean \([\times 10^{-3}]\)</th><th>\(e_v\) std</th>
+              <th>SR [%]</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Deterministic baseline from Table 4 -->
+            <tr>
+              <td>\(\pi^{unp}\)</td>
+              <td>606.34</td><td>–</td>
+              <td>0.25</td><td>–</td>
+              <td>0</td><td>–</td>
+              <td>100</td>
+            </tr>
+          
+            <!-- Robust policies from Table 5 -->
+            <tr><td>\(\pi^{st}\)</td>   <td>581.34</td><td>8.41</td><td>0.63</td><td>0.25</td><td>0.022</td><td>0.15</td><td>91.5</td></tr>
+            <tr><td>\(\pi^{obs}\)</td>  <td>582.50</td><td>9.34</td><td>0.66</td><td>0.26</td><td>0.044</td><td>0.26</td><td>89.1</td></tr>
+            <tr><td>\(\pi^{ctr}\)</td>  <td>590.61</td><td>0.80</td><td>0.66</td><td>0.32</td><td>0.016</td><td>0.12</td><td>84.4</td></tr>
+            <tr><td>\(\pi^{mte,1}\)</td><td>583.55</td><td>7.12</td><td>0.76</td><td>0.57</td><td>0.10</td><td>0.47</td><td>81.9</td></tr>
+            <tr><td>\(\pi^{mte,2}\)</td><td>573.88</td><td>4.22</td><td>1.09</td><td>1.27</td><td>0.46</td><td>2.49</td><td>62.8</td></tr>
+          </tbody>
+          
+        </table>
+        <p class="subtle">
+          \(m_f\): final mass; \(e_r\), \(e_v\): terminal position/velocity errors (scaled); SR: success rate.
+        </p>
+        <p class="subtle">
+            \(\pi^{unp}\) values are from the deterministic overview (Table 4 in the paper).
+          </p>          
+        <p class="subtle">
+          Table 5 in the paper also reports the tolerance \(\varepsilon_B\) needed to reach 1σ/2σ/3σ success.
+        </p>
+      </section>
+      
+
+      <!-- <section id="limitations">
+        <h2>Limitations & next steps</h2>
+        <ul>
+          <li><strong>Impulse model</strong> ($N=40$) is coarse for true low-thrust flight; integrating a finite-thrust propagator is the obvious upgrade.</li>
+          <li><strong>Single-environment training</strong> can overfit to a specific failure model (e.g., expecting exactly one MTE). Meta-RL across environment families could reduce brittleness.</li>
+          <li><strong>Stability/guarantees:</strong> The policy is evaluated Monte-Carlo style. Formal verification or robust tubes would increase trust.</li>
+        </ul>
+        <p>
+          A compelling direction is to <strong>embed this robust leg solver</strong> inside a multi-gravity-assist (MGA) designer: use a global search (e.g., GA) to pick sequences/times and call the RL policy to realize each leg robustly.
+        </p>
+      </section> -->
+      <section id="limitations">
+        <h2>Limitations &amp; next steps</h2>
+        <ul>
+          <li><strong>Impulse model:</strong> \(N=40\) impulses is coarse for true low-thrust flight; a finite-thrust propagator is the natural upgrade.</li>
+          <li><strong>Environment realism:</strong> the MTE training setups always include at least one miss, which can overfit policies to that specific failure pattern; broader failure families would improve generality.</li>
+          <li><strong>Verification:</strong> results rely on Monte-Carlo success; formal guarantees (e.g., robust tubes or reachability) would increase trust.</li>
+        </ul>
+      
+        <p>
+        A compelling direction is to <strong>embed this robust leg solver</strong> inside a multi-gravity-assist (MGA) designer used for deepspace missions. Use a global search to pick sequences and epochs, then call the RL policy to realize each leg robustly.
+          One such algorithm with which it could easily be combined to achieve a robust and fuel vs time balancing MGA trajectory is my master thesis project. For context and future work ties, see:
+          <a href="../files/MGA_Paper.pdf" title="Discover what my master thesis is about" target="_blank" rel="noopener">my master’s thesis</a>
+          and the
+          <a href="../research.html#MGA" title="Open the MGA trajectory optimization project">MGA trajectory-optimization project</a>
+          on the research page.
+        </p>
+      </section>
+      
+
+      <!-- <section id="compute">
+        <h2>Compute & Reproducibility</h2>
+        <p>A strong student desktop can reproduce the training: the original experiments used ~200M steps in about 12 hours on an 8‑core i7‑9700K with 8 parallel environments. On‑board inference is lightweight since the policy is just a small MLP.</p>
+      </section> -->
+      <section id="compute">
+        <h2>Compute &amp; Reproducibility</h2>
+      
+        <p>
+          Training follows a two-phase loop:
+        </p>
+        <ol>
+          <li><strong>Policy rollout.</strong> Run the current policy \( \pi_\theta \) in <code>n<sub>env</sub></code> parallel environments for <code>n<sub>b</sub></code> episodes of length \(N\), collecting on-policy trajectories \( \{\tau_i\}\).</li>
+          <li><strong>Policy update.</strong> For each update, optimize the PPO loss for <code>n<sub>opt</sub></code> epochs over mini-batches drawn from those fresh trajectories only.</li>
+        </ol>
+      
+        <p>
+          With total training steps \(T\), the number of updates is
+          $$ N_{\text{upd}} \;=\; \frac{T}{\,n_{\text{env}}\, n_b\, N\,}. $$
+        </p>
+      
+        <div class="callout" style="margin:.75rem 0">
+          <strong>Rough recipe (what the paper used in practice):</strong>
+          <ul>
+            <li>\(N=40\) steps/episode (≈9 days/step).</li>
+            <li>\(n_{\text{env}}=8\) parallel envs; \(n_b\in\{8,16,32\}\) depending on the policy (see Table 4 of the paper for the exact setting).</li>
+            <li>\(n_{\text{opt}}=30\) PPO epochs/update; GAE with \(\gamma=0.9999\), \(\lambda=0.99\).</li>
+            <li>Linear schedules: \( \alpha(t)=\alpha_0\!\left(1-\tfrac{t}{T}\right), \ \epsilon(t)=\epsilon_0\!\left(1-\tfrac{t}{T}\right)\) with \(\alpha_0=2.5\times 10^{-4}\), \(\epsilon_0=0.3\).</li>
+            <li>Periodic Monte-Carlo eval (100 runs) every \(4\times 10^4\, n_{\text{env}}\) steps; keep the best checkpoint.</li>
+          </ul>
+        </div>
+      
+        <p class="subtle">
+          A strong student desktop can reproduce the runs: the authors report ~\(2\times 10^8\) steps in ≈12 hours on an 8-core i7-9700K with 8 envs. Exact per-policy settings (e.g., \(n_{\text{env}}, n_b\)) are in Table 4 of the paper, and the full code is available on GitHub:
+          <a href="https://github.com/LorenzoFederici/RobustTrajectoryDesignbyRL" target="_blank" rel="noopener">LorenzoFederici/RobustTrajectoryDesignbyRL</a>.
+        </p>
+      </section>
+      
+      <div class="hr"></div>
+      <section id="refs" class="footnotes">
+        <h3>References & resources</h3>
+        <ul>
+          <li>Zavoli, A., &amp; Federici, L. (2021). <em>Reinforcement Learning for Robust Trajectory Design of Interplanetary Missions</em>. Journal of Guidance, Control, and Dynamics, 44(8), 1440–1455. DOI: <a href="https://doi.org/10.2514/1.G005794" target="_blank" rel="noopener">10.2514/1.G005794</a></li>
+          <li>Gaudet, B., Linares, R., &amp; Furfaro, R. (2020). “Deep Reinforcement Learning for Six Degree-of-Freedom Planetary Landing.” <em>Advances in Space Research</em>, 65(7), 1723–1741. <a href="https://doi.org/10.1016/j.asr.2019.12.030" target="_blank" rel="noopener">https://doi.org/10.1016/j.asr.2019.12.030</a></li>
+          <li>Schulman, J., Wolski, F., Dhariwal, P., Radford, A., &amp; Klimov, O. (2017). “Proximal Policy Optimization Algorithms.” <em>arXiv</em>: <a href="https://arxiv.org/abs/1707.06347" target="_blank" rel="noopener">1707.06347</a></li>
+          <li>Optuna TPE sampler documentation: <a href="https://optuna.readthedocs.io/en/stable/reference/samplers/generated/optuna.samplers.TPESampler.html#optuna.samplers.TPESampler" target="_blank" rel="noopener">optuna.samplers.TPESampler</a></li>
+          <li>My presentation on the original paper in the ASEN 6519 course: <a href="../files/rl-robust-trajectory-rl-slides.pdf" target="_blank" rel="noopener">PDF slides</a></li>
+        </ul>
+      </section>
+    </main>
+
+    <footer>
+      <p>© 2025 Daniel Hulterer Prats • Built for ASEN 6519</p>
+    </footer>
+  </div>
+
+  <script>
+    function toggleTheme() {
+      const html = document.documentElement;
+      const current = html.getAttribute("data-theme") || "light";
+      html.setAttribute("data-theme", current === "dark" ? "light" : "dark");
+    }
+
+    // ----- PPO clipped objective widget -----
+    const canvas = document.getElementById('ppoCanvas');
+    const ctx = canvas.getContext('2d');
+    const rSlider = document.getElementById('ratio');
+    const aSlider = document.getElementById('adv');
+    const rLabel = document.getElementById('rLabel');
+    const aLabel = document.getElementById('aLabel');
+    const eps = 0.2; // clip range
+
+    function drawPPO(r, A){
+      const w = canvas.width, h = canvas.height;
+      ctx.clearRect(0,0,w,h);
+      // axes
+      ctx.beginPath(); ctx.moveTo(40,h-30); ctx.lineTo(w-10,h-30); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(40,10); ctx.lineTo(40,h-30); ctx.stroke();
+      ctx.font = '12px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+      ctx.fillText('r (probability ratio)', w/2-50, h-10);
+      ctx.save(); ctx.translate(12, h/2); ctx.rotate(-Math.PI/2); ctx.fillText('objective value', 0,0); ctx.restore();
+
+      // x scale for r in [0.5, 1.5]
+      function xOf(r){ return 40 + (r-0.5)*(w-60)/1.0; }
+      // y scale for value in [-2,2]
+      function yOf(v){ const top=10, bottom=h-30; const t=(v+2)/4; return bottom - t*(bottom-top); }
+
+      // unclipped curve: r*A
+      ctx.beginPath();
+      for(let rr=0.5; rr<=1.5; rr+=0.005){
+        const y = yOf(rr*A);
+        const x = xOf(rr);
+        if(rr===0.5) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      }
+      ctx.strokeStyle = '#1f77b4';
+      ctx.lineWidth = 2; ctx.stroke();
+
+      // clipped curve
+      ctx.beginPath();
+      for(let rr=0.5; rr<=1.5; rr+=0.005){
+        const clipr = Math.max(1-eps, Math.min(1+eps, rr));
+        const y = yOf(clipr*A);
+        const x = xOf(rr);
+        if(rr===0.5) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      }
+      ctx.strokeStyle = '#ff7f0e'; ctx.lineWidth = 2; ctx.stroke();
+
+      // draw clip verticals at 0.8 and 1.2
+      ctx.setLineDash([4,3]); ctx.strokeStyle = '#888';
+      ctx.beginPath(); ctx.moveTo(xOf(1-eps), 10); ctx.lineTo(xOf(1-eps), h-30); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(xOf(1+eps), 10); ctx.lineTo(xOf(1+eps), h-30); ctx.stroke();
+      ctx.setLineDash([]);
+
+      // marker at current r
+      ctx.beginPath();
+      ctx.arc(xOf(r), yOf(r*A), 4, 0, 2*Math.PI);
+      ctx.fillStyle = '#1f77b4'; ctx.fill();
+
+      // legend
+      ctx.fillStyle = '#000';
+      ctx.fillText(`A = ${A.toFixed(2)}, eps = ${eps}`, 50, 20);
+      ctx.fillStyle = '#1f77b4'; ctx.fillRect(50,30,10,10); ctx.fillStyle = '#000'; ctx.fillText('unclipped r·A', 65, 40);
+      ctx.fillStyle = '#ff7f0e'; ctx.fillRect(170,30,10,10); ctx.fillStyle = '#000'; ctx.fillText('clipped min(·)', 185, 40);
+    }
+
+    function updatePPO(){
+      const r = parseFloat(rSlider.value);
+      const A = parseFloat(aSlider.value);
+      rLabel.textContent = r.toFixed(2);
+      aLabel.textContent = A.toFixed(2);
+      drawPPO(r, A);
+    }
+
+    rSlider.addEventListener('input', updatePPO);
+    aSlider.addEventListener('input', updatePPO);
+    updatePPO();
+
+    preset('robust');
+  </script>
+
+    <script>
+        // ----- Thrust schedule image switcher -----
+        const thrustImg = document.getElementById('thrustImg');
+        const thrustCap = document.getElementById('thrustCap');
+    
+        const thrustCases = {
+        unp: {
+            src: '../images/blog/thrust_plot_unperturbed.png',
+            cap: `<strong>Unperturbed (deterministic):</strong> classic bang–off–bang—large early burns, long coast,
+                large terminal burn. With no uncertainty, the policy confidently uses the per-step max Δv and chases fuel-optimality.`
+        },
+        state: {
+            src: '../images/blog/thrust_plot_state_unc.png',
+            cap: `<strong>State-noise robust:</strong> still bowl-shaped, but burns are spread and rarely saturate.
+                The policy leaves margin to correct drift accumulated from process disturbances.`
+        },
+        obs: {
+            src: '../images/blog/thrust_plot_obs_unc.png',
+            cap: `<strong>Observation-noise robust:</strong> stronger late ramp than the deterministic case, with distributed
+                early/mid corrections. Navigation noise encourages conservative updates instead of maxing Δv.`
+        },
+        ctr: {
+            src: '../images/blog/thrust_plot_ctr_unc.png',
+            cap: `<strong>Control-noise robust:</strong> avoids late saturation and keeps breathing room before arrival;
+                early/mid thrust is more uniform so execution errors don’t paint the policy into a corner.`
+        },
+        mte1: {
+            src: '../images/blog/thrust_plot_mte_single.png',
+            cap: `<strong>Single-step MTE robust:</strong> burn scheduling aims to meet terminal conditions earlier and
+                reduce dependence on the final steps. In the authors’ setup there is <em>always at least one</em> missed-thrust event
+                per episode (if none occurs earlier, the last step is forced to be missed). The policy therefore anticipates a potential
+                late MTE by front-loading partial corrections—effective here, but this assumption risks overfitting. Future studies
+                should randomize the <em>number</em> (including zero) and timing of MTEs.`
+        },
+        mte2: {
+            src: '../images/blog/thrust_plot_mte_multiple.png',
+            cap: `<strong>Multi-step MTE robust:</strong> even more conservative distribution, pushing progress earlier
+                so that two consecutive missed burns near the end are survivable. Again, because training guarantees at least one MTE,
+                the strategy can specialize to that modeling choice. A more realistic generator (e.g., Bernoulli/Poisson with
+                \(p_{\text{mte}}\) allowing zero events) would improve generality.`
+        }
+        };
+    
+        // map keys -> buttons for active styling
+        const btnMap = {
+            unp:  document.getElementById('btn-unp'),
+            state:document.getElementById('btn-state'),
+            obs:  document.getElementById('btn-obs'),
+            ctr:  document.getElementById('btn-ctr'),
+            mte1: document.getElementById('btn-mte1'),
+            mte2: document.getElementById('btn-mte2'),
+        };
+        function setActive(key){
+            Object.values(btnMap).forEach(b => b.classList.remove('active'));
+            (btnMap[key] || btnMap.unp).classList.add('active');
+        }
+
+        function setThrustCase(key){
+            const c = thrustCases[key] || thrustCases.unp;
+            thrustImg.src = c.src;
+            thrustImg.alt = `Per-step Δv magnitude, ${key} case`;
+            thrustCap.innerHTML = c.cap +
+            `<br><span class="subtle">Across all robust cases the policy spreads burns and rarely uses the max per-step Δv,
+            trading a bit of fuel for robustness. That’s why final mass is lower than the unperturbed solution.</span>`;
+            setActive(key);
+        }
+        setThrustCase('unp'); // default
+    </script>
+
+
+<script>
+    // ----- Actor architecture visual -----
+    const ninEl = document.getElementById('nin');
+    const noutEl = document.getElementById('nout');
+    const ninLabel = document.getElementById('ninLabel');
+    const noutLabel = document.getElementById('noutLabel');
+    const nnCanvas = document.getElementById('nnCanvas');
+    const nn = nnCanvas ? nnCanvas.getContext('2d') : null;
+  
+    function drawActor(){
+      if(!nn) return;
+      const nin  = parseInt(ninEl.value,10);
+      const nout = parseInt(noutEl.value,10);
+      ninLabel.textContent = nin; noutLabel.textContent = nout;
+  
+      const h1 = 10*nin;
+      const h3 = 10*nout;
+      const h2 = Math.ceil(Math.sqrt(h1*h3));
+  
+      const layers = [
+        {name:`Input (${nin})`, n:nin},
+        {name:`h1=${h1}`, n:h1},
+        {name:`h2=${h2}`, n:h2},
+        {name:`h3=${h3}`, n:h3},
+        {name:`Output (n_out=${nout})`, n:nout}
+      ];
+  
+      // canvas layout
+      const W = nnCanvas.width, H = nnCanvas.height;
+      nn.clearRect(0,0,W,H);
+      const left=50, right=W-30, top=30, bottom=H-26;
+      const cols = layers.length;
+      const xStep = (right-left)/(cols-1);
+  
+      // compute node positions (draw every neuron; cap radius by spacing)
+      const positions = layers.map((L,i)=>{
+        const x = left + i*xStep;
+        const m = L.n;
+        const pad = 8;
+        const avail = (bottom-top-2*pad);
+        const dy = avail / Math.max(1,m-1);
+        const ys = Array.from({length:m}, (_,j)=> top+pad + j*dy);
+        return {x, ys, label:L.name, n:L.n};
+      });
+  
+      // draw sample connections (not all, to keep it readable)
+      nn.strokeStyle = '#9aa'; nn.lineWidth = 0.6;
+      for(let i=0;i<positions.length-1;i++){
+        const a = positions[i], b = positions[i+1];
+        const stepA = Math.ceil(Math.max(1, a.ys.length/14));
+        const stepB = Math.ceil(Math.max(1, b.ys.length/14));
+        for(let j=0;j<a.ys.length; j+=stepA){
+          for(let k=0;k<b.ys.length; k+=stepB){
+            nn.beginPath(); nn.moveTo(a.x+8, a.ys[j]); nn.lineTo(b.x-8, b.ys[k]); nn.stroke();
+          }
+        }
+      }
+  
+      // draw nodes
+      positions.forEach(p=>{
+        const m = p.ys.length;
+        const r = Math.max(1, Math.min(4, (bottom-top)/(m*6))); // fit many dots
+        nn.fillStyle = '#333';
+        p.ys.forEach(y=>{ nn.beginPath(); nn.arc(p.x, y, r, 0, 2*Math.PI); nn.fill(); });
+        nn.font = '12px system-ui'; nn.fillStyle='#000'; nn.textAlign='center';
+        nn.fillText(p.label, p.x, top-8);
+      });
+  
+      // footer with exact tuple
+      nn.textAlign = 'left';
+      nn.fillText(`Sizes → [ ${nin} , ${h1} , ${h2} , ${h3} , ${nout} ]`, 50, H-8);
+    }
+  
+    ninEl?.addEventListener('input', drawActor);
+    noutEl?.addEventListener('input', drawActor);
+    drawActor(); // default = 1–10–18–30–3
+  </script>
+
+    <script>
+        (function () {
+          const canvas = document.getElementById('ppoPlot');
+          if (!canvas) return;
+          const ctx = canvas.getContext('2d');
+        
+          // HiDPI
+          const DPR = window.devicePixelRatio || 1;
+          const W = canvas.width, H = canvas.height;
+          canvas.width = W * DPR; canvas.height = H * DPR;
+          canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+          ctx.scale(DPR, DPR);
+        
+          const rSlider   = document.getElementById('ppo-r');
+          const ASlider   = document.getElementById('ppo-A');
+          const epsSlider = document.getElementById('ppo-eps');
+          const rLbl   = document.getElementById('ppo-r-val');
+          const ALbl   = document.getElementById('ppo-A-val');
+          const epsLbl = document.getElementById('ppo-eps-val');
+        
+          // Plot bounds
+          const xMin = 0.5, xMax = 1.5;
+          const yMin = -2.2, yMax = 2.2;
+          const L = { left: 42, right: W - 10, top: 10, bottom: H - 34 };
+        
+          function xToPx(x){ return L.left + (x - xMin) * (L.right - L.left) / (xMax - xMin); }
+          function yToPx(y){ return L.bottom - (y - yMin) * (L.bottom - L.top) / (yMax - yMin); }
+        
+          function draw() {
+            const r = parseFloat(rSlider.value);
+            const A = parseFloat(ASlider.value);
+            const eps = parseFloat(epsSlider.value);
+        
+            rLbl.textContent   = r.toFixed(2);
+            ALbl.textContent   = (A>=0?'+':'') + A.toFixed(2);
+            epsLbl.textContent = eps.toFixed(2);
+        
+            // Clear
+            ctx.clearRect(0,0,W,H);
+        
+            // Axes
+            ctx.strokeStyle = '#69737d'; ctx.lineWidth = 1;
+            // x axis
+            ctx.beginPath(); ctx.moveTo(L.left, yToPx(0)); ctx.lineTo(L.right, yToPx(0)); ctx.stroke();
+            // y axis
+            ctx.beginPath(); ctx.moveTo(L.left, L.top); ctx.lineTo(L.left, L.bottom); ctx.stroke();
+        
+            // Dashed clip lines at 1-eps and 1+eps
+            ctx.setLineDash([4,3]); ctx.strokeStyle = '#9aa5af';
+            ctx.beginPath(); ctx.moveTo(xToPx(1-eps), L.top); ctx.lineTo(xToPx(1-eps), L.bottom); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(xToPx(1+eps), L.top); ctx.lineTo(xToPx(1+eps), L.bottom); ctx.stroke();
+            ctx.setLineDash([]);
+        
+            // Shade plateau region (depends on sign of A)
+            ctx.fillStyle = 'rgba(200,80,80,0.12)';
+            if (A >= 0) {
+              const x1 = xToPx(1+eps);
+              ctx.fillRect(x1, L.top, L.right - x1, L.bottom - L.top);
+            } else {
+              const x0 = xToPx(xMin), x1 = xToPx(1-eps);
+              ctx.fillRect(x0, L.top, x1 - x0, L.bottom - L.top);
+            }
+        
+            // Draw unclipped curve: y = r*A
+            ctx.beginPath();
+            for (let rr = xMin; rr <= xMax; rr += 0.0025) {
+              const y = rr * A;
+              const xpx = xToPx(rr), ypx = yToPx(y);
+              (rr === xMin) ? ctx.moveTo(xpx, ypx) : ctx.lineTo(xpx, ypx);
+            }
+            ctx.strokeStyle = '#1f77b4'; ctx.lineWidth = 2; ctx.stroke();
+        
+            // Draw clipped curve: y = clip(r)*A
+            ctx.beginPath();
+            for (let rr = xMin; rr <= xMax; rr += 0.0025) {
+              const rclip = Math.max(1 - eps, Math.min(1 + eps, rr));
+              const y = rclip * A;
+              const xpx = xToPx(rr), ypx = yToPx(y);
+              (rr === xMin) ? ctx.moveTo(xpx, ypx) : ctx.lineTo(xpx, ypx);
+            }
+            ctx.strokeStyle = '#d64c4c'; ctx.lineWidth = 2; ctx.stroke();
+        
+            // Draw PPO objective (min of the two)
+            ctx.beginPath();
+            for (let rr = xMin; rr <= xMax; rr += 0.0025) {
+              const uncl = rr * A;
+              const clip = Math.max(1 - eps, Math.min(1 + eps, rr)) * A;
+              const y = Math.min(uncl, clip);              // this works for A>0 and A<0
+              const xpx = xToPx(rr), ypx = yToPx(y);
+              (rr === xMin) ? ctx.moveTo(xpx, ypx) : ctx.lineTo(xpx, ypx);
+            }
+            ctx.strokeStyle = '#111'; ctx.lineWidth = 3; ctx.stroke();
+        
+            // Current r marker
+            const unclNow = r * A;
+            const clipNow = Math.max(1 - eps, Math.min(1 + eps, r)) * A;
+            const objNow  = Math.min(unclNow, clipNow);
+            ctx.fillStyle = '#1f77b4';
+            ctx.beginPath(); ctx.arc(xToPx(r), yToPx(unclNow), 4, 0, 2*Math.PI); ctx.fill();
+            ctx.fillStyle = '#d64c4c';
+            ctx.beginPath(); ctx.arc(xToPx(r), yToPx(clipNow), 4, 0, 2*Math.PI); ctx.fill();
+            ctx.fillStyle = '#111';
+            ctx.beginPath(); ctx.arc(xToPx(r), yToPx(objNow), 5.5, 0, 2*Math.PI); ctx.fill();
+        
+            // Labels
+            ctx.fillStyle = '#0b0f14'; ctx.font = '12px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+            ctx.fillText('r_t(θ)', W/2 - 8, H - 10);
+            ctx.save(); ctx.translate(14, H/2); ctx.rotate(-Math.PI/2);
+            ctx.fillText('L^clip (objective)', 0, 0); ctx.restore();
+        
+            ctx.fillStyle = '#9aa5af';
+            ctx.fillText('1−ε', xToPx(1-eps) - 14, yToPx(0) - 8);
+            ctx.fillText('1+ε', xToPx(1+eps) - 14, yToPx(0) - 8);
+        
+            // Legend
+            const Lx = L.right - 180, Ly = L.top + 10;
+            ctx.fillStyle = '#000'; ctx.fillText('Legend', Lx, Ly);
+            ctx.fillStyle = '#1f77b4'; ctx.fillRect(Lx, Ly+8, 14, 3);
+            ctx.fillStyle = '#000'; ctx.fillText('  r·A (unclipped)', Lx+18, Ly+12);
+            ctx.fillStyle = '#d64c4c'; ctx.fillRect(Lx, Ly+26, 14, 3);
+            ctx.fillStyle = '#000'; ctx.fillText('  clip(r)·A (clipped)', Lx+18, Ly+30);
+            ctx.fillStyle = '#111'; ctx.fillRect(Lx, Ly+44, 14, 3);
+            ctx.fillStyle = '#000'; ctx.fillText('  min(·) = PPO objective', Lx+18, Ly+48);
+          }
+        
+          rSlider.addEventListener('input', draw);
+          ASlider.addEventListener('input', draw);
+          epsSlider.addEventListener('input', draw);
+          draw();
+        })();
+        </script>
+        
+    
+    <script>
+        /* --- Earth→Mars rendezvous with discrete burn bursts & particles --- */
+        (function () {
+          const c = document.getElementById('transferCanvas');
+          if (!c) return;
+          const ctx = c.getContext('2d');
+        
+          // HiDPI
+          const DPR = window.devicePixelRatio || 1;
+          const W = c.width, H = c.height;
+          c.width = W * DPR; c.height = H * DPR; c.style.width = W + 'px'; c.style.height = H + 'px';
+          ctx.scale(DPR, DPR);
+        
+          // Scene geometry
+          const cx = W * 0.42, cy = H * 0.58;  // Sun
+          const rE = Math.min(W, H) * 0.22;
+          const rM = Math.min(W, H) * 0.34;
+          const a  = (rE + rM) / 2;
+          const e  = (rM - rE) / (rM + rE);
+        
+          // Orbits (normalized)
+          const TE = 1.0, TM = 1.881;
+          const wE = 2 * Math.PI / TE, wM = 2 * Math.PI / TM;
+        
+          // Transfer time (half transfer period)
+          const Tt = 0.71;
+        
+          // Discrete guidance steps for bursts
+          const Nsteps = 40;
+        
+          // Animation cycle
+          const cyclePause = 0.12;
+          const cyclePeriod = Tt + cyclePause;
+          let tCycle = 0;
+          let lastTSec = performance.now();
+        
+          // Departure orientation
+          let thetaE0 = -Math.PI * 0.92;
+          let thetaM0 = thetaE0 + Math.PI - wM * Tt;
+        
+          function resetCycle () {
+            thetaE0 += Math.PI / 7;
+            thetaM0  = thetaE0 + Math.PI - wM * Tt;
+            tCycle   = 1e-4;
+            particles.length = 0;               // clear particles between loops
+            lastStepIndex = -1;
+            burstTimer = 0;
+          }
+        
+          // Helpers
+          function toXY (r, ang) { return [cx + r * Math.cos(ang), cy + r * Math.sin(ang)]; }
+          function drawCircle (x, y, r, stroke, fill) {
+            ctx.beginPath(); ctx.arc(x, y, r, 0, 2 * Math.PI);
+            if (fill)   { ctx.fillStyle = fill;   ctx.fill(); }
+            if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1; ctx.stroke(); }
+          }
+          function drawText (txt, x, y) { ctx.fillStyle = '#a9bac7'; ctx.fillText(txt, x, y); }
+        
+          // Ship along ellipse (Sun at focus)
+          function shipState (p) {
+            const f = Math.max(0, Math.min(1, p)) * Math.PI;  // 0..π
+            const r = a * (1 - e * e) / (1 + e * Math.cos(f));
+            const cosA = Math.cos(thetaE0), sinA = Math.sin(thetaE0);
+            const x = cx + (r * Math.cos(f) * cosA - r * Math.sin(f) * sinA);
+            const y = cy + (r * Math.cos(f) * sinA + r * Math.sin(f) * cosA);
+            const tx = -r * Math.sin(f), ty =  r * Math.cos(f);
+            const ang = Math.atan2(ty * cosA + tx * sinA, tx * cosA - ty * sinA);
+            return { x, y, ang };
+          }
+        
+          // Bang–off–bang envelope (for burst intensity)
+          const burns = Array.from({ length: Nsteps }, (_, k) => {
+            const t = k / (Nsteps - 1);
+            const g = (x, mu, s) => Math.exp(-0.5 * ((x - mu) / s) ** 2);
+            return 0.22 + 0.78 * (g(t, 0.03, 0.07) + g(t, 0.97, 0.07)) /
+                   (1 + g(t, 0.03, 0.07) + g(t, 0.97, 0.07));
+          });
+        
+          // Particles (burn sparks)
+          const particles = [];
+          const MAX_PARTS = 150;
+          let burstTimer = 0;          // seconds remaining for current flame burst
+          let lastStepIndex = -1;      // to trigger new bursts once per step
+        
+          function spawnBurst (x, y, ang, mag) {
+            const n = Math.max(6, Math.round(8 + 18 * mag));
+            for (let i = 0; i < n; i++) {
+              const spread = (Math.random() - 0.5) * 0.7;      // angle jitter
+              const dir = ang + Math.PI + spread;
+              const speed = (80 + Math.random() * 120) * (0.6 + 0.8 * mag); // px/s
+              particles.push({
+                x, y,
+                vx: speed * Math.cos(dir),
+                vy: speed * Math.sin(dir),
+                life: 0.45 + Math.random() * 0.35,
+                age: 0
+              });
+            }
+            // cap
+            if (particles.length > MAX_PARTS) particles.splice(0, particles.length - MAX_PARTS);
+            burstTimer = 0.28 + 0.12 * mag; // flame brightens for a short window
+          }
+        
+          function updateParticles (dt) {
+            for (let i = particles.length - 1; i >= 0; i--) {
+              const p = particles[i];
+              p.age += dt;
+              p.x += p.vx * dt;
+              p.y += p.vy * dt;
+              // light drag
+              p.vx *= (1 - 0.8 * dt);
+              p.vy *= (1 - 0.8 * dt);
+              if (p.age > p.life) particles.splice(i, 1);
+            }
+          }
+        
+          function drawParticles () {
+            for (const p of particles) {
+              const a = Math.max(0, 1 - p.age / p.life);
+              const r = 2 + 2 * a;
+              ctx.beginPath();
+              ctx.arc(p.x, p.y, r, 0, 2 * Math.PI);
+              ctx.fillStyle = `rgba(255,160,60,${0.55 * a})`;
+              ctx.fill();
+            }
+          }
+        
+          function drawBackdrop (thetaE, thetaM) {
+            ctx.fillStyle = '#0e1a23'; ctx.fillRect(0, 0, W, H);
+        
+            // Orbits
+            ctx.strokeStyle = 'rgba(210,220,230,0.22)'; ctx.lineWidth = 1.2;
+            drawCircle(cx, cy, rE, ctx.strokeStyle);
+            drawCircle(cx, cy, rM, ctx.strokeStyle);
+        
+            // Transfer ellipse (peri→apo)
+            ctx.save();
+            ctx.translate(cx, cy); ctx.rotate(thetaE0);
+            ctx.beginPath();
+            for (let f = 0; f <= Math.PI; f += 0.01) {
+              const r = a * (1 - e * e) / (1 + e * Math.cos(f));
+              const x = r * Math.cos(f), y = r * Math.sin(f);
+              if (f === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            }
+            ctx.setLineDash([3, 4]);
+            ctx.strokeStyle = 'rgba(120,180,230,0.45)'; ctx.lineWidth = 1.4; ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.restore();
+        
+            // Bodies
+            drawCircle(cx, cy, 10, null, '#ffb300');
+            const [eX, eY] = toXY(rE, thetaE); drawCircle(eX, eY, 5, '#6aa6ff', '#8ec7ff');
+            const [mX, mY] = toXY(rM, thetaM); drawCircle(mX, mY, 5, '#ff9595', '#ffb3b3');
+        
+            // Labels
+            ctx.font = '14px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+            drawText('Earth', eX - 20, eY - 10);
+            drawText('Mars',  mX + 10, mY - 10);
+            ctx.font = '18px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+            drawText('Earth to Mars', 26, 38);
+          }
+        
+          function drawProgressArc (p) {
+            const fMax = Math.max(0, Math.min(1, p)) * Math.PI;
+            ctx.save();
+            ctx.translate(cx, cy); ctx.rotate(thetaE0);
+            ctx.beginPath();
+            for (let f = 0; f <= fMax; f += 0.01) {
+              const r = a * (1 - e * e) / (1 + e * Math.cos(f));
+              const x = r * Math.cos(f), y = r * Math.sin(f);
+              if (f === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            }
+            ctx.strokeStyle = 'rgba(120,200,255,0.85)'; ctx.lineWidth = 2; ctx.stroke();
+            ctx.restore();
+          }
+        
+          function drawShip (x, y, ang, burstFactor) {
+            // flame (only bright during bursts; faint otherwise)
+            const base = 0.15;                          // faint idle
+            const s = base + 0.85 * burstFactor;        // 0..1
+            const L = 16 * s, Wp = 5 * s;
+        
+            // particles drawn separately
+            // flame triangle
+            ctx.save(); ctx.translate(x, y); ctx.rotate(ang + Math.PI);
+            ctx.beginPath();
+            ctx.moveTo(0, 0); ctx.lineTo(-L, Wp); ctx.lineTo(-L, -Wp); ctx.closePath();
+            ctx.fillStyle = `rgba(255,150,40,${0.85 * s})`; ctx.fill();
+            ctx.restore();
+        
+            // body (arrowhead)
+            ctx.save(); ctx.translate(x, y); ctx.rotate(ang);
+            ctx.beginPath(); ctx.moveTo(9, 0); ctx.lineTo(-6, 4); ctx.lineTo(-6, -4); ctx.closePath();
+            ctx.fillStyle = '#dfe8f1'; ctx.fill();
+            ctx.restore();
+          }
+        
+          function frame (now) {
+            const dtSec = (now - lastTSec) / 1000; lastTSec = now;
+            const speed = 0.14;
+        
+            if (tCycle < Tt) tCycle += speed * dtSec;
+            else tCycle = Math.min(cyclePeriod, tCycle + speed * dtSec);
+            if (tCycle >= cyclePeriod) resetCycle();
+        
+            const thetaE = thetaE0 + wE * Math.min(tCycle, Tt);
+            const thetaM = thetaM0 + wM * Math.min(tCycle, Tt);
+        
+            drawBackdrop(thetaE, thetaM);
+        
+            const p = Math.min(1, tCycle / Tt);
+            drawProgressArc(p);
+            const ship = shipState(p);
+        
+            // Determine current step and trigger bursts once per step during transfer
+            const stepIndex = Math.floor(p * (Nsteps - 1));
+            if (tCycle < Tt && stepIndex !== lastStepIndex) {
+              const mag = burns[stepIndex];
+              spawnBurst(ship.x, ship.y, ship.ang, mag);
+              lastStepIndex = stepIndex;
+            }
+        
+            // Update / draw particles and ship flame
+            burstTimer = Math.max(0, burstTimer - dtSec);
+            updateParticles(dtSec);
+            drawParticles();
+        
+            // Map burstTimer to [0,1] for flame brightness
+            const burstFactor = Math.min(1, burstTimer / 0.4);
+            drawShip(ship.x, ship.y, ship.ang, burstFactor);
+        
+            // Arrival highlight
+            if (tCycle >= Tt) {
+              const [mX, mY] = toXY(rM, thetaM);
+              const alpha = 0.6 + 0.4 * Math.sin(now / 150);
+              ctx.beginPath(); ctx.arc(mX, mY, 12 + 4 * alpha, 0, 2 * Math.PI);
+              ctx.strokeStyle = `rgba(255,180,180,${0.35 * alpha})`;
+              ctx.lineWidth = 2; ctx.stroke();
+            }
+        
+            requestAnimationFrame(frame);
+          }
+        
+          resetCycle();
+          requestAnimationFrame(frame);
+        })();
+        </script>
+        
+    
+</body>
+</html>
