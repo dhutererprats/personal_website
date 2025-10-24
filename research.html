@@ -12,10 +12,9 @@
 <body>
   <button class="theme-toggle" onclick="toggleTheme()">🌓 Toggle Theme</button>
 
-  <!-- New site nav -->
   <nav class="site-nav" aria-label="Primary">
-    <a href="index.html" class="active" aria-current="page">Home</a>
-    <a href="research.html">Research</a>
+    <a href="index.html">Home</a>
+    <a href="research.html" class="active" aria-current="page">Research</a>
     <a href="about.html">About Me</a>
   </nav>  
 
@@ -53,10 +52,10 @@
             <a class="underline" href="blog/robust-trajectory-rl.html">Read the post</a>
             </p>
         </div>
-        
+
         <!-- AMOS SBSS project -->
         <div class="project-item">
-            <a class="image-container" href="Amos_sbss.html">
+            <a class="image-container" href="files/AMOS_SBSS/Amos_sbss.html">
             <img src="files/AMOS_SBSS/7b17ceeb-9b70-4015-855a-9b9022705f9c.PNG"
                 alt="AMOS: RL for Space-to-Space Imaging"/>
             <div class="overlay">
@@ -66,7 +65,7 @@
             </a>
             <p>
             Actor–critic scheduling for autonomous RSO imaging with Basilisk and BSK-RL.
-            <a class="underline" href="Amos_sbss.html" title="Open the AMOS SBSS project page">See page</a>
+            <a class="underline" href="files/AMOS_SBSS/Amos_sbss.html" title="Open the AMOS Space-to-Space Surveillance project page">See page</a>
             </p>
         </div>
   
@@ -174,5 +173,15 @@
       arrow.textContent = parent.classList.contains('active') ? '▲' : '▼';
     }
   </script>
+  <script>
+    (function(){
+      const here = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
+      document.querySelectorAll('.site-nav a').forEach(a => {
+        const href = (a.getAttribute('href')||'').toLowerCase();
+        if (href.endsWith(here)) { a.classList.add('active'); a.setAttribute('aria-current','page'); }
+        else { a.classList.remove('active'); a.removeAttribute('aria-current'); }
+      });
+    })();
+    </script>
 </body>
 </html>
