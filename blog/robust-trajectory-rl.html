@@ -103,20 +103,25 @@
       <div class="toc">
         <strong>On this page:</strong>
         <ul>
-          <li><a href="#mission">Mission setup & motivation</a></li>
+          <li><a href="#mission">Mission setup &amp; motivation</a></li>
+          <li><a href="#problem">Problem setup &amp; why robustness matters</a></li>
           <li><a href="#pomdp">From physics to a POMDP</a></li>
-          <li><a href="#ppo">PPO: objective & algorithm used</a></li>
-          <li><a href="#epsilon">Constraint tightening (ε-schedule)</a></li>
+          <li><a href="#ppo">How PPO is used here</a></li>
+          <li><a href="#epsilon">Tightening constraints with an ε-schedule</a></li>
           <li><a href="#knobs">Implementation knobs</a></li>
-          <li><a href="#hparams">PPO hyperparameters & schedules</a></li>
+          <li><a href="#hparams">PPO hyperparameters &amp; schedules</a></li>
+          <li><a href="#tpe-demo">Interactive: Tree-Structured Parzen Estimator (TPE)</a></li>
           <li><a href="#arch">Network architecture (actor)</a></li>
-          <li><a href="#interactive">Interactive: PPO objective & burn schedules</a></li>
-          <li><a href="#results">Policy behavior</a> · <a href="#mc-results">Monte-Carlo results</a></li>
-          <li><a href="#compute">Compute & reproducibility</a></li>
-          <li><a href="#limitations">Limitations & next steps</a></li>
-          <li><a href="#refs">References & resources</a></li>
+          <li><a href="#interactive">Interactive: PPO objective &amp; burn schedules</a></li>
+          <li><a href="#results">Results and takeaways</a></li>
+          <li><a href="#figures">Figures from the paper</a></li>
+          <li><a href="#mc-results">Monte-Carlo results</a></li>
+          <li><a href="#compute">Compute &amp; reproducibility</a></li>
+          <li><a href="#limitations">Limitations &amp; next steps</a></li>
+          <li><a href="#refs">References &amp; resources</a></li>
         </ul>
       </div>
+      
       
 
       <section id="mission">
@@ -283,82 +288,338 @@
         </ul>
         <p class="subtle">These small choices add up: together with the ε-schedule they noticeably improved stability and final performance in my presentation experiments.</p>
       </section>
+      
+      <section id="hparams">
+        <h2>PPO hyperparameters</h2>
+        <table class="tbl">
+          <thead>
+            <tr><th>Hyperparameter</th><th>Value</th><th>Eligibility / search space</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Discount factor \( \gamma \)</td><td>0.9999</td><td>{0.9, 0.95, 0.98, 0.99, 0.999, 0.9999, 1.0}</td></tr>
+            <tr><td>GAE factor \( \lambda \)</td><td>0.99</td><td>{0.8, 0.9, 0.92, 0.95, 0.98, 0.99, 1.0}</td></tr>
+            <tr><td>Initial learning rate \( \alpha_0 \)</td><td>\(2.5\times 10^{-4}\)</td><td>\([1\times10^{-5},\,1]\) (log-uniform)</td></tr>
+            <tr><td>Initial clip range \( \varepsilon_0 \)</td><td>0.3</td><td>{0.1, 0.2, 0.3, 0.4}</td></tr>
+            <tr><td>Value-loss coeff \( c_1 \)</td><td>0.5</td><td>{0.5, 1.0, 5.0}</td></tr>
+            <tr><td>Entropy coeff \( c_2 \)</td><td>\(4.75\times10^{-8}\)</td><td>\([1\times10^{-8},\,0.1]\) (log-uniform)</td></tr>
+            <tr><td>SGD epochs per update \( n_{\text{opt}} \)</td><td>30</td><td>{1, 5, 10, 20, 30, 50}</td></tr>
+          </tbody>
+        </table>
+        <h3>Linear schedules used during training</h3>
+        <p>Both the learning rate and the clip range are decayed linearly over the total training step budget \(T\):</p>
+        $$
+        \alpha(t) = \alpha_0\!\left(1 - \frac{t}{T}\right), \qquad
+        \varepsilon(t) = \varepsilon_0\!\left(1 - \frac{t}{T}\right).
+        $$
+        <p class="subtle">
+          Early training benefits from larger steps and wider exploration; as convergence nears, shrinking the step size \( \alpha(t) \) and the effective trust region via smaller \( \varepsilon(t) \) reduces variance and prevents policy collapse—practically a progressively tighter KL budget.
+        </p>
 
-      <section id="figures">
-        <h2>Figures from the paper — what they show</h2>
-        <div class="grid-2">
-          <figure class="figure">
-            <img loading="lazy" src="../images/blog/fig2-deterministic.png"
-                 alt="Deterministic optimal vs learned unperturbed policy">
-            <figcaption><strong>Fig. 2.</strong> In the deterministic case, the learned unperturbed policy (blue) essentially overlays the indirect optimal solution (red dashed). Thrust bunches early and late (bang–off–bang).</figcaption>
-          </figure>
+        <h3>How these were tuned using Optuna's Tree-Structured Parzen Estimator (TPE)</h3>
+        <p>
+        Hyperparameters were tuned once on a deterministic (unperturbed) mission scenario using Optuna’s TPE (link in resources below) with a budget of <strong>500 trials</strong> and a cap of <strong>\(2.4\times10^6\)</strong> training steps per trial.
+        Categorical knobs (e.g., \( \gamma,\ \lambda,\ \varepsilon_0 \)) were searched over the finite sets in the table; scale-sensitive knobs (e.g., \( \alpha_0,\ c_2 \)) were sampled log-uniformly.
+        Periodic Monte-Carlo evaluation (100 runs) promoted the best checkpoint found so far.
+        See the exact Optuna library reference in <a href="#refs">References &amp; resources</a>.
+        </p>
       
-          <figure class="figure">
-            <img loading="lazy" src="../images/blog/fig3-trajectories.png"
-                 alt="Earth–Mars trajectories under different robust policies">
-            <figcaption><strong>Fig. 3.</strong> Training against different uncertainty families (state/obs/control noise, MTEs) yields slightly different arcs; robust policies distribute corrections and avoid saturating near arrival.</figcaption>
-          </figure>
-      
-          <figure class="figure">
-            <img loading="lazy" src="../images/blog/fig6-error-clouds.png"
-                 alt="Encounter error distributions for stochastic vs control-robust policies">
-            <figcaption><strong>Fig. 6.</strong> Mars-encounter error clouds tighten under a control-robust policy, reducing outliers versus a stochastic-only policy—evidence of margin management.</figcaption>
-          </figure>
-      
-          <figure class="figure">
-            <figcaption><strong>Table 3.</strong> Parameters of the different uncertainty models.</figcaption>
-            <table class="tbl">
-              <thead>
-                <tr><th>Uncertainty</th><th>Parameter</th><th>Value</th></tr>
-              </thead>
-              <tbody>
-                <tr><td rowspan="2">State</td><td>σ<sub>r,s</sub> (km)</td><td>1.0</td></tr>
-                <tr>                          <td>σ<sub>v,s</sub> (km/s)</td><td>0.05</td></tr>
-          
-                <tr><td rowspan="2">Observation</td><td>σ<sub>r,o</sub> (km)</td><td>1.0</td></tr>
-                <tr>                               <td>σ<sub>v,o</sub> (km/s)</td><td>0.05</td></tr>
-          
-                <tr><td rowspan="4">Control</td><td>σ<sub>ϕ</sub> (&deg;)</td><td>1.0</td></tr>
-                <tr>                        <td>σ<sub>ϑ</sub> (&deg;)</td><td>1.0</td></tr>
-                <tr>                        <td>σ<sub>ψ</sub> (&deg;)</td><td>1.0</td></tr>
-                <tr>                        <td>σ<sub>u</sub> (—)</td><td>0.05</td></tr>
-          
-                <tr><td>Single-step MTE</td><td>p<sub>mte</sub>, n<sub>mte</sub></td><td>0, 1</td></tr>
-                <tr><td>Multiple-step MTE</td><td>p<sub>mte</sub>, n<sub>mte</sub></td><td>0.1, 3</td></tr>
-              </tbody>
-            </table>
-            <style>
-                .table-notes {
-                  margin-top: .6rem;
-                  padding: .75rem 1rem;
-                  border: 1px dashed var(--border-color);
-                  border-radius: 10px;
-                  background: var(--card-bg);
-                  font-size: .94rem;
-                  line-height: 1.45;
-                }
-                .table-notes strong { font-weight: 600; }
-                .table-notes code { background: transparent; padding: 0; }
-              </style>
-              <div class="table-notes" style="margin-top:.6rem;padding:.6rem .9rem;border:1px dashed var(--border-color);border-radius:10px;background:var(--card-bg);font-size:.95rem;">
-                <strong>Notes — Table 3</strong>
-                <ul style="margin:.4rem 0 0 1rem;">
-                  <li><em>State noise</em>: <code>σ<sub>r,s</sub></code> (km), <code>σ<sub>v,s</sub></code> (km/s) — process/disturbance on dynamics.</li>
-                  <li><em>Observation noise</em>: <code>σ<sub>r,o</sub></code> (km), <code>σ<sub>v,o</sub></code> (km/s) — navigation/measurement error.</li>
-                  <li><em>Control errors</em>: pointing <code>σ<sub>φ</sub></code>, <code>σ<sub>ϑ</sub></code>, <code>σ<sub>ψ</sub></code> (deg); magnitude <code>σ<sub>u</sub></code> (fractional, e.g., 0.05 = 5%).</li>
-                  <li><em>Missed-thrust events (MTE)</em>: <code>p<sub>mte</sub></code> = per-step miss probability; <code>n<sub>mte</sub></code> = consecutive missed burns.</li>
-                  <li>All <code>σ</code> are 1-σ (Gaussian). Units: km, km/s, deg; probabilities unitless.</li>
-                </ul>
-              </div>
-              
-              
-          </figure>
-          
+        <div class="callout">
+          <strong>Why tuning on the clean case still transfers.</strong>
+          The policy is trained with a <em>constraint-tightening curriculum</em>: the terminal tolerance \( \varepsilon \) is loose in the first half of training and tight thereafter, which encourages broad exploration before enforcing precision. That schedule looks like
+          $$ \varepsilon(t) \;=\;
+            \begin{cases}
+              \varepsilon_0, & t\le T/2\\[2pt]
+              \varepsilon_\infty, & t> T/2
+            \end{cases} $$
+          and is discussed more in <a href="#epsilon">Constraint tightening (ε-schedule)</a>. This simple trick was one of the most impactful stability improvements.
         </div>
+        <h3>What the Tree-Structured Parzen Estimator (TPE) is doing</h3>
+        <p>
+        TPE models \(p(x \mid y)\) instead of \(p(y \mid x)\) for a hyperparameter vector \(x\) and an observed score \(y\) (e.g., final return).
+        Trials are split by a threshold \( y^\star \) (top-\( \gamma \) fraction). Two Parzen density models are fit:
+        </p>
+        $$
+        \ell(x) \;=\; p(x \mid y \le y^\star) \;\approx\; \sum_{i\in \mathcal{G}} w_i\,\mathcal{K}(x;\,x_i,\sigma_i),
+        \qquad
+        g(x) \;=\; p(x \mid y > y^\star) \;\approx\; \sum_{i\in \mathcal{B}} w_i\,\mathcal{K}(x;\,x_i,\sigma_i),
+        $$
+        <p class="subtle">
+        where \( \mathcal{K} \) is a Parzen kernel (Gaussian for continuous variables; smoothed categorical kernels otherwise).
+        The next suggestion maximizes a proxy for expected improvement:
+        </p>
+        $$
+        x_{\text{next}} \;=\; \arg\max_x \frac{\ell(x)}{g(x)}.
+        $$
+        <p class="subtle">
+        In simple words, the “promisingness” of a candidate is \( \displaystyle \frac{p(x\mid\text{good})}{p(x\mid\text{bad})} \).
+        See the Optuna TPE entry in <a href="#refs">References &amp; resources</a>.
+        </p>
+
+      
+        <!-- <h3>What is TPE doing, in one picture?</h3>
+        <p>
+          TPE models \(p(x\mid y)\) instead of \(p(y\mid x)\) for a hyperparameter vector \(x\) and an observed score \(y\) (e.g., final return). Trials are split by a threshold \(y^\*\) (top-\( \gamma \) fraction of scores). Two Parzen density models are fit:
+        </p>
+        $$ \underbrace{l(x)}_{\text{good}} \;=\; p(x\mid y \le y^\*) \;\approx\; \sum_{i\in \mathcal{G}} w_i \,\mathcal{K}(x;\,x_i,\sigma_i), \qquad
+           \underbrace{g(x)}_{\text{bad}} \;=\; p(x\mid y > y^\*) \;\approx\; \sum_{i\in \mathcal{B}} w_i \,\mathcal{K}(x;\,x_i,\sigma_i), $$
+        <p>
+          where \( \mathcal{K} \) is a Parzen kernel (Gaussian for continuous variables; categorical smoothed histograms otherwise). The next suggestion maximizes a proxy for expected improvement:
+        </p>
+        $$ x_{\text{next}} \;=\; \arg\max_x \frac{l(x)}{g(x)}. $$
+        <p class="subtle">
+          Intuition: sample where the “good” density mass is high and the “bad” density is low—cheap Bayesian guidance that handles <em>tree-structured</em> spaces (conditional choices) naturally. See the exact Optuna TPE sampler referenced in <a href="#refs">References &amp; resources</a>. :contentReference[oaicite:3]{index=3}
+        </p> -->
+      </section>
+
+      <section id="tpe-demo" aria-labelledby="tpe-demo-title">
+        <h2 id="tpe-demo-title">Interactive: Tree-Structured Parzen Estimator “promisingness”</h2>
+        <p class="subtle">
+          TPE chooses the next trial by sampling where the ratio of Parzen densities over the “good” and “bad” regions is largest.
+        </p>
+        <div class="math">
+          $$ \text{Promisingness}(x) \;\approx\; \frac{p(x \mid \text{good})}{p(x \mid \text{bad})}. $$
+        </div>
+      
+        <div class="tpe-controls" role="group" aria-label="TPE controls">
+          <label>γ (good fraction)
+            <input type="range" id="gamma" min="0.05" max="0.5" step="0.05" value="0.20" aria-describedby="gammaVal">
+            <span id="gammaVal" class="mono">0.20</span>
+          </label>
+          <label>σ (kernel width)
+            <input type="range" id="sigma" min="0.02" max="0.25" step="0.01" value="0.08" aria-describedby="sigmaVal">
+            <span id="sigmaVal" class="mono">0.08</span>
+          </label>
+          <label>Probe \(x\)
+            <input type="range" id="xprobe" min="0" max="1" step="0.005" value="0.50" aria-describedby="xVal">
+            <span id="xVal" class="mono">0.50</span>
+          </label>
+          <button id="resample" type="button">Resample trials</button>
+        </div>
+      
+        <div class="tpe-plot-wrap">
+          <canvas id="tpePlot" width="720" height="280" aria-label="Parzen densities plot" role="img"></canvas>
+        </div>
+      
+        <div class="tpe-stats">
+          <div><span class="label">ℓ(x)=p(x|good):</span> <span id="lVal" class="mono">—</span></div>
+          <div><span class="label">g(x)=p(x|bad):</span>  <span id="gVal" class="mono">—</span></div>
+          <div><span class="label">ℓ(x)/g(x):</span>      <span id="ratioVal" class="mono">—</span></div>
+        </div>
+      
+        <style>
+          #tpe-demo { margin: 2rem 0; }
+          #tpe-demo .subtle { color: var(--muted, #555); }
+          #tpe-demo .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+          #tpe-demo .tpe-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: .75rem 1rem;
+            align-items: center;
+            margin: 1rem 0 1.25rem;
+          }
+          #tpe-demo .tpe-controls label {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: .5rem;
+            align-items: center;
+            font-size: .95rem;
+          }
+          #tpe-demo .tpe-controls input[type="range"] { width: 100%; }
+          #tpe-demo .tpe-controls button {
+            justify-self: start;
+            padding: .45rem .8rem;
+            border-radius: .5rem;
+            border: 1px solid #ddd;
+            background: #fafafa;
+            cursor: pointer;
+          }
+          #tpe-demo .tpe-controls button:hover { background: #f3f3f3; }
+          #tpe-demo .tpe-plot-wrap { max-width: 100%; overflow: auto; }
+          #tpe-demo canvas { width: 100%; height: auto; border-radius: 8px; border: 1px solid #eee; background: #fff; }
+          #tpe-demo .tpe-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: .5rem 1rem; margin-top: .5rem; }
+          #tpe-demo .tpe-stats .label { color: #444; margin-right: .25rem; }
+        </style>
+      
+        <script>
+          (function(){
+            const canvas = document.getElementById('tpePlot');
+            const gammaEl = document.getElementById('gamma');
+            const sigmaEl = document.getElementById('sigma');
+            const xEl = document.getElementById('xprobe');
+            const resampleBtn = document.getElementById('resample');
+            const gammaVal = document.getElementById('gammaVal');
+            const sigmaVal = document.getElementById('sigmaVal');
+            const xVal = document.getElementById('xVal');
+            const lVal = document.getElementById('lVal');
+            const gVal = document.getElementById('gVal');
+            const ratioVal = document.getElementById('ratioVal');
+      
+            // HiDPI scaling
+            function setupCanvas(c) {
+              const dpr = window.devicePixelRatio || 1;
+              const rect = c.getBoundingClientRect();
+              c.width = Math.round(rect.width * dpr);
+              c.height = Math.round(280 * dpr);
+              const ctx = c.getContext('2d');
+              ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+              return ctx;
+            }
+            let ctx = setupCanvas(canvas);
+            window.addEventListener('resize', () => { ctx = setupCanvas(canvas); draw(); });
+      
+            // Synthetic trials (x in [0,1], score y; lower is better)
+            let trials = [];
+            function underlyingObjective(x){
+              return 0.3*Math.sin(6.0*x + 0.5) + 0.6*Math.cos(3.0*x - 0.2) + 0.1*Math.sin(18.0*x) + 0.15*Math.random();
+            }
+            function sampleTrials(N=48, seed=Math.random()*1e9){
+              // Simple LCG for reproducibility per resample
+              let s = Math.floor(seed) % 2147483647; if (s <= 0) s += 2147483646;
+              function rand(){ s = s*16807 % 2147483647; return (s-1)/2147483646; }
+              const arr = [];
+              for (let i=0;i<N;i++){
+                const x = rand();
+                const y = underlyingObjective(x);
+                arr.push({x, y});
+              }
+              return arr.sort((a,b)=>a.x-b.x);
+            }
+      
+            function quantile(values, q){
+              const a = [...values].sort((x,y)=>x-y);
+              const pos = (a.length-1)*q;
+              const base = Math.floor(pos);
+              const rest = pos - base;
+              if (a[base+1] !== undefined) return a[base] + rest*(a[base+1]-a[base]);
+              return a[base];
+            }
+      
+            function splitGoodBad(gamma){
+              const ys = trials.map(t=>t.y);
+              const ystar = quantile(ys, gamma);
+              const good = trials.filter(t => t.y <= ystar);
+              const bad  = trials.filter(t => t.y >  ystar);
+              return {good, bad, ystar};
+            }
+      
+            function gaussian(x, m, s){
+              const u = (x-m)/s;
+              return Math.exp(-0.5*u*u)/(Math.sqrt(2*Math.PI)*s);
+            }
+            function parzen(x, points, sigma){
+              if (!points.length) return 0;
+              let sum = 0;
+              for (const p of points) sum += gaussian(x, p.x, sigma);
+              return sum / points.length;
+            }
+      
+            function draw(){
+              const W = canvas.getBoundingClientRect().width;
+              const H = 280;
+              const ctx = canvas.getContext('2d');
+              ctx.clearRect(0,0,W,H);
+      
+              const gamma = +gammaEl.value;
+              const sigma = +sigmaEl.value;
+              const xProbe = +xEl.value;
+      
+              gammaVal.textContent = gamma.toFixed(2);
+              sigmaVal.textContent = sigma.toFixed(2);
+              xVal.textContent = xProbe.toFixed(2);
+      
+              const {good, bad} = splitGoodBad(gamma);
+      
+              const Xs = [], ls = [], gs = [];
+              const N = Math.max(300, Math.floor(W));
+              for (let i=0;i<=N;i++){
+                const x = i/N;
+                const l = parzen(x, good, sigma);
+                const g = parzen(x, bad,  sigma);
+                Xs.push(x); ls.push(l); gs.push(g);
+              }
+      
+              const maxY = Math.max(1e-6, Math.max(...ls, ...gs)) * 1.15;
+      
+              // Axes
+              ctx.strokeStyle = '#ddd';
+              ctx.lineWidth = 1;
+              ctx.beginPath(); ctx.moveTo(40, H-30); ctx.lineTo(W-10, H-30); ctx.stroke();
+              ctx.beginPath(); ctx.moveTo(40, 10);   ctx.lineTo(40, H-30);   ctx.stroke();
+              ctx.fillStyle = '#666';
+              ctx.font = '12px system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
+              ctx.fillText('0', 36, H-14); ctx.fillText('1', W-14, H-14);
+              ctx.fillText('density', 6, 20);
+      
+              const x2px = x => 40 + (W-50)*x;
+              const y2px = y => (H-30) - (H-60)*(y/maxY);
+      
+              // Points
+              function drawPoints(arr, color){
+                ctx.fillStyle = color;
+                for (const p of arr){
+                  const x = x2px(p.x);
+                  const y = y2px(0);
+                  ctx.beginPath(); ctx.arc(x, y, 2.5, 0, Math.PI*2); ctx.fill();
+                }
+              }
+              drawPoints(bad,  'rgba(200,60,60,0.9)');
+              drawPoints(good, 'rgba(60,140,200,0.95)');
+      
+              // Densities
+              function drawCurve(vals, color){
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(x2px(Xs[0]), y2px(vals[0]));
+                for (let i=1;i<Xs.length;i++) ctx.lineTo(x2px(Xs[i]), y2px(vals[i]));
+                ctx.stroke();
+              }
+              drawCurve(gs, 'rgba(200,60,60,0.9)');   // g(x)
+              drawCurve(ls, 'rgba(60,140,200,0.95)'); // ℓ(x)
+      
+              // Probe & readouts
+              const lProbe = parzen(xProbe, good, sigma);
+              const gProbe = parzen(xProbe, bad,  sigma);
+              const ratio  = (gProbe > 0) ? (lProbe / gProbe) : Infinity;
+      
+              ctx.setLineDash([4,4]);
+              ctx.strokeStyle = '#444';
+              ctx.lineWidth = 1;
+              ctx.beginPath(); ctx.moveTo(x2px(xProbe), 10); ctx.lineTo(x2px(xProbe), H-30); ctx.stroke();
+              ctx.setLineDash([]);
+      
+              function drawDot(x, y, color){
+                ctx.fillStyle = color;
+                ctx.beginPath(); ctx.arc(x2px(x), y2px(y), 3.5, 0, Math.PI*2); ctx.fill();
+              }
+              drawDot(xProbe, lProbe, 'rgba(60,140,200,0.95)');
+              drawDot(xProbe, gProbe, 'rgba(200,60,60,0.9)');
+      
+              // Legend
+              ctx.fillStyle = '#000';
+              ctx.font = '12px system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
+              ctx.fillText('good density ℓ(x)', 54, 24);
+              ctx.fillText('bad density g(x)',  54, 40);
+              ctx.fillStyle = 'rgba(60,140,200,0.95)'; ctx.fillRect(40,16,8,8);
+              ctx.fillStyle = 'rgba(200,60,60,0.9)';  ctx.fillRect(40,32,8,8);
+      
+              function fmt(v){ return (v===Infinity)?'∞':v.toExponential(2); }
+              lVal.textContent = fmt(lProbe);
+              gVal.textContent = fmt(gProbe);
+              ratioVal.textContent = fmt(ratio);
+            }
+      
+            function refresh(){ trials = sampleTrials(); draw(); }
+            gammaEl.addEventListener('input', draw);
+            sigmaEl.addEventListener('input', draw);
+            xEl.addEventListener('input', draw);
+            resampleBtn.addEventListener('click', refresh);
+            refresh();
+          })();
+        </script>
       </section>
       
-      
-
+<!--       
       <section id="hparams">
         <h2>PPO hyperparameters</h2>
         <table class="tbl">
@@ -383,12 +644,15 @@
         <p class="subtle">
           Why this helps: early training benefits from larger steps and wider exploration; as convergence nears, shrinking the step size \( \alpha(t) \) and the effective trust region via smaller \( \varepsilon(t) \) reduces variance and prevents policy collapse. In practice, this behaves like using a progressively tighter KL budget around the incumbent policy.
         </p>
-      </section>
+      </section> -->
 
-      <section id="arch">
-        <h2>Network architecture &amp; sizing (actor)</h2>
-        <p>
-          Actor network uses three hidden layers sized by the paper’s heuristic:
+        <!-- Optional tiny add-on to the architecture section: mention the critic head explicitly -->
+        <section id="arch">
+            <h2>Network architecture &amp; sizing (actor)</h2>
+            <p>
+            The paper uses separate heads for <strong>actor</strong> (control policy) and <strong>critic</strong> (value function). With \(n_{\text{in}}=8\) (namely position and velocity, mass and time),
+            the actor outputs \(n_{\text{out}}^{\text{act}}=3\) (Δv in 3 axes) and the critic \(n_{\text{out}}^{\text{crit}}=1\) (scalar value).
+            All hidden layers use <code>tanh</code> and the output layers are linear. Both the actor and critic network uses three hidden layers sized by the paper’s heuristic:
         </p>
         $$ h_1 = 10\,n_{\text{in}}, \qquad
            h_3 = 10\,n_{\text{out}}, \qquad
@@ -407,7 +671,7 @@
             </div>
           </div>
           <canvas id="nnCanvas" width="900" height="260" style="margin-top:.75rem" aria-label="Actor network layout"></canvas>
-          <p class="subtle">Fully connected (edges omitted for clarity). Exact counts are printed; dots equal neurons.</p>
+          <p class="subtle">Fully connected (edges omitted for clarity). Exact counts are printed and each dot represents a neuron. This almost arbitrary-looking neural network shape was first used (successfully) in <em>Deep Reinforcement Learning for Six Degree-of-Freedom Planetary Landing</em> by Gaudet et&nbsp;al. (see References).</p>
         </div>
       </section>
       
@@ -499,7 +763,8 @@
       </section>
 
       <section id="results">
-        <h2>What the trained policies actually do</h2>
+        <h2>Results and takeaways</h2>
+        <h3>What the trained policies actually do</h3>
         <ul>
           <li><strong>Near-optimal when clean:</strong> In unperturbed tests, the learned policy’s final mass is comparable to an indirect optimal method—evidence that PPO didn’t sacrifice too much efficiency to gain robustness.</li>
           <li><strong>Robustness trade:</strong> With state/obs/control noise, the policy favors earlier partial corrections and avoids saturating $\|\Delta v\|$—leaving breathing room near rendezvous.</li>
@@ -510,6 +775,78 @@
           </div>
         <div class="callout">
           <p class="subtle">In short: PPO learns a feedback guidance law that is <em>adaptive</em> and <em>anticipatory</em>. You can see “margin management” behavior emerge—something that’s hard to encode directly with classical optimal control.</p>
+        </div>
+      </section>
+      <section id="figures">
+        <h3>Figures from the paper — what they show</h3>
+        <div class="grid-2">
+          <figure class="figure">
+            <img loading="lazy" src="../images/blog/fig2-deterministic.png"
+                 alt="Deterministic optimal vs learned unperturbed policy">
+            <figcaption><strong>Fig. 2.</strong> In the deterministic case, the learned unperturbed policy (blue) essentially overlays the indirect optimal solution (red dashed). Thrust bunches early and late (bang–off–bang).</figcaption>
+          </figure>
+      
+          <figure class="figure">
+            <img loading="lazy" src="../images/blog/fig3-trajectories.png"
+                 alt="Earth–Mars trajectories under different robust policies">
+            <figcaption><strong>Fig. 3.</strong> Training against different uncertainty families (state/obs/control noise, MTEs) yields slightly different arcs; robust policies distribute corrections and avoid saturating near arrival.</figcaption>
+          </figure>
+      
+          <figure class="figure">
+            <img loading="lazy" src="../images/blog/fig6-error-clouds.png"
+                 alt="Encounter error distributions for stochastic vs control-robust policies">
+            <figcaption><strong>Fig. 6.</strong> Mars-encounter error clouds tighten under a control-robust policy, reducing outliers versus a stochastic-only policy—evidence of margin management.</figcaption>
+          </figure>
+      
+          <figure class="figure">
+            <figcaption><strong>Table 3.</strong> Parameters of the different uncertainty models.</figcaption>
+            <table class="tbl">
+              <thead>
+                <tr><th>Uncertainty</th><th>Parameter</th><th>Value</th></tr>
+              </thead>
+              <tbody>
+                <tr><td rowspan="2">State</td><td>σ<sub>r,s</sub> (km)</td><td>1.0</td></tr>
+                <tr>                          <td>σ<sub>v,s</sub> (km/s)</td><td>0.05</td></tr>
+          
+                <tr><td rowspan="2">Observation</td><td>σ<sub>r,o</sub> (km)</td><td>1.0</td></tr>
+                <tr>                               <td>σ<sub>v,o</sub> (km/s)</td><td>0.05</td></tr>
+          
+                <tr><td rowspan="4">Control</td><td>σ<sub>ϕ</sub> (&deg;)</td><td>1.0</td></tr>
+                <tr>                        <td>σ<sub>ϑ</sub> (&deg;)</td><td>1.0</td></tr>
+                <tr>                        <td>σ<sub>ψ</sub> (&deg;)</td><td>1.0</td></tr>
+                <tr>                        <td>σ<sub>u</sub> (—)</td><td>0.05</td></tr>
+          
+                <tr><td>Single-step MTE</td><td>p<sub>mte</sub>, n<sub>mte</sub></td><td>0, 1</td></tr>
+                <tr><td>Multiple-step MTE</td><td>p<sub>mte</sub>, n<sub>mte</sub></td><td>0.1, 3</td></tr>
+              </tbody>
+            </table>
+            <style>
+                .table-notes {
+                  margin-top: .6rem;
+                  padding: .75rem 1rem;
+                  border: 1px dashed var(--border-color);
+                  border-radius: 10px;
+                  background: var(--card-bg);
+                  font-size: .94rem;
+                  line-height: 1.45;
+                }
+                .table-notes strong { font-weight: 600; }
+                .table-notes code { background: transparent; padding: 0; }
+              </style>
+              <div class="table-notes" style="margin-top:.6rem;padding:.6rem .9rem;border:1px dashed var(--border-color);border-radius:10px;background:var(--card-bg);font-size:.95rem;">
+                <strong>Notes — Table 3</strong>
+                <ul style="margin:.4rem 0 0 1rem;">
+                  <li><em>State noise</em>: <code>σ<sub>r,s</sub></code> (km), <code>σ<sub>v,s</sub></code> (km/s) — process/disturbance on dynamics.</li>
+                  <li><em>Observation noise</em>: <code>σ<sub>r,o</sub></code> (km), <code>σ<sub>v,o</sub></code> (km/s) — navigation/measurement error.</li>
+                  <li><em>Control errors</em>: pointing <code>σ<sub>φ</sub></code>, <code>σ<sub>ϑ</sub></code>, <code>σ<sub>ψ</sub></code> (deg); magnitude <code>σ<sub>u</sub></code> (fractional, e.g., 0.05 = 5%).</li>
+                  <li><em>Missed-thrust events (MTE)</em>: <code>p<sub>mte</sub></code> = per-step miss probability; <code>n<sub>mte</sub></code> = consecutive missed burns.</li>
+                  <li>All <code>σ</code> are 1-σ (Gaussian). Units: km, km/s, deg; probabilities unitless.</li>
+                </ul>
+              </div>
+              
+              
+          </figure>
+          
         </div>
       </section>
       <section id="mc-results">
@@ -553,6 +890,7 @@
           Table 5 in the paper also reports the tolerance \(\varepsilon_B\) needed to reach 1σ/2σ/3σ success.
         </p>
       </section>
+      
       
 
       <!-- <section id="limitations">
