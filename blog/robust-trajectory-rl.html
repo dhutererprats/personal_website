@@ -159,7 +159,7 @@
           <p class="subtle" style="margin-top:.5rem">
             Schematic (not to scale): Sun (center), Earth and Mars on circular orbits,
             and a Hohmann-like transfer ellipse. Thruster plumes flash at discrete
-            decision steps; big pulses near the start/end evoke bang–off–bang,
+            decision steps. Big pulses are used near the start/end evoke bang–off–bang,
             while mid-course trims illustrate guidance corrections.
           </p>
         </div>
@@ -199,9 +199,6 @@
 
       <section id="ppo">
         <h2>How PPO is used here</h2>
-        <p>
-          This section builds from the objective to the exact PPO loss used by the authors (Zavoli &amp; Federici). Explanations avoid “we” and emphasize the intuition behind each step.
-        </p>
       
         <h3>1) Goal</h3>
         <p>The aim is to learn parameters \( \theta \) that maximize discounted return:</p>
@@ -255,7 +252,7 @@
         </ol>
       
         <div class="callout">
-          <strong>Why this approach is useful for interplanetary guidance.</strong>
+          <strong>Why this approach is useful for interplanetary guidance:</strong>
           A policy gives closed-loop robustness without re-solving an optimal control problem onboard.
           In clean cases it remains near-optimal; under uncertainty it spreads thrust and keeps margin—behavior that is difficult to hand-design with classical trackers.
         </div>
@@ -283,8 +280,9 @@
         <ul>
           <li><strong>Curriculum via an <em>ε</em>-schedule:</strong> start with looser terminal tolerances so the agent learns to make progress, then tighten mid-training.</li>
           <li><strong>Normalization:</strong> nondimensionalize states and rewards to stabilize training and help generalization across scales.</li>
-          <li><strong>Policy/value nets:</strong> compact MLPs are sufficient here; actor outputs a mean and std for a Gaussian over Δv within per-step bounds.</li>
-          <li><strong>Optimization:</strong> linearly decay learning rate and clip range; tune with a lightweight search; keep batch/mini-batch sizes consistent with on-policy PPO.</li>
+          <li><strong>Policy/value nets:</strong> compact MLPs are sufficient for this task, and the actor outputs a mean and std for a Gaussian over Δv within per-step bounds.</li>
+          <li><strong>Policy and value networks:</strong> compact MLPs are sufficient for this task, and the actor produces a mean and standard deviation that parameterize a Gaussian distribution over Δv within the allowed bounds for each step.</li>
+          <li><strong>Optimization:</strong> decrease the learning rate and clip range linearly, tune hyperparameters with a lightweight search, and keep batch and mini-batch sizes consistent with typical on-policy PPO practice.</li>
         </ul>
         <p class="subtle">These small choices add up: together with the ε-schedule they noticeably improved stability and final performance in my presentation experiments.</p>
       </section>
@@ -312,7 +310,7 @@
         \varepsilon(t) = \varepsilon_0\!\left(1 - \frac{t}{T}\right).
         $$
         <p class="subtle">
-          Early training benefits from larger steps and wider exploration; as convergence nears, shrinking the step size \( \alpha(t) \) and the effective trust region via smaller \( \varepsilon(t) \) reduces variance and prevents policy collapse—practically a progressively tighter KL budget.
+          Early in training, larger updates and wider exploration are beneficial. As convergence approaches, reducing the step size \( \alpha(t) \) and narrowing the effective trust region through a smaller \( \varepsilon(t) \) lowers variance and avoids policy collapse. This acts as a progressively tighter constraint on the KL divergence budget.
         </p>
 
         <h3>How these were tuned using Optuna's Tree-Structured Parzen Estimator (TPE)</h3>
@@ -324,7 +322,7 @@
         </p>
       
         <div class="callout">
-          <strong>Why tuning on the clean case still transfers.</strong>
+          <strong>Why tuning on the clean case still transfers:</strong>
           The policy is trained with a <em>constraint-tightening curriculum</em>: the terminal tolerance \( \varepsilon \) is loose in the first half of training and tight thereafter, which encourages broad exploration before enforcing precision. That schedule looks like
           $$ \varepsilon(t) \;=\;
             \begin{cases}
@@ -718,7 +716,7 @@
           
             <p class="subtle" style="margin:.6rem 0">
               Blue = unclipped term \(r_tA_t\); red = clipped term \(\mathrm{clip}(r_t,1-\epsilon,1+\epsilon)\,A_t\);
-              thick black = PPO objective \(\min(\cdot)\). Shaded region is the **clipped plateau** (for \(A_t\!>\!0\) it’s to the right of \(1+\epsilon\); for \(A_t\!<\!0\) it’s to the left of \(1-\epsilon\)).
+              thick black = PPO objective \(\min(\cdot)\). Shaded region is the **clipped plateau** (for \(A_t\!>\!0\) it’s to the right of \(1+\epsilon\). For \(A_t\!<\!0\) it’s to the left of \(1-\epsilon\)).
             </p>
           
             <div style="margin-top:.6rem">
@@ -789,7 +787,7 @@
           <figure class="figure">
             <img loading="lazy" src="../images/blog/fig3-trajectories.png"
                  alt="Earth–Mars trajectories under different robust policies">
-            <figcaption><strong>Fig. 3.</strong> Training against different uncertainty families (state/obs/control noise, MTEs) yields slightly different arcs; robust policies distribute corrections and avoid saturating near arrival.</figcaption>
+            <figcaption><strong>Fig. 3.</strong> Training against different uncertainty families (state/obs/control noise, MTEs) yields slightly different arcs. Robust policies distribute corrections and avoid saturating near arrival.</figcaption>
           </figure>
       
           <figure class="figure">
@@ -907,9 +905,9 @@
       <section id="limitations">
         <h2>Limitations &amp; next steps</h2>
         <ul>
-          <li><strong>Impulse model:</strong> \(N=40\) impulses is coarse for true low-thrust flight; a finite-thrust propagator is the natural upgrade.</li>
+          <li><strong>Impulse model:</strong> \(N=40\) impulses is coarse for true low-thrust flight. A finite-thrust propagator is the natural upgrade or perhaps transitioning to fully continuous thrust modeling..</li>
           <li><strong>Environment realism:</strong> the MTE training setups always include at least one miss, which can overfit policies to that specific failure pattern; broader failure families would improve generality.</li>
-          <li><strong>Verification:</strong> results rely on Monte-Carlo success; formal guarantees (e.g., robust tubes or reachability) would increase trust.</li>
+          <li><strong>Verification:</strong> results rely on Monte-Carlo success. There are no formal guarantees (e.g., robust tubes or reachability) in this paper which is also a commong shortcoming in many other RL applications in aerospace. Having formal guarantees would increase trust, since it is often hard to reconcile why the agent acts in a certain way.</li>
         </ul>
       
         <p>
