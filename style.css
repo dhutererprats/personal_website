@@ -534,4 +534,10 @@ footer {
   box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent-color) 25%, transparent);
 }
 
-
+.ai-disclaimer {
+  font-size: 0.85rem;
+  font-style: italic;
+  color: #666;
+  margin-top: 2rem;
+  text-align: center; /* optional */
+}
