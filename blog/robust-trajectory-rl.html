@@ -159,7 +159,7 @@
           <p class="subtle" style="margin-top:.5rem">
             Schematic (not to scale): Sun (center), Earth and Mars on circular orbits,
             and a Hohmann-like transfer ellipse. Thruster plumes flash at discrete
-            decision steps. Big pulses are used near the start/end evoke bang–off–bang,
+            decision steps. Big pulses are used near the start/end to evoke bang–off–bang,
             while mid-course trims illustrate guidance corrections.
           </p>
         </div>
@@ -769,7 +769,7 @@
           <li><strong>MTEs are toughest:</strong> Multi-step missed-thrust episodes (late in the trajectory) degrade success rates most, motivating either more conservative policies or training curricula that include families of failure models.</li>
         </ul>
         <div class="figure">
-            <p>In clean (deterministic) tests without uncertainty the learned policy achieved final mass on par with an indirect optimal method (≈606 vs 604 kg), while under uncertainty it trades a little extra propellant for higher success—particularly by spreading thrust and reserving margin before the last steps. Single-step MTEs are challenging since they introduce potentially larger deviations from the course which then have to be recovered at an inopportune or less efficient location. This problem is further excarbated when considering multi-step MTEs which are the hardest (as would also be expected in real life).</p>
+            <p>In clean (deterministic) tests without uncertainty, the learned policy achieved final mass on par with an indirect optimal method (≈606 vs 604 kg), while under uncertainty it trades a little extra propellant for higher success, particularly by spreading thrust and reserving margin before the last steps. Single-step MTEs are challenging because they can introduce larger deviations from the nominal course that must be corrected later at less efficient points in the trajectory. This problem is further exacerbated for multi-step MTEs, which are the hardest case (as expected in real missions).</p>
           </div>
         <div class="callout">
           <p class="subtle">In short: PPO learns a feedback guidance law that is <em>adaptive</em> and <em>anticipatory</em>. You can see “margin management” behavior emerge—something that’s hard to encode directly with classical optimal control.</p>
@@ -905,14 +905,14 @@
       <section id="limitations">
         <h2>Limitations &amp; next steps</h2>
         <ul>
-          <li><strong>Impulse model:</strong> \(N=40\) impulses is coarse for true low-thrust flight. A finite-thrust propagator is the natural upgrade or perhaps transitioning to fully continuous thrust modeling..</li>
+          <li><strong>Impulse model:</strong> \(N=40\) impulses is coarse for true low-thrust flight. A finite-thrust propagator is the natural upgrade, or perhaps a transition to fully continuous thrust modeling.</li>
           <li><strong>Environment realism:</strong> the MTE training setups always include at least one miss, which can overfit policies to that specific failure pattern; broader failure families would improve generality.</li>
-          <li><strong>Verification:</strong> results rely on Monte-Carlo success. There are no formal guarantees (e.g., robust tubes or reachability) in this paper which is also a commong shortcoming in many other RL applications in aerospace. Having formal guarantees would increase trust, since it is often hard to reconcile why the agent acts in a certain way.</li>
+          <li><strong>Verification:</strong> results rely on Monte-Carlo success. There are no formal guarantees (e.g., robust tubes or reachability) in this paper, which is also a common shortcoming in many other RL aerospace applications. Having formal guarantees would increase trust, since it is often hard to reconcile why the agent acts in a certain way.</li>
         </ul>
       
         <p>
-        A compelling direction is to <strong>embed this robust leg solver</strong> inside a multi-gravity-assist (MGA) designer used for deepspace missions. Use a global search to pick sequences and epochs, then call the RL policy to realize each leg robustly.
-          One such algorithm with which it could easily be combined to achieve a robust and fuel vs time balancing MGA trajectory is my master thesis project. For context and future work ties, see:
+        A compelling direction is to <strong>embed this robust leg solver</strong> inside a multi-gravity-assist (MGA) designer used for deep-space missions. Use a global search to pick sequences and epochs, then call the RL policy to realize each leg robustly.
+          One such algorithm it could be combined with to produce robust MGA trajectories that balance fuel and flight time is from my master’s thesis project. For context and future work ties, see:
           <a href="../files/MGA_Paper.pdf" title="Discover what my master thesis is about" target="_blank" rel="noopener">my master’s thesis</a>
           and the
           <a href="../research.html#MGA" title="Open the MGA trajectory optimization project">MGA trajectory-optimization project</a>
@@ -973,7 +973,7 @@
     </main>
 
     <footer>
-      <p>© 2025 Daniel Hulterer Prats • Built for ASEN 6519</p>
+      <p>© 2025 Daniel Huterer Prats • Built for ASEN 6519</p>
     </footer>
   </div>
 
