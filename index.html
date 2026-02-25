@@ -635,6 +635,74 @@
       opacity: 0.9;
     }
 
+    .iss-visible-now {
+      margin: 0.52rem 0 0;
+      font-size: 0.82rem;
+      line-height: 1.45;
+      opacity: 0.9;
+    }
+
+    .iss-custom-check {
+      margin-top: 0.72rem;
+      border: 1px dashed color-mix(in oklab, var(--border-color) 70%, #6ca4ff 30%);
+      border-radius: 10px;
+      padding: 0.62rem;
+      background: color-mix(in oklab, var(--bg-color) 88%, #091d38 12%);
+    }
+
+    .iss-custom-title {
+      margin: 0;
+      font-size: 0.87rem;
+      font-weight: 650;
+      line-height: 1.4;
+    }
+
+    .iss-custom-help {
+      margin: 0.26rem 0 0;
+      font-size: 0.8rem;
+      line-height: 1.4;
+      opacity: 0.86;
+    }
+
+    .iss-location-form {
+      margin-top: 0.52rem;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.4rem;
+      align-items: center;
+    }
+
+    .iss-location-form input {
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background: var(--bg-color);
+      color: var(--text-color);
+      padding: 0.45rem 0.52rem;
+      font-size: 0.84rem;
+      min-width: 0;
+    }
+
+    .iss-location-form button {
+      border: 1px solid color-mix(in oklab, var(--accent-color) 55%, var(--border-color));
+      border-radius: 8px;
+      background: color-mix(in oklab, var(--accent-color) 20%, var(--bg-color));
+      color: var(--text-color);
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 0.45rem 0.62rem;
+      cursor: pointer;
+    }
+
+    .iss-location-form button:hover {
+      border-color: var(--accent-color);
+    }
+
+    .iss-location-status {
+      margin: 0.5rem 0 0;
+      font-size: 0.82rem;
+      line-height: 1.46;
+    }
+
     .iss-stats {
       margin-top: 0.68rem;
       display: grid;
@@ -853,6 +921,10 @@
       }
 
       .iss-stats {
+        grid-template-columns: 1fr;
+      }
+
+      .iss-location-form {
         grid-template-columns: 1fr;
       }
     }
@@ -1148,15 +1220,11 @@
               </div>
             </div>
             <div class="iss-city-legend" aria-label="Pinned cities on ISS globe">
-              <span class="iss-city-pill">📍 Milan</span>
-              <span class="iss-city-pill">📍 Moedling</span>
-              <span class="iss-city-pill">📍 Riyadh</span>
-              <span class="iss-city-pill">📍 Abu Dhabi</span>
-              <span class="iss-city-pill">📍 New York City</span>
-              <span class="iss-city-pill">📍 Barcelona</span>
-              <span class="iss-city-pill">📍 Toulouse</span>
-              <span class="iss-city-pill">📍 Boulder</span>
+              <span class="iss-city-pill">🟢 Above horizon from a tracked city</span>
+              <span class="iss-city-pill">⚪ Not in range right now</span>
+              <span class="iss-city-pill">🟣 Your temporary custom location</span>
             </div>
+            <p class="iss-visible-now" id="iss-visible-now">Above-horizon now from tracked cities: --</p>
             <div class="iss-stats" aria-live="polite">
               <p><span>Latitude</span><strong id="iss-lat">--</strong></p>
               <p><span>Longitude</span><strong id="iss-lon">--</strong></p>
@@ -1167,7 +1235,16 @@
             </div>
             <div class="iss-pass-row">
               <span class="iss-pass-status" id="iss-pass-status">Next Boulder pass: loading...</span>
-              <a class="iss-pass-link" href="https://spotthestation.nasa.gov/signup.cfm" target="_blank" rel="noopener">Official alerts</a>
+              <a class="iss-pass-link" href="https://spotthestation.nasa.gov/" target="_blank" rel="noopener">Official alerts</a>
+            </div>
+            <div class="iss-custom-check" aria-labelledby="iss-custom-title">
+              <p id="iss-custom-title" class="iss-custom-title">Curious about ISS visibility from your location?</p>
+              <p class="iss-custom-help">Type a city name, or use <code>City, Country</code> for ambiguous places (for example: <code>London, UK</code>).</p>
+              <form id="iss-location-form" class="iss-location-form">
+                <input id="iss-location-input" type="text" placeholder="Los Angeles or London, UK" autocomplete="off" />
+                <button type="submit">Check visibility</button>
+              </form>
+              <p id="iss-location-status" class="iss-location-status">Enter a location to check current visibility and the next viewing window.</p>
             </div>
           </article>
 
@@ -1264,15 +1341,22 @@
 
       var tooltip = document.getElementById("iss-globe-tooltip");
       var statusEl = document.getElementById("iss-pass-status");
+      var visibleCitiesEl = document.getElementById("iss-visible-now");
       var latEl = document.getElementById("iss-lat");
       var lonEl = document.getElementById("iss-lon");
       var altEl = document.getElementById("iss-alt");
       var velEl = document.getElementById("iss-vel");
       var updatedEl = document.getElementById("iss-updated");
+      var customForm = document.getElementById("iss-location-form");
+      var customInput = document.getElementById("iss-location-input");
+      var customStatusEl = document.getElementById("iss-location-status");
       var refreshMs = 4000;
       var ISS_URL = "https://api.wheretheiss.at/v1/satellites/25544";
-      var boulder = { name: "Boulder, Colorado, USA", lat: 40.015, lon: -105.2705 };
-      var journeyStops = [
+      var EARTH_RADIUS_KM = 6371.0;
+      var MIN_NAKED_EYE_ELEV_DEG = 10;
+      var DARK_SKY_SUN_ALT_DEG = -6;
+      var boulder = { id: "boulder", flag: "🇺🇸", name: "Boulder, Colorado, USA", lat: 40.015, lon: -105.2705, short: "Current PhD at CU Boulder." };
+      var trackedStops = [
         { id: "milan", flag: "🇮🇹", name: "Milan, Italy", lat: 45.4642, lon: 9.19, short: "Born and first 4 years." },
         { id: "moedling", flag: "🇦🇹", name: "Moedling, Austria", lat: 48.0867, lon: 16.2892, short: "Childhood years." },
         { id: "riyadh", flag: "🇸🇦", name: "Riyadh, Saudi Arabia", lat: 24.7136, lon: 46.6753, short: "High school period." },
@@ -1280,14 +1364,14 @@
         { id: "nyc", flag: "🇺🇸", name: "New York City, USA", lat: 40.7128, lon: -74.006, short: "NYU study-away semester." },
         { id: "barcelona", flag: "🇪🇸", name: "Barcelona, Spain", lat: 41.3874, lon: 2.1686, short: "Master's in Aerospace." },
         { id: "toulouse", flag: "🇫🇷", name: "Toulouse, France", lat: 43.6047, lon: 1.4442, short: "Industry roles in aerospace." },
-        { id: "boulder", flag: "🇺🇸", name: "Boulder, Colorado, USA", lat: 40.015, lon: -105.2705, short: "Current PhD at CU Boulder." }
+        boulder
       ];
+      var customStop = null;
       var globeState = {
         sample: null,
         sampleAtMs: 0,
         latRate: 0,
-        lonRate: 0,
-        trail: []
+        lonRate: 0, trail: []
       };
 
       function wrapLon(lon) {
@@ -1295,6 +1379,18 @@
         while (wrapped > 180) wrapped -= 360;
         while (wrapped < -180) wrapped += 360;
         return wrapped;
+      }
+
+      function degToRad(deg) {
+        return (deg * Math.PI) / 180;
+      }
+
+      function radToDeg(rad) {
+        return (rad * 180) / Math.PI;
+      }
+
+      function clamp(value, min, max) {
+        return Math.max(min, Math.min(max, value));
       }
 
       function shortestLonDelta(fromLon, toLon) {
@@ -1316,8 +1412,112 @@
         });
       }
 
-      async function fetchBoulderPass() {
-        var rawUrl = "http://api.open-notify.org/iss-pass.json?lat=40.015&lon=-105.2705&n=1";
+      function formatDuration(ms) {
+        if (ms <= 0) {
+          return "< 1 min";
+        }
+        var totalMin = Math.round(ms / 60000);
+        var hours = Math.floor(totalMin / 60);
+        var mins = totalMin % 60;
+        if (hours === 0) {
+          return mins + " min";
+        }
+        return hours + " h " + mins + " min";
+      }
+
+      function ecefFromLatLon(latDeg, lonDeg, radiusKm) {
+        var lat = degToRad(latDeg);
+        var lon = degToRad(lonDeg);
+        var cosLat = Math.cos(lat);
+        return {
+          x: radiusKm * cosLat * Math.cos(lon),
+          y: radiusKm * cosLat * Math.sin(lon),
+          z: radiusKm * Math.sin(lat)
+        };
+      }
+
+      function vecSub(a, b) {
+        return { x: a.x - b.x, y: a.y - b.y, z: a.z - b.z };
+      }
+
+      function vecDot(a, b) {
+        return a.x * b.x + a.y * b.y + a.z * b.z;
+      }
+
+      function vecNorm(a) {
+        return Math.sqrt(vecDot(a, a));
+      }
+
+      function vecScale(a, scalar) {
+        return { x: a.x * scalar, y: a.y * scalar, z: a.z * scalar };
+      }
+
+      function sunUnitEcef(date) {
+        var jd = date.getTime() / 86400000 + 2440587.5;
+        var n = jd - 2451545.0;
+        var L = degToRad((280.46 + 0.9856474 * n) % 360);
+        var g = degToRad((357.528 + 0.9856003 * n) % 360);
+        var lambda = L + degToRad(1.915) * Math.sin(g) + degToRad(0.02) * Math.sin(2 * g);
+        var epsilon = degToRad(23.439 - 0.0000004 * n);
+        var alpha = Math.atan2(Math.cos(epsilon) * Math.sin(lambda), Math.cos(lambda));
+        var delta = Math.asin(Math.sin(epsilon) * Math.sin(lambda));
+        var gmstDeg = 280.46061837 + 360.98564736629 * (jd - 2451545.0);
+        var subsolarLon = wrapLon(radToDeg(alpha) - gmstDeg);
+        var subsolarLat = radToDeg(delta);
+        var unit = ecefFromLatLon(subsolarLat, subsolarLon, 1);
+        var mag = vecNorm(unit);
+        return vecScale(unit, 1 / mag);
+      }
+
+      function isSatSunlit(satVec, sunUnit) {
+        var proj = vecDot(satVec, sunUnit);
+        if (proj > 0) {
+          return true;
+        }
+        var perpSq = vecDot(satVec, satVec) - proj * proj;
+        return perpSq > EARTH_RADIUS_KM * EARTH_RADIUS_KM;
+      }
+
+      function computeVisibility(site, iss, sunUnit) {
+        if (!iss) {
+          return null;
+        }
+        // Visibility geometry: elevation from local vertical using ECEF vectors.
+        var ground = ecefFromLatLon(site.lat, site.lon, EARTH_RADIUS_KM);
+        var sat = ecefFromLatLon(iss.lat, iss.lon, EARTH_RADIUS_KM + iss.alt);
+        var los = vecSub(sat, ground);
+        var rangeKm = vecNorm(los);
+        if (!rangeKm) {
+          return null;
+        }
+        var up = vecScale(ground, 1 / EARTH_RADIUS_KM);
+        var losUnit = vecScale(los, 1 / rangeKm);
+        var elevationDeg = radToDeg(Math.asin(clamp(vecDot(losUnit, up), -1, 1)));
+        var inRange = elevationDeg > 0;
+        var sunDir = sunUnit || sunUnitEcef(new Date());
+        var groundSunAltDeg = radToDeg(Math.asin(clamp(vecDot(up, sunDir), -1, 1)));
+        var satSunlit = isSatSunlit(sat, sunDir);
+        var likelyVisible = inRange && elevationDeg >= MIN_NAKED_EYE_ELEV_DEG && groundSunAltDeg <= DARK_SKY_SUN_ALT_DEG && satSunlit;
+        return {
+          elevationDeg: elevationDeg,
+          rangeKm: rangeKm,
+          inRange: inRange,
+          likelyVisible: likelyVisible,
+          satSunlit: satSunlit,
+          groundSunAltDeg: groundSunAltDeg
+        };
+      }
+
+      function allStops() {
+        var stops = trackedStops.slice();
+        if (customStop) {
+          stops.push(customStop);
+        }
+        return stops;
+      }
+
+      async function fetchNextPass(lat, lon) {
+        var rawUrl = "http://api.open-notify.org/iss-pass.json?lat=" + encodeURIComponent(lat) + "&lon=" + encodeURIComponent(lon) + "&n=1";
         var proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(rawUrl);
         var res = await fetch(proxyUrl, { cache: "no-store" });
         if (!res.ok) {
@@ -1332,7 +1532,7 @@
 
       async function updatePassStatus() {
         try {
-          var pass = await fetchBoulderPass();
+          var pass = await fetchNextPass(boulder.lat, boulder.lon);
           var passTime = formatTimestamp(pass.risetime);
           var durationMin = Math.round(pass.duration / 60);
           statusEl.textContent = "Next Boulder pass: " + passTime + " (~" + durationMin + " min)";
@@ -1391,6 +1591,78 @@
           alt: globeState.sample.alt,
           vel: globeState.sample.vel
         };
+      }
+
+      async function geocodeLocation(query) {
+        var url = "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=" + encodeURIComponent(query);
+        var res = await fetch(url, { cache: "no-store", headers: { "Accept": "application/json" } });
+        if (!res.ok) {
+          throw new Error("location lookup failed");
+        }
+        var data = await res.json();
+        if (!Array.isArray(data) || !data.length) {
+          throw new Error("location not found");
+        }
+        var best = data[0];
+        var displayName = best.display_name || query;
+        var shortName = displayName.split(",").slice(0, 2).join(",").trim();
+        return {
+          id: "custom",
+          flag: "🟣",
+          name: shortName || query,
+          lat: Number(best.lat),
+          lon: Number(best.lon),
+          short: "Temporary user-selected location",
+          fullName: displayName
+        };
+      }
+
+      function setCustomStatus(message) {
+        if (customStatusEl) {
+          customStatusEl.textContent = message;
+        }
+      }
+
+      async function updateCustomVisibilityMessage(forcePassLookup) {
+        if (!customStop || !customStatusEl) {
+          return;
+        }
+
+        var iss = predictIssPosition() || globeState.sample;
+        if (!iss) {
+          setCustomStatus("Waiting for live ISS data to compute visibility for " + customStop.name + ".");
+          return;
+        }
+
+        var metrics = computeVisibility(customStop, iss);
+        customStop._metrics = metrics;
+
+        var baseMessage;
+        if (!metrics) {
+          baseMessage = "Visibility calculation unavailable for " + customStop.name + ".";
+        } else if (metrics.likelyVisible) {
+          baseMessage = "Yes: ISS is likely visible now from " + customStop.name + " (elevation " + metrics.elevationDeg.toFixed(1) + " deg).";
+        } else if (metrics.inRange) {
+          baseMessage = "ISS is above the horizon now from " + customStop.name + " (elevation " + metrics.elevationDeg.toFixed(1) + " deg), but naked-eye visibility is not guaranteed.";
+        } else {
+          baseMessage = "No: ISS is currently below the horizon from " + customStop.name + ".";
+        }
+
+        var nextPassText = "";
+        try {
+          if (forcePassLookup || !customStop.nextPass || Date.now() - (customStop.lastPassLookupMs || 0) > 5 * 60000) {
+            customStop.nextPass = await fetchNextPass(customStop.lat, customStop.lon);
+            customStop.lastPassLookupMs = Date.now();
+          }
+          if (customStop.nextPass && customStop.nextPass.risetime) {
+            var msToPass = customStop.nextPass.risetime * 1000 - Date.now();
+            nextPassText = " Next viewing range in " + formatDuration(msToPass) + " (" + formatTimestamp(customStop.nextPass.risetime) + ").";
+          }
+        } catch (error) {
+          nextPassText = " Next-pass estimate unavailable right now.";
+        }
+
+        setCustomStatus(baseMessage + nextPassText);
       }
 
       function initIssGlobe() {
@@ -1462,24 +1734,47 @@
         var worldGeo = null;
         var lastRenderedIss = null;
 
-        var cityDots = cityGroup.selectAll("circle")
-          .data(journeyStops)
-          .enter()
-          .append("circle")
-          .attr("stroke", "rgba(7,12,21,0.9)")
-          .attr("stroke-width", 0.9)
-          .style("cursor", "pointer")
-          .on("mouseenter", function (event, stop) {
-            showTooltip(event, stop.flag + " " + stop.name + " - " + stop.short);
-          })
-          .on("mousemove", function (event) {
-            positionTooltip(event);
-          })
-          .on("mouseleave", function () {
-            hideTooltip();
+        function ensureCityDots(stops) {
+          var dots = cityGroup.selectAll("circle.city-pin").data(stops, function (stop) {
+            return stop.id;
           });
 
-        function renderCities() {
+          dots.exit().remove();
+
+          var entered = dots.enter()
+            .append("circle")
+            .attr("class", "city-pin")
+            .attr("stroke", "rgba(7,12,21,0.9)")
+            .attr("stroke-width", 0.95)
+            .style("cursor", "pointer")
+            .on("mouseenter", function (event, stop) {
+              var metrics = stop._metrics;
+              var suffix = metrics ? " | elev " + metrics.elevationDeg.toFixed(1) + " deg" : "";
+              showTooltip(event, stop.flag + " " + stop.name + " - " + stop.short + suffix);
+            })
+            .on("mousemove", function (event) {
+              positionTooltip(event);
+            })
+            .on("mouseleave", function () {
+              hideTooltip();
+            });
+
+          return entered.merge(dots);
+        }
+
+        function renderCities(issPos) {
+          var stops = allStops();
+          var nowVisible = [];
+          var sunDir = sunUnitEcef(new Date());
+
+          stops.forEach(function (stop) {
+            stop._metrics = computeVisibility(stop, issPos, sunDir);
+            if (stop.id !== "custom" && stop._metrics && stop._metrics.inRange) {
+              nowVisible.push(stop.name.split(",")[0]);
+            }
+          });
+
+          var cityDots = ensureCityDots(stops);
           cityDots
             .style("display", function (stop) {
               return projection([stop.lon, stop.lat]) ? null : "none";
@@ -1493,11 +1788,29 @@
               return point ? point[1] : -9999;
             })
             .attr("fill", function (stop) {
-              return stop.id === "boulder" ? "#ffad5b" : "#ffea7a";
+              if (stop.id === "custom") {
+                return "#b66bff";
+              }
+              if (!stop._metrics || !stop._metrics.inRange) {
+                return "#d7dce6";
+              }
+              return stop._metrics.likelyVisible ? "#19c95f" : "#38d26f";
             })
             .attr("r", function (stop) {
-              return stop.id === "boulder" ? 5.9 : 4.5;
+              if (stop.id === "custom") {
+                return 6.2;
+              }
+              if (!stop._metrics || !stop._metrics.inRange) {
+                return 4.5;
+              }
+              return stop._metrics.likelyVisible ? 6.0 : 5.4;
             });
+
+          if (visibleCitiesEl) {
+            visibleCitiesEl.textContent = nowVisible.length
+              ? "Above-horizon now from tracked cities: " + nowVisible.join(", ") + "."
+              : "Above-horizon now from tracked cities: none.";
+          }
         }
 
         function renderTrail() {
@@ -1538,9 +1851,10 @@
             countries.style("display", "none");
           }
 
-          renderCities();
+          var issPos = predictIssPosition();
+          renderCities(issPos);
           renderTrail();
-          renderIss(predictIssPosition());
+          renderIss(issPos);
         }
 
         issDot
@@ -1610,6 +1924,9 @@
                 second: "2-digit"
               });
             }
+            if (customStop) {
+              updateCustomVisibilityMessage(false);
+            }
           } catch (error) {
             latEl.textContent = "Unavailable";
             lonEl.textContent = "Unavailable";
@@ -1628,6 +1945,11 @@
 
         refreshIssTelemetry();
         setInterval(refreshIssTelemetry, refreshMs);
+        setInterval(function () {
+          if (customStop) {
+            updateCustomVisibilityMessage(true);
+          }
+        }, 5 * 60000);
         animate();
       }
 
@@ -1639,6 +1961,29 @@
 
       updatePassStatus();
       setInterval(updatePassStatus, 10 * 60 * 1000);
+
+      if (customForm && customInput) {
+        customForm.addEventListener("submit", function (event) {
+          event.preventDefault();
+          var query = (customInput.value || "").trim();
+          if (!query) {
+            setCustomStatus("Please type a city, for example: Los Angeles or London, UK.");
+            return;
+          }
+
+          setCustomStatus("Searching location and evaluating ISS visibility...");
+          geocodeLocation(query)
+            .then(function (location) {
+              customStop = location;
+              customStop.nextPass = null;
+              customStop.lastPassLookupMs = 0;
+              updateCustomVisibilityMessage(true);
+            })
+            .catch(function () {
+              setCustomStatus("Location not found. Try a more specific query like City, Country.");
+            });
+        });
+      }
     })();
 
     (function () {
