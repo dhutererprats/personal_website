@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Deep Dive: Robust Interplanetary Trajectory Design with RL (PPO)</title>
   <link rel="stylesheet" href="../style.css" />
+  <script src="../theme-toggle.js" defer></script>
   <link rel="icon" href="../icons/astronaut.ico" type="image/x-icon"/>
   <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
   <!-- MathJax for equations -->
@@ -46,11 +47,15 @@
   </style>
 </head>
 <body>
-  <button class="theme-toggle" onclick="toggleTheme()">🌓 Toggle Theme</button>
   <nav class="site-nav" aria-label="Primary">
     <a href="../index.html">Home</a>
     <a href="../research.html">Research</a>
     <a href="../about.html">About</a>
+    <a href="../publications.html">Publications</a>
+    <button class="theme-toggle" aria-label="Toggle theme">
+      <span class="theme-toggle-icon" aria-hidden="true">◑</span>
+      <span class="theme-toggle-text">Dark mode</span>
+    </button>
   </nav>
 
   <div class="homepage-container blog-container">
@@ -218,12 +223,6 @@ store(obs_k, Delta_v_cmd, r_k);
   </div>
 
   <script>
-    function toggleTheme() {
-      const html = document.documentElement;
-      const current = html.getAttribute("data-theme") || "light";
-      html.setAttribute("data-theme", current === "dark" ? "light" : "dark");
-    }
-
     // ----- PPO clipped objective widget -----
     const canvas = document.getElementById('ppoCanvas');
     const ctx = canvas.getContext('2d');
@@ -330,5 +329,3 @@ store(obs_k, Delta_v_cmd, r_k);
   </script>
 </body>
 </html>
-
-

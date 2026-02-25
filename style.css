@@ -225,17 +225,37 @@ footer {
 }
 
 
-/* Dark mode toggle button */
-.toggle-theme {
-  position: fixed;
-  top: 1rem;
-  right: 1rem;
-  padding: 0.5rem 1rem;
-  background: var(--accent-color);
-  color: white;
-  border: none;
-  border-radius: 6px;
+/* Theme toggle in top nav: icon + target mode label */
+.theme-toggle {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  padding: 0.42rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
+  color: var(--text-color);
   cursor: pointer;
+  font-size: 0.84rem;
+  font-weight: 600;
+  line-height: 1;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.theme-toggle:hover {
+  border-color: var(--accent-color);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.14);
+  transform: translateY(-1px);
+}
+
+.theme-toggle-icon {
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.theme-toggle-text {
+  letter-spacing: 0.01em;
 }
 
 /* Project layout and size */
@@ -474,7 +494,9 @@ footer {
   top: 0;
   z-index: 1000;
   display: flex;
+  align-items: center;
   gap: 0.25rem;
+  flex-wrap: wrap;
   padding: 0.5rem 1rem;
   background: var(--header-bg);
   border-bottom: 1px solid var(--border-color);
@@ -498,6 +520,14 @@ footer {
 .site-nav a[aria-current="page"] {
   background: var(--accent-color);
   color: #fff;
+}
+
+@media (max-width: 760px) {
+  .theme-toggle {
+    margin-left: 0;
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 .projects .project-item a.image-container {

@@ -5,18 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>About Me — Daniel Huterer Prats</title>
   <link rel="stylesheet" href="style.css" />
+  <script src="theme-toggle.js" defer></script>
   <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
   <link rel="icon" href="icons/astronaut.ico" type="image/x-icon"/>
 </head>
 <body>
-  <!-- theme toggle (reuses your existing JS) -->
-  <button class="theme-toggle" onclick="toggleTheme()">🌓 Toggle Theme</button>
-
   <!-- site nav -->
   <nav class="site-nav" aria-label="Primary">
     <a href="index.html">Home</a>
     <a href="research.html">Research</a>
     <a href="about.html" class="active" aria-current="page">About Me</a>
+    <a href="publications.html">Publications</a>
+    <button class="theme-toggle" aria-label="Toggle theme">
+      <span class="theme-toggle-icon" aria-hidden="true">◑</span>
+      <span class="theme-toggle-text">Dark mode</span>
+    </button>
   </nav>
 
   <div class="homepage-container">
@@ -50,13 +53,5 @@
     </footer>
   </div>
 
-  <script>
-    // Reuse the same theme toggler you already have on index.html
-    function toggleTheme() {
-      const html = document.documentElement;
-      const current = html.getAttribute("data-theme") || "light";
-      html.setAttribute("data-theme", current === "dark" ? "light" : "dark");
-    }
-  </script>
 </body>
 </html>
