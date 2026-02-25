@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Publications - Daniel Huterer Prats</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="theme-toggle.js" defer></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <link rel="icon" href="icons/astronaut.ico" type="image/x-icon"/>
+  <link rel="canonical" href="https://dhutererprats.github.io/publications.html"/>
+  <style>
+    .pub-main {
+      padding-top: 1.2rem;
+    }
+
+    .pub-intro {
+      background: linear-gradient(150deg, #122344 0%, #1f4278 100%);
+      color: #fff;
+      border-radius: 16px;
+      padding: 1.2rem 1.3rem;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      margin-bottom: 1.3rem;
+    }
+
+    .pub-intro h1 {
+      margin: 0 0 0.45rem;
+      color: #fff;
+    }
+
+    .pub-intro p {
+      margin: 0;
+      line-height: 1.6;
+      max-width: 78ch;
+      color: rgba(255, 255, 255, 0.94);
+    }
+
+    .pub-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    @media (min-width: 980px) {
+      .pub-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    .pub-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 1rem;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+    }
+
+    .pub-type {
+      display: inline-block;
+      border: 1px solid var(--border-color);
+      border-radius: 999px;
+      padding: 0.2rem 0.55rem;
+      font-size: 0.78rem;
+      margin-bottom: 0.45rem;
+    }
+
+    .pub-card h2 {
+      margin: 0.1rem 0 0.4rem;
+      font-size: 1.08rem;
+      line-height: 1.35;
+    }
+
+    .pub-meta {
+      margin: 0 0 0.45rem;
+      font-size: 0.9rem;
+      opacity: 0.86;
+    }
+
+    .pub-authors {
+      margin: 0 0 0.6rem;
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+
+    .pub-desc {
+      margin: 0 0 0.75rem;
+      line-height: 1.6;
+      font-size: 0.95rem;
+    }
+
+    .pub-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      margin-bottom: 0.65rem;
+    }
+
+    .pub-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.3rem 0.62rem;
+      border-radius: 999px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-color);
+      font-size: 0.86rem;
+      text-decoration: none;
+      color: var(--text-color);
+    }
+
+    .pub-link:hover {
+      border-color: var(--accent-color);
+      text-decoration: none;
+    }
+
+    .pub-link.scholar {
+      width: 2rem;
+      justify-content: center;
+      padding: 0.3rem;
+      font-size: 1rem;
+    }
+
+    .citation {
+      display: inline-block;
+      font-size: 0.82rem;
+      opacity: 0.82;
+      border-top: 1px dashed var(--border-color);
+      padding-top: 0.55rem;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <nav class="site-nav" aria-label="Primary">
+    <a href="index.html">Home</a>
+    <a href="research.html">Research</a>
+    <a href="about.html">About Me</a>
+    <a href="publications.html" class="active" aria-current="page">Publications</a>
+    <button class="theme-toggle" aria-label="Toggle theme">
+      <span class="theme-toggle-icon" aria-hidden="true">◑</span>
+      <span class="theme-toggle-text">Dark mode</span>
+    </button>
+  </nav>
+
+  <div class="homepage-container">
+    <main class="pub-main">
+      <section class="pub-intro">
+        <h1>Publications</h1>
+        <p>
+          This page is a curated overview of my research papers and conference contributions in space autonomy, astrodynamics, and astrophysics. If you are visiting for the first time, this is the best place to quickly see what I have published, where it appeared, and where to read or watch each contribution.
+        </p>
+      </section>
+
+      <section class="pub-grid">
+        <article class="pub-card">
+          <span class="pub-type">Conference • 2026</span>
+          <h2>Autonomous Space-Based Imaging: Reinforcement Learning Scheduling with Downlink Latency and Resource-Aware Actions</h2>
+          <p class="pub-meta">AAS Rocky Mountain GN&amp;C Conference, Breckenridge, Colorado, Jan. 31-Feb. 4, 2026</p>
+          <p class="pub-authors"><strong>Daniel Huterer Prats</strong>, Hanspeter Schaub</p>
+          <p class="pub-desc">Presents a POMDP-based RL scheduler for autonomous RSO imaging under line-of-sight, lighting, battery, wheel-momentum, and downlink constraints in a high-fidelity Basilisk simulation.</p>
+          <div class="pub-links">
+            <a class="pub-link" href="https://hanspeterschaub.info/Papers/HutererPrats2026.pdf" target="_blank" rel="noopener">PDF</a>
+            <a class="pub-link" href="https://www.xcdsystem.com/aas/program/w8LRlcl/index.cfm" target="_blank" rel="noopener">Conference Program</a>
+            <a class="pub-link" href="https://www.youtube.com/watch?v=o_yLNhcnVEM" target="_blank" rel="noopener"><iconify-icon icon="mdi:youtube"></iconify-icon>Talk Video</a>
+            <a class="pub-link scholar" href="https://scholar.google.com/scholar?q=Autonomous+Space-Based+Imaging%3A+Reinforcement+Learning+Scheduling+with+Downlink+Latency+and+Resource-Aware+Actions" target="_blank" rel="noopener" aria-label="Google Scholar result">
+              <iconify-icon icon="simple-icons:googlescholar"></iconify-icon>
+            </a>
+          </div>
+        </article>
+
+        <article class="pub-card">
+          <span class="pub-type">Conference • 2025</span>
+          <h2>Reinforcement Learning for Space-to-Space Surveillance: Autonomous Scheduling for Resident Space Object Imaging</h2>
+          <p class="pub-meta">Advanced Maui Optical and Space Surveillance Technologies Conference, Maui, Hawaii, Sept. 16-19, 2025</p>
+          <p class="pub-authors"><strong>Daniel Huterer Prats</strong>, Hanspeter Schaub, Chris Wheeler</p>
+          <p class="pub-desc">Investigates RL-based scheduling for autonomous space-based imaging in dynamic orbital environments, including observation opportunities, downlink latency, and onboard resource limits.</p>
+          <div class="pub-links">
+            <a class="pub-link" href="https://amostech.com/TechnicalPapers/2025/Machine-Learning-for-SDA-Applications/Huterer%20Prats.pdf" target="_blank" rel="noopener">PDF</a>
+            <a class="pub-link" href="https://amostech.space/amos/2025/" target="_blank" rel="noopener">Technical Library</a>
+            <a class="pub-link" href="https://www.youtube.com/watch?v=nU8sa1a_Ijs" target="_blank" rel="noopener"><iconify-icon icon="mdi:youtube"></iconify-icon>Talk Video</a>
+            <a class="pub-link scholar" href="https://scholar.google.com/scholar?q=Reinforcement+Learning+for+Space-to-Space+Surveillance%3A+Autonomous+Scheduling+for+Resident+Space+Object+Imaging" target="_blank" rel="noopener" aria-label="Google Scholar result">
+              <iconify-icon icon="simple-icons:googlescholar"></iconify-icon>
+            </a>
+          </div>
+        </article>
+
+        <article class="pub-card">
+          <span class="pub-type">Conference • 2025</span>
+          <h2>Autonomous Satellite Inspection in Low Earth Orbit with Optimization-Based Safety Guarantees</h2>
+          <p class="pub-meta">International Workshop on Planning &amp; Scheduling for Space, Toulouse, France, April 28-30, 2025</p>
+          <p class="pub-authors">M. Stephenson, <strong>D. Huterer Prats</strong>, H. Schaub</p>
+          <p class="pub-desc">Introduces a shielded MDP framework for autonomous LEO inspection planning that balances task completion and safety constraints in dynamic operational scenarios.</p>
+          <div class="pub-links">
+            <a class="pub-link" href="https://hanspeterschaub.info/Papers/Stephenson2025a.pdf" target="_blank" rel="noopener">PDF</a>
+            <a class="pub-link" href="https://iwpss.org/program/" target="_blank" rel="noopener">Workshop Program</a>
+            <a class="pub-link scholar" href="https://scholar.google.com/scholar?q=Autonomous+Satellite+Inspection+in+Low+Earth+Orbit+with+Optimization-Based+Safety+Guarantees" target="_blank" rel="noopener" aria-label="Google Scholar result">
+              <iconify-icon icon="simple-icons:googlescholar"></iconify-icon>
+            </a>
+          </div>
+        </article>
+
+        <article class="pub-card">
+          <span class="pub-type">Upcoming • 2026</span>
+          <h2>Responsive Autonomous RSO Imaging and Catalog Maintenance Using Reinforcement Learning Across Orbital Regimes</h2>
+          <p class="pub-meta">Advanced Maui Optical and Space Surveillance Technologies Conference, Maui, Hawaii, Sept. 15-18, 2026</p>
+          <p class="pub-authors"><strong>D. Huterer Prats</strong>, H. Schaub</p>
+          <p class="pub-desc">Upcoming paper teaser: extends autonomous RSO imaging to broader orbital-regime coverage with catalog maintenance objectives and reinforcement-learning-based responsive scheduling.</p>
+          <div class="pub-links">
+            <a class="pub-link" href="https://amostech.com/" target="_blank" rel="noopener">Conference Site</a>
+            <a class="pub-link scholar" href="https://scholar.google.com/scholar?q=Responsive+Autonomous+RSO+Imaging+and+Catalog+Maintenance+Using+Reinforcement+Learning+Across+Orbital+Regimes" target="_blank" rel="noopener" aria-label="Google Scholar result">
+              <iconify-icon icon="simple-icons:googlescholar"></iconify-icon>
+            </a>
+          </div>
+        </article>
+
+        <article class="pub-card">
+          <span class="pub-type">Journal • 2021</span>
+          <h2>Creating a galaxy lacking dark matter in a dark matter dominated universe</h2>
+          <p class="pub-meta">Monthly Notices of the Royal Astronomical Society (MNRAS), 501, 693</p>
+          <p class="pub-authors">Andrea V. Macciò, <strong>Daniel Huterer Prats</strong>, Keri L. Dixon, Tobias Buck, Stefan Waterval, Nikhil Arora, Stéphane Courteau, Xi Kang</p>
+          <p class="pub-desc">Hydrodynamical cosmological simulations show that tidal interactions can produce galaxies that appear dark-matter deficient even in a dark-matter-dominated universe. After a strong radial pericentric passage, dwarfs can lose up to about 80% of dark matter, with central dark-matter-to-stellar ratios dropping toward values reported for NGC1052-DF2 and NGC1052-DF4.</p>
+          <div class="pub-links">
+            <a class="pub-link" href="https://ui.adsabs.harvard.edu/abs/2021MNRAS.501..693M/abstract" target="_blank" rel="noopener">ADS Abstract</a>
+            <a class="pub-link" href="https://arxiv.org/abs/2010.02245" target="_blank" rel="noopener">arXiv</a>
+            <a class="pub-link" href="https://doi.org/10.48550/arXiv.2010.02245" target="_blank" rel="noopener">arXiv DOI</a>
+            <a class="pub-link" href="https://doi.org/10.1093/mnras/staa3716" target="_blank" rel="noopener">Journal DOI</a>
+            <a class="pub-link scholar" href="https://scholar.google.com/scholar?q=Creating+a+galaxy+lacking+dark+matter+in+a+dark+matter+dominated+universe" target="_blank" rel="noopener" aria-label="Google Scholar result">
+              <iconify-icon icon="simple-icons:googlescholar"></iconify-icon>
+            </a>
+          </div>
+          <span class="citation" data-doi="10.1093/mnras/staa3716">Citations: loading live count...</span>
+        </article>
+      </section>
+    </main>
+
+    <footer>
+      <p>© 2025 Daniel Huterer Prats. Built from scratch with care 🛰️</p>
+    </footer>
+  </div>
+
+  <script>
+    async function loadCitationCounts() {
+      const targets = document.querySelectorAll(".citation[data-doi]");
+      for (const target of targets) {
+        const doi = target.getAttribute("data-doi");
+        try {
+          const url = "https://api.openalex.org/works/https://doi.org/" + encodeURIComponent(doi);
+          const response = await fetch(url);
+          if (!response.ok) {
+            target.remove();
+            continue;
+          }
+          const data = await response.json();
+          const count = Number(data.cited_by_count || 0);
+          target.textContent = "Citations: " + count.toLocaleString() + " (live via OpenAlex)";
+        } catch (err) {
+          target.remove();
+        }
+      }
+    }
+
+    loadCitationCounts();
+  </script>
+</body>
+</html>
