@@ -20,6 +20,8 @@
   <link rel="stylesheet" href="style.css" />
   <script src="theme-toggle.js" defer></script>
   <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js" defer></script>
   <link rel="icon" href="icons/astronaut.ico" type="image/x-icon"/>
   <link rel="canonical" href="https://dhutererprats.github.io/"/>
   <script type="application/ld+json">
@@ -576,6 +578,7 @@
     }
 
     .iss-visual {
+      position: relative;
       margin-top: 0.7rem;
       border: 1px solid color-mix(in oklab, var(--border-color) 75%, #6ca4ff 25%);
       border-radius: 10px;
@@ -583,10 +586,53 @@
       overflow: hidden;
     }
 
-    #iss-map {
+    .iss-globe-wrap {
+      position: relative;
       width: 100%;
-      height: 210px;
+      min-height: 260px;
+    }
+
+    #iss-globe {
+      width: 100%;
+      height: 260px;
       display: block;
+    }
+
+    .iss-globe-tooltip {
+      position: absolute;
+      left: 0;
+      top: 0;
+      pointer-events: none;
+      background: rgba(8, 14, 30, 0.92);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      border-radius: 8px;
+      padding: 0.35rem 0.5rem;
+      font-size: 0.78rem;
+      max-width: 220px;
+      line-height: 1.35;
+      z-index: 2;
+      transform: translate(10px, 10px);
+    }
+
+    .iss-city-legend {
+      margin-top: 0.58rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      align-items: center;
+    }
+
+    .iss-city-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.24rem;
+      border: 1px solid var(--border-color);
+      border-radius: 999px;
+      padding: 0.16rem 0.5rem;
+      font-size: 0.75rem;
+      background: color-mix(in oklab, var(--bg-color) 88%, #091e3b 12%);
+      opacity: 0.9;
     }
 
     .iss-stats {
@@ -645,6 +691,10 @@
     .iss-pass-link:hover {
       text-decoration: none;
       border-bottom-style: solid;
+    }
+
+    .mission-pathway-hidden[hidden] {
+      display: none !important;
     }
 
     .roadmap-wrap {
@@ -789,7 +839,7 @@
       }
 
       .home-mission-grid {
-        grid-template-columns: 1.3fr 1fr 1fr;
+        grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
       }
     }
 
@@ -1083,22 +1133,37 @@
 
       <section class="home-mission" aria-labelledby="mission-title">
         <div class="home-section-head">
-          <h2 id="mission-title">Mission Control and Astronaut Journey</h2>
-          <p class="home-section-note">Live orbital context, long-term astronaut pathway, and a weekly space image feed.</p>
+          <h2 id="mission-title">Mission Control and Space Highlights</h2>
+          <p class="home-section-note">Live ISS orbital context with global journey city markers, plus a weekly space image feed.</p>
         </div>
 
         <div class="home-mission-grid">
           <article class="mission-card" aria-labelledby="iss-live-title">
             <h3 id="iss-live-title">ISS Live Mission Control</h3>
-            <p>Real-time ISS telemetry with current orbit state and Boulder pass forecasting from public APIs.</p>
+            <p>Interactive 3D-style globe with live ISS motion, real telemetry, and pins for Boulder plus places where you've lived, studied, and worked.</p>
             <div class="iss-visual">
-              <canvas id="iss-map" width="960" height="420" role="img" aria-label="Map showing current ISS and Boulder positions"></canvas>
+              <div class="iss-globe-wrap">
+                <svg id="iss-globe" viewBox="0 0 760 460" role="img" aria-label="Interactive globe showing live ISS position and journey cities"></svg>
+                <div id="iss-globe-tooltip" class="iss-globe-tooltip" hidden></div>
+              </div>
+            </div>
+            <div class="iss-city-legend" aria-label="Pinned cities on ISS globe">
+              <span class="iss-city-pill">📍 Milan</span>
+              <span class="iss-city-pill">📍 Moedling</span>
+              <span class="iss-city-pill">📍 Riyadh</span>
+              <span class="iss-city-pill">📍 Abu Dhabi</span>
+              <span class="iss-city-pill">📍 New York City</span>
+              <span class="iss-city-pill">📍 Barcelona</span>
+              <span class="iss-city-pill">📍 Toulouse</span>
+              <span class="iss-city-pill">📍 Boulder</span>
             </div>
             <div class="iss-stats" aria-live="polite">
               <p><span>Latitude</span><strong id="iss-lat">--</strong></p>
               <p><span>Longitude</span><strong id="iss-lon">--</strong></p>
               <p><span>Altitude</span><strong id="iss-alt">--</strong></p>
               <p><span>Velocity</span><strong id="iss-vel">--</strong></p>
+              <p><span>Updated</span><strong id="iss-updated">--</strong></p>
+              <p><span>Refresh</span><strong>~4s</strong></p>
             </div>
             <div class="iss-pass-row">
               <span class="iss-pass-status" id="iss-pass-status">Next Boulder pass: loading...</span>
@@ -1106,7 +1171,7 @@
             </div>
           </article>
 
-          <article class="mission-card" aria-labelledby="pathway-title">
+          <article class="mission-card mission-pathway-hidden" aria-labelledby="pathway-title" hidden aria-hidden="true">
             <h3 id="pathway-title">Astronaut Pathway</h3>
             <p>An interactive roadmap from autonomous-space research to future human spaceflight mission operations.</p>
             <div class="roadmap-wrap">
@@ -1192,18 +1257,38 @@
     })();
 
     (function () {
-      var canvas = document.getElementById("iss-map");
-      if (!canvas) {
+      var svgNode = document.getElementById("iss-globe");
+      if (!svgNode) {
         return;
       }
 
-      var ctx = canvas.getContext("2d");
-      var boulder = { lat: 40.015, lon: -105.2705 };
+      var tooltip = document.getElementById("iss-globe-tooltip");
       var statusEl = document.getElementById("iss-pass-status");
       var latEl = document.getElementById("iss-lat");
       var lonEl = document.getElementById("iss-lon");
       var altEl = document.getElementById("iss-alt");
       var velEl = document.getElementById("iss-vel");
+      var updatedEl = document.getElementById("iss-updated");
+      var refreshMs = 4000;
+      var ISS_URL = "https://api.wheretheiss.at/v1/satellites/25544";
+      var boulder = { name: "Boulder, Colorado, USA", lat: 40.015, lon: -105.2705 };
+      var journeyStops = [
+        { id: "milan", flag: "🇮🇹", name: "Milan, Italy", lat: 45.4642, lon: 9.19, short: "Born and first 4 years." },
+        { id: "moedling", flag: "🇦🇹", name: "Moedling, Austria", lat: 48.0867, lon: 16.2892, short: "Childhood years." },
+        { id: "riyadh", flag: "🇸🇦", name: "Riyadh, Saudi Arabia", lat: 24.7136, lon: 46.6753, short: "High school period." },
+        { id: "abudhabi", flag: "🇦🇪", name: "Abu Dhabi, UAE", lat: 24.4539, lon: 54.3773, short: "BSc Physics at NYU Abu Dhabi." },
+        { id: "nyc", flag: "🇺🇸", name: "New York City, USA", lat: 40.7128, lon: -74.006, short: "NYU study-away semester." },
+        { id: "barcelona", flag: "🇪🇸", name: "Barcelona, Spain", lat: 41.3874, lon: 2.1686, short: "Master's in Aerospace." },
+        { id: "toulouse", flag: "🇫🇷", name: "Toulouse, France", lat: 43.6047, lon: 1.4442, short: "Industry roles in aerospace." },
+        { id: "boulder", flag: "🇺🇸", name: "Boulder, Colorado, USA", lat: 40.015, lon: -105.2705, short: "Current PhD at CU Boulder." }
+      ];
+      var globeState = {
+        sample: null,
+        sampleAtMs: 0,
+        latRate: 0,
+        lonRate: 0,
+        trail: []
+      };
 
       function wrapLon(lon) {
         var wrapped = lon;
@@ -1212,90 +1297,23 @@
         return wrapped;
       }
 
-      function toXY(lat, lon, width, height) {
-        return {
-          x: ((wrapLon(lon) + 180) / 360) * width,
-          y: ((90 - lat) / 180) * height
-        };
+      function shortestLonDelta(fromLon, toLon) {
+        var delta = wrapLon(toLon) - wrapLon(fromLon);
+        if (delta > 180) delta -= 360;
+        if (delta < -180) delta += 360;
+        return delta;
       }
 
-      function resizeCanvas() {
-        var dpr = window.devicePixelRatio || 1;
-        var cssWidth = canvas.clientWidth;
-        var cssHeight = canvas.clientHeight;
-        canvas.width = Math.max(1, Math.floor(cssWidth * dpr));
-        canvas.height = Math.max(1, Math.floor(cssHeight * dpr));
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      }
-
-      function drawBackground() {
-        var w = canvas.clientWidth;
-        var h = canvas.clientHeight;
-
-        var g = ctx.createLinearGradient(0, 0, 0, h);
-        g.addColorStop(0, "#031020");
-        g.addColorStop(1, "#0a1f37");
-        ctx.fillStyle = g;
-        ctx.fillRect(0, 0, w, h);
-
-        ctx.strokeStyle = "rgba(170, 210, 255, 0.16)";
-        ctx.lineWidth = 1;
-        for (var lat = -60; lat <= 60; lat += 30) {
-          var y = toXY(lat, 0, w, h).y;
-          ctx.beginPath();
-          ctx.moveTo(0, y);
-          ctx.lineTo(w, y);
-          ctx.stroke();
-        }
-        for (var lon = -150; lon <= 150; lon += 30) {
-          var x = toXY(0, lon, w, h).x;
-          ctx.beginPath();
-          ctx.moveTo(x, 0);
-          ctx.lineTo(x, h);
-          ctx.stroke();
-        }
-      }
-
-      function drawMarker(lat, lon, color, radius) {
-        var w = canvas.clientWidth;
-        var h = canvas.clientHeight;
-        var point = toXY(lat, lon, w, h);
-        ctx.beginPath();
-        ctx.arc(point.x, point.y, radius + 3, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(point.x, point.y, radius, 0, Math.PI * 2);
-        ctx.fillStyle = color;
-        ctx.fill();
-        return point;
-      }
-
-      function drawScene(iss) {
-        drawBackground();
-        var boulderPoint = drawMarker(boulder.lat, boulder.lon, "#ffd35d", 4);
-        var issPoint = drawMarker(iss.latitude, iss.longitude, "#63d8ff", 5);
-
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.28)";
-        ctx.setLineDash([4, 4]);
-        ctx.beginPath();
-        ctx.moveTo(boulderPoint.x, boulderPoint.y);
-        ctx.lineTo(issPoint.x, issPoint.y);
-        ctx.stroke();
-        ctx.setLineDash([]);
-
-        ctx.font = "12px system-ui, sans-serif";
-        ctx.fillStyle = "rgba(255,255,255,0.86)";
-        ctx.fillText("Boulder", boulderPoint.x + 8, boulderPoint.y - 6);
-        ctx.fillText("ISS", issPoint.x + 8, issPoint.y - 6);
-      }
-
-      async function fetchIss() {
-        var res = await fetch("https://api.wheretheiss.at/v1/satellites/25544", { cache: "no-store" });
-        if (!res.ok) {
-          throw new Error("ISS API unavailable");
-        }
-        return res.json();
+      function formatTimestamp(epochSeconds) {
+        var date = new Date(epochSeconds * 1000);
+        return date.toLocaleString([], {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+          timeZoneName: "short"
+        });
       }
 
       async function fetchBoulderPass() {
@@ -1312,39 +1330,10 @@
         return data.response[0];
       }
 
-      function formatUtcTimestamp(epochSeconds) {
-        var date = new Date(epochSeconds * 1000);
-        return date.toLocaleString([], {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-          hour: "numeric",
-          minute: "2-digit",
-          timeZoneName: "short"
-        });
-      }
-
-      async function updateIss() {
-        try {
-          var iss = await fetchIss();
-          latEl.textContent = iss.latitude.toFixed(2) + " deg";
-          lonEl.textContent = iss.longitude.toFixed(2) + " deg";
-          altEl.textContent = iss.altitude.toFixed(1) + " km";
-          velEl.textContent = iss.velocity.toFixed(0) + " km/h";
-          drawScene(iss);
-        } catch (error) {
-          latEl.textContent = "Unavailable";
-          lonEl.textContent = "Unavailable";
-          altEl.textContent = "Unavailable";
-          velEl.textContent = "Unavailable";
-          drawBackground();
-        }
-      }
-
       async function updatePassStatus() {
         try {
           var pass = await fetchBoulderPass();
-          var passTime = formatUtcTimestamp(pass.risetime);
+          var passTime = formatTimestamp(pass.risetime);
           var durationMin = Math.round(pass.duration / 60);
           statusEl.textContent = "Next Boulder pass: " + passTime + " (~" + durationMin + " min)";
         } catch (error) {
@@ -1352,16 +1341,304 @@
         }
       }
 
-      resizeCanvas();
-      drawBackground();
-      updateIss();
+      function showTooltip(event, text) {
+        if (!tooltip) {
+          return;
+        }
+        tooltip.textContent = text;
+        tooltip.removeAttribute("hidden");
+        positionTooltip(event);
+      }
+
+      function positionTooltip(event) {
+        if (!tooltip || tooltip.hasAttribute("hidden")) {
+          return;
+        }
+        var panelRect = svgNode.getBoundingClientRect();
+        tooltip.style.left = (event.clientX - panelRect.left) + "px";
+        tooltip.style.top = (event.clientY - panelRect.top) + "px";
+      }
+
+      function hideTooltip() {
+        if (tooltip) {
+          tooltip.setAttribute("hidden", "");
+        }
+      }
+
+      async function fetchIssSample() {
+        var res = await fetch(ISS_URL, { cache: "no-store" });
+        if (!res.ok) {
+          throw new Error("ISS API unavailable");
+        }
+        var data = await res.json();
+        return {
+          lat: Number(data.latitude),
+          lon: Number(data.longitude),
+          alt: Number(data.altitude),
+          vel: Number(data.velocity),
+          time: Number(data.timestamp)
+        };
+      }
+
+      function predictIssPosition() {
+        if (!globeState.sample) {
+          return null;
+        }
+        var elapsedSec = Math.min((Date.now() - globeState.sampleAtMs) / 1000, (refreshMs / 1000) * 1.6);
+        return {
+          lat: Math.max(-89, Math.min(89, globeState.sample.lat + globeState.latRate * elapsedSec)),
+          lon: wrapLon(globeState.sample.lon + globeState.lonRate * elapsedSec),
+          alt: globeState.sample.alt,
+          vel: globeState.sample.vel
+        };
+      }
+
+      function initIssGlobe() {
+        if (!window.d3 || !window.topojson) {
+          statusEl.textContent = "ISS globe unavailable in this browser/network setup.";
+          latEl.textContent = "Unavailable";
+          lonEl.textContent = "Unavailable";
+          altEl.textContent = "Unavailable";
+          velEl.textContent = "Unavailable";
+          if (updatedEl) {
+            updatedEl.textContent = "Unavailable";
+          }
+          return;
+        }
+
+        var width = 760;
+        var height = 460;
+        var projection = d3.geoOrthographic()
+          .scale(206)
+          .translate([width / 2, height / 2])
+          .clipAngle(90)
+          .precision(0.3)
+          .rotate([-boulder.lon, -boulder.lat, 0]);
+        var path = d3.geoPath(projection);
+        var line = d3.line().x(function (d) { return d[0]; }).y(function (d) { return d[1]; });
+        var svg = d3.select(svgNode);
+        svg.selectAll("*").remove();
+
+        var defs = svg.append("defs");
+        var oceanGradient = defs.append("radialGradient")
+          .attr("id", "issOceanGradient")
+          .attr("cx", "42%")
+          .attr("cy", "34%");
+        oceanGradient.append("stop").attr("offset", "0%").attr("stop-color", "#72c8ff");
+        oceanGradient.append("stop").attr("offset", "45%").attr("stop-color", "#2e78c0");
+        oceanGradient.append("stop").attr("offset", "100%").attr("stop-color", "#153e74");
+
+        var globeLayer = svg.append("g");
+        var sphere = globeLayer.append("path")
+          .datum({ type: "Sphere" })
+          .attr("fill", "url(#issOceanGradient)")
+          .attr("stroke", "rgba(255,255,255,0.45)")
+          .attr("stroke-width", 1.15);
+        var graticule = globeLayer.append("path")
+          .datum(d3.geoGraticule10())
+          .attr("fill", "none")
+          .attr("stroke", "rgba(255,255,255,0.21)")
+          .attr("stroke-width", 0.55);
+        var countries = globeLayer.append("path")
+          .attr("fill", "rgba(223, 180, 122, 0.84)")
+          .attr("stroke", "rgba(24, 40, 57, 0.82)")
+          .attr("stroke-width", 0.5);
+        var trailPath = globeLayer.append("path")
+          .attr("fill", "none")
+          .attr("stroke", "rgba(99, 216, 255, 0.7)")
+          .attr("stroke-width", 1.45)
+          .attr("stroke-linecap", "round");
+        var cityGroup = globeLayer.append("g");
+        var issGlow = globeLayer.append("circle")
+          .attr("r", 10)
+          .attr("fill", "rgba(99,216,255,0.26)")
+          .style("pointer-events", "none");
+        var issDot = globeLayer.append("circle")
+          .attr("r", 4.8)
+          .attr("fill", "#63d8ff")
+          .attr("stroke", "#e8f7ff")
+          .attr("stroke-width", 1.2);
+
+        var worldGeo = null;
+        var lastRenderedIss = null;
+
+        var cityDots = cityGroup.selectAll("circle")
+          .data(journeyStops)
+          .enter()
+          .append("circle")
+          .attr("stroke", "rgba(7,12,21,0.9)")
+          .attr("stroke-width", 0.9)
+          .style("cursor", "pointer")
+          .on("mouseenter", function (event, stop) {
+            showTooltip(event, stop.flag + " " + stop.name + " - " + stop.short);
+          })
+          .on("mousemove", function (event) {
+            positionTooltip(event);
+          })
+          .on("mouseleave", function () {
+            hideTooltip();
+          });
+
+        function renderCities() {
+          cityDots
+            .style("display", function (stop) {
+              return projection([stop.lon, stop.lat]) ? null : "none";
+            })
+            .attr("cx", function (stop) {
+              var point = projection([stop.lon, stop.lat]);
+              return point ? point[0] : -9999;
+            })
+            .attr("cy", function (stop) {
+              var point = projection([stop.lon, stop.lat]);
+              return point ? point[1] : -9999;
+            })
+            .attr("fill", function (stop) {
+              return stop.id === "boulder" ? "#ffad5b" : "#ffea7a";
+            })
+            .attr("r", function (stop) {
+              return stop.id === "boulder" ? 5.9 : 4.5;
+            });
+        }
+
+        function renderTrail() {
+          var projected = globeState.trail
+            .map(function (point) { return projection([point.lon, point.lat]); })
+            .filter(function (point) { return !!point; });
+          if (projected.length < 2) {
+            trailPath.style("display", "none");
+            return;
+          }
+          trailPath.style("display", null).attr("d", line(projected));
+        }
+
+        function renderIss(issPos) {
+          if (!issPos) {
+            issDot.style("display", "none");
+            issGlow.style("display", "none");
+            return;
+          }
+          lastRenderedIss = issPos;
+          var point = projection([issPos.lon, issPos.lat]);
+          if (!point) {
+            issDot.style("display", "none");
+            issGlow.style("display", "none");
+            return;
+          }
+          issGlow.style("display", null).attr("cx", point[0]).attr("cy", point[1]);
+          issDot.style("display", null).attr("cx", point[0]).attr("cy", point[1]);
+        }
+
+        function render() {
+          sphere.attr("d", path);
+          graticule.attr("d", path);
+
+          if (worldGeo) {
+            countries.style("display", null).datum(worldGeo).attr("d", path);
+          } else {
+            countries.style("display", "none");
+          }
+
+          renderCities();
+          renderTrail();
+          renderIss(predictIssPosition());
+        }
+
+        issDot
+          .style("cursor", "pointer")
+          .on("mouseenter", function (event) {
+            if (!lastRenderedIss) {
+              return;
+            }
+            showTooltip(
+              event,
+              "🛰️ ISS - " + lastRenderedIss.lat.toFixed(2) + " deg, " + lastRenderedIss.lon.toFixed(2) + " deg"
+            );
+          })
+          .on("mousemove", function (event) {
+            positionTooltip(event);
+          })
+          .on("mouseleave", function () {
+            hideTooltip();
+          });
+
+        svg.call(
+          d3.drag().on("drag", function (event) {
+            hideTooltip();
+            var rotate = projection.rotate();
+            var sensitivity = 0.34;
+            var nextLambda = rotate[0] + event.dx * sensitivity;
+            var nextPhi = Math.max(-85, Math.min(85, rotate[1] - event.dy * sensitivity));
+            projection.rotate([nextLambda, nextPhi, rotate[2]]);
+            render();
+          })
+        );
+
+        d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json")
+          .then(function (world) {
+            if (world && world.objects && world.objects.countries) {
+              worldGeo = topojson.feature(world, world.objects.countries);
+            }
+            render();
+          })
+          .catch(function () {
+            render();
+          });
+
+        async function refreshIssTelemetry() {
+          try {
+            var next = await fetchIssSample();
+            if (globeState.sample && next.time > globeState.sample.time) {
+              var dt = next.time - globeState.sample.time;
+              globeState.latRate = (next.lat - globeState.sample.lat) / dt;
+              globeState.lonRate = shortestLonDelta(globeState.sample.lon, next.lon) / dt;
+            }
+            globeState.sample = next;
+            globeState.sampleAtMs = Date.now();
+            globeState.trail.push({ lat: next.lat, lon: next.lon });
+            if (globeState.trail.length > 70) {
+              globeState.trail.shift();
+            }
+
+            latEl.textContent = next.lat.toFixed(2) + " deg";
+            lonEl.textContent = next.lon.toFixed(2) + " deg";
+            altEl.textContent = next.alt.toFixed(1) + " km";
+            velEl.textContent = next.vel.toFixed(0) + " km/h";
+            if (updatedEl) {
+              updatedEl.textContent = new Date().toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit"
+              });
+            }
+          } catch (error) {
+            latEl.textContent = "Unavailable";
+            lonEl.textContent = "Unavailable";
+            altEl.textContent = "Unavailable";
+            velEl.textContent = "Unavailable";
+            if (updatedEl) {
+              updatedEl.textContent = "Unavailable";
+            }
+          }
+        }
+
+        function animate() {
+          render();
+          requestAnimationFrame(animate);
+        }
+
+        refreshIssTelemetry();
+        setInterval(refreshIssTelemetry, refreshMs);
+        animate();
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initIssGlobe);
+      } else {
+        initIssGlobe();
+      }
+
       updatePassStatus();
-      window.addEventListener("resize", function () {
-        resizeCanvas();
-        updateIss();
-      });
-      setInterval(updateIss, 12000);
-      setInterval(updatePassStatus, 15 * 60 * 1000);
+      setInterval(updatePassStatus, 10 * 60 * 1000);
     })();
 
     (function () {
@@ -1374,11 +1651,11 @@
       var steps = [
         {
           title: "Current Focus: AVS Lab PhD Research",
-          body: "Building autonomous scheduling and inspection policies for space-to-space surveillance missions with strict power, illumination, pointing, and onboard resource constraints."
+          body: "Building autonomous scheduling and inspection policies for space-to-space surveillance missions with strict power, illumination, pointing, and onboard resource constraints. In parallel, actively progressing pilot-license training."
         },
         {
-          title: "Near-Term Buildout: Proximity Operations and GNC Safety",
-          body: "Expanding into flight-ready safety methods, relative navigation, and docking/inspection envelopes informed by prior Infinite Orbits and LASP mission analysis experience."
+          title: "Near-Term Buildout: Ops Readiness and Field Training",
+          body: "Expanding flight-readiness with advanced proximity-operations and GNC safety work while adding Advanced Open Water and Rescue Diver certifications."
         },
         {
           title: "Mid-Term Goal: Human Spaceflight Operations",
