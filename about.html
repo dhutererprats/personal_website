@@ -7,10 +7,230 @@
   <link rel="stylesheet" href="style.css" />
   <script src="theme-toggle.js" defer></script>
   <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js" defer></script>
+  <script src="about-globe.js" defer></script>
   <link rel="icon" href="icons/astronaut.ico" type="image/x-icon"/>
+  <link rel="canonical" href="https://dhutererprats.github.io/about.html"/>
+  <style>
+    .about-hero {
+      background:
+        radial-gradient(circle at 88% 18%, rgba(242, 184, 109, 0.28), transparent 35%),
+        linear-gradient(145deg, #0f2247, #173b72 58%, #245784 100%);
+      color: #fff;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .about-hero h1 {
+      color: #fff;
+      margin-bottom: 0.55rem;
+    }
+
+    .about-location-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.45rem;
+      margin: 0.2rem 0 0.65rem;
+    }
+
+    .location-pill,
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      border-radius: 999px;
+      padding: 0.27rem 0.62rem;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      background: rgba(7, 15, 34, 0.34);
+      color: #fff;
+      font-size: 0.86rem;
+      line-height: 1.2;
+    }
+
+    .location-pill:hover {
+      text-decoration: none;
+      border-color: rgba(255, 255, 255, 0.72);
+    }
+
+    .about-kicker {
+      margin: 0;
+      max-width: 66ch;
+      line-height: 1.6;
+      color: rgba(255, 255, 255, 0.92);
+    }
+
+    .about-main {
+      padding-top: 1.2rem;
+    }
+
+    .about {
+      border-radius: 14px;
+      border: 1px solid var(--border-color);
+      background: var(--card-bg);
+      padding: 1rem 1.1rem;
+    }
+
+    .about p {
+      font-size: 1.03rem;
+      line-height: 1.72;
+      margin: 0 0 1rem;
+    }
+
+    .about p:last-child {
+      margin-bottom: 0;
+    }
+
+    .journey-section {
+      margin-top: 1.2rem;
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      background: var(--card-bg);
+      padding: 1rem;
+    }
+
+    .journey-header h2 {
+      margin: 0 0 0.35rem;
+    }
+
+    .journey-header p {
+      margin: 0 0 0.85rem;
+      opacity: 0.85;
+    }
+
+    .journey-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+      align-items: start;
+    }
+
+    .globe-panel {
+      position: relative;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+      background: radial-gradient(circle at 30% 15%, #174282 0%, #0e2450 52%, #09142c 100%);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    }
+
+    #journey-globe {
+      width: 100%;
+      min-height: 360px;
+      display: block;
+      cursor: grab;
+    }
+
+    #journey-globe:active {
+      cursor: grabbing;
+    }
+
+    .globe-tooltip {
+      position: absolute;
+      pointer-events: none;
+      background: rgba(8, 14, 30, 0.92);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      border-radius: 8px;
+      padding: 0.35rem 0.5rem;
+      font-size: 0.79rem;
+      max-width: 220px;
+      line-height: 1.35;
+      z-index: 5;
+      transform: translate(12px, 12px);
+    }
+
+    .journey-stops {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.45rem;
+    }
+
+    .journey-stop {
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      background: var(--bg-color);
+      color: var(--text-color);
+      text-align: left;
+      padding: 0.5rem 0.65rem;
+      cursor: pointer;
+      transition: border-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .journey-stop:hover {
+      border-color: var(--accent-color);
+      transform: translateY(-1px);
+    }
+
+    .journey-stop.active {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 2px rgba(0, 112, 243, 0.14);
+    }
+
+    .journey-stop-title {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.1rem;
+    }
+
+    .journey-stop-note {
+      display: block;
+      font-size: 0.82rem;
+      opacity: 0.82;
+    }
+
+    .journey-detail {
+      margin-top: 0.8rem;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      background: var(--bg-color);
+      padding: 0.75rem;
+    }
+
+    .journey-detail h3 {
+      margin: 0 0 0.3rem;
+      font-size: 1rem;
+    }
+
+    .journey-detail p {
+      margin: 0;
+      line-height: 1.55;
+      font-size: 0.93rem;
+    }
+
+    .journey-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 0.6rem;
+    }
+
+    .journey-links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      border: 1px solid var(--border-color);
+      border-radius: 999px;
+      padding: 0.24rem 0.55rem;
+      font-size: 0.8rem;
+      text-decoration: none;
+      color: var(--text-color);
+      background: var(--card-bg);
+    }
+
+    .journey-links a:hover {
+      border-color: var(--accent-color);
+      text-decoration: none;
+    }
+
+    @media (min-width: 1040px) {
+      .journey-grid {
+        grid-template-columns: 1.45fr 1fr;
+      }
+    }
+  </style>
 </head>
 <body>
-  <!-- site nav -->
   <nav class="site-nav" aria-label="Primary">
     <a href="index.html">Home</a>
     <a href="research.html">Research</a>
@@ -23,20 +243,23 @@
   </nav>
 
   <div class="homepage-container">
-    <header>
+    <header class="about-hero">
       <div class="header-text">
         <h1>About Me</h1>
-        <p class="location">
-          <a href="https://www.google.com/maps/place/Boulder,+CO" target="_blank" rel="noopener noreferrer">
-            Boulder, CO
+        <p class="location about-location-row">
+          <a class="location-pill" href="https://www.google.com/maps/place/Boulder,+CO" target="_blank" rel="noopener noreferrer">
+            🇺🇸 Boulder, CO
           </a>
+          <span class="status-pill">🛰️ PhD at CU Boulder AVS Lab</span>
+        </p>
+        <p class="about-kicker">
+          A global path across Europe, the Middle East, and the U.S. shaped how I approach space systems, autonomy, and mission design.
         </p>
       </div>
-      <!-- optional: use your existing headshot asset -->
       <img src="Headshot-photo-NYU.png" alt="Daniel Huterer Prats" class="profile-image">
     </header>
 
-    <main>
+    <main class="about-main">
       <section class="about">
         <p>
           Hi! I’m <strong>Daniel Huterer Prats</strong>. I was born in Italy and moved to Austria when I was young, spending most of my childhood there before moving to Saudi Arabia, where I finished high school. I completed my undergraduate degree in Physics at <strong>New York University Abu Dhabi</strong> (with a semester in New York), then earned a master’s in <strong>Aerospace Science and Technology</strong> in Barcelona. After that, I spent a year in the aerospace industry in Toulouse, France—working as an aerospace consultant and as a <strong>GNC engineer</strong>, including as a lead engineer for a European Commission–led project. In the summer of 2024, I started my <strong>PhD in Colorado</strong> at the Autonomous Vehicle Systems Lab.
@@ -46,12 +269,68 @@
           Outside of research, I love playing soccer—well, <em>football</em>—and I’ve played ever since I was a kid in Austria. I continued through high school in Saudi and as a student-athlete at NYU Abu Dhabi, and to this day I still enjoy pick-up games on the weekends. I also love exploring nature, scuba diving, I’m currently working on my pilot’s license, and I’m always excited to travel and experience different countries and cultures.
         </p>
       </section>
+
+      <section class="journey-section" aria-labelledby="journey-title">
+        <div class="journey-header">
+          <h2 id="journey-title">Global Journey</h2>
+          <p>Drag to spin the globe. Hover or click a pin to see a quick milestone and related links.</p>
+        </div>
+
+        <div class="journey-grid">
+          <div class="globe-panel">
+            <svg id="journey-globe" viewBox="0 0 760 460" role="img" aria-label="Interactive globe showing locations where Daniel has lived, studied, and worked"></svg>
+            <div id="globe-tooltip" class="globe-tooltip" hidden></div>
+          </div>
+
+          <aside class="journey-sidebar">
+            <div class="journey-stops" aria-label="Journey locations">
+              <button class="journey-stop" type="button" data-location="milan">
+                <span class="journey-stop-title">🇮🇹 Milan, Italy</span>
+                <span class="journey-stop-note">Born and lived first 4 years</span>
+              </button>
+              <button class="journey-stop" type="button" data-location="moedling">
+                <span class="journey-stop-title">🇦🇹 Moedling, Austria</span>
+                <span class="journey-stop-note">Childhood years</span>
+              </button>
+              <button class="journey-stop" type="button" data-location="riyadh">
+                <span class="journey-stop-title">🇸🇦 Riyadh, Saudi Arabia</span>
+                <span class="journey-stop-note">High school period</span>
+              </button>
+              <button class="journey-stop" type="button" data-location="abudhabi">
+                <span class="journey-stop-title">🇦🇪 Abu Dhabi, UAE</span>
+                <span class="journey-stop-note">BSc Physics at NYU Abu Dhabi</span>
+              </button>
+              <button class="journey-stop" type="button" data-location="nyc">
+                <span class="journey-stop-title">🇺🇸 New York City, USA</span>
+                <span class="journey-stop-note">NYU study-away semester</span>
+              </button>
+              <button class="journey-stop" type="button" data-location="barcelona">
+                <span class="journey-stop-title">🇪🇸 Barcelona, Spain</span>
+                <span class="journey-stop-note">Master's in Aerospace</span>
+              </button>
+              <button class="journey-stop" type="button" data-location="toulouse">
+                <span class="journey-stop-title">🇫🇷 Toulouse, France</span>
+                <span class="journey-stop-note">Aerospace consultant and GNC roles</span>
+              </button>
+              <button class="journey-stop" type="button" data-location="boulder">
+                <span class="journey-stop-title">🇺🇸 Boulder, Colorado</span>
+                <span class="journey-stop-note">PhD at CU Boulder</span>
+              </button>
+            </div>
+
+            <article class="journey-detail" id="journey-detail" aria-live="polite">
+              <h3 id="journey-detail-title">Select a location</h3>
+              <p id="journey-detail-text">Click any stop to rotate the globe and load details.</p>
+              <div id="journey-detail-links" class="journey-links"></div>
+            </article>
+          </aside>
+        </div>
+      </section>
     </main>
 
     <footer>
       <p>© 2025 Daniel Huterer Prats</p>
     </footer>
   </div>
-
 </body>
 </html>
