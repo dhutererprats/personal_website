@@ -20,9 +20,8 @@
       border-radius: 18px;
       border: 1px solid var(--border-color);
       background:
-        radial-gradient(circle at 82% 18%, rgba(250, 192, 109, 0.16), transparent 30%),
-        linear-gradient(140deg, rgba(12, 21, 58, 0.92), rgba(22, 63, 118, 0.82)),
-        url("images/reentry-traj.png") center/cover;
+        radial-gradient(circle at 88% 18%, rgba(242, 184, 109, 0.28), transparent 35%),
+        linear-gradient(145deg, #0f2247, #173b72 58%, #245784 100%);
       color: #fff;
       display: grid;
       grid-template-columns: 1fr;
@@ -182,10 +181,22 @@
     .home-work-list {
       list-style: none;
       margin: 0;
-      padding: 0;
+      padding: 0 0 0 2.35rem;
       display: grid;
       grid-template-columns: 1fr;
-      gap: 0.72rem;
+      gap: 0.95rem;
+      position: relative;
+    }
+
+    .home-work-list::before {
+      content: "";
+      position: absolute;
+      left: 1rem;
+      top: 0.35rem;
+      bottom: 0.35rem;
+      width: 2px;
+      background: linear-gradient(180deg, rgba(165, 171, 181, 0.42), rgba(165, 171, 181, 0.16));
+      border-radius: 999px;
     }
 
     .home-work-item {
@@ -193,6 +204,81 @@
       border-radius: 10px;
       background: var(--bg-color);
       padding: 0.82rem;
+      position: relative;
+      transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease;
+    }
+
+    .home-work-item.reveal-pending {
+      opacity: 0.28;
+      transform: translateY(18px);
+    }
+
+    .home-work-item::before {
+      content: "";
+      position: absolute;
+      left: -1.48rem;
+      top: 1.15rem;
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: #8f96a3;
+      border: 2px solid var(--bg-color);
+      box-shadow: 0 0 0 2px rgba(144, 151, 162, 0.25);
+      transition: background-color 0.35s ease, box-shadow 0.35s ease;
+    }
+
+    .home-work-item::after {
+      content: "";
+      position: absolute;
+      left: -0.95rem;
+      top: 1.48rem;
+      width: 0.7rem;
+      height: 1px;
+      background: rgba(145, 152, 163, 0.5);
+    }
+
+    .home-work-item.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .home-work-item.is-visible::before {
+      background: var(--accent-color);
+      box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent-color) 22%, transparent);
+    }
+
+    .timeline-year {
+      position: absolute;
+      left: -3.1rem;
+      top: -0.1rem;
+      font-size: 0.73rem;
+      line-height: 1;
+      color: #8f96a3;
+      background: color-mix(in oklab, var(--card-bg) 80%, #ffffff 20%);
+      border: 1px solid var(--border-color);
+      border-radius: 999px;
+      padding: 0.2rem 0.42rem;
+      letter-spacing: 0.02em;
+      opacity: 0.78;
+      transition: opacity 0.35s ease, color 0.35s ease, border-color 0.35s ease;
+    }
+
+    .home-work-item.is-visible .timeline-year {
+      opacity: 1;
+      color: var(--text-color);
+      border-color: color-mix(in oklab, var(--accent-color) 45%, var(--border-color));
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      .home-work-item.is-visible:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.11);
+        border-color: color-mix(in oklab, var(--accent-color) 34%, var(--border-color));
+      }
+
+      .home-work-item.is-visible:hover::before {
+        box-shadow: 0 0 0 4px color-mix(in oklab, var(--accent-color) 28%, transparent);
+      }
     }
 
     .home-work-header {
@@ -257,6 +343,7 @@
       align-content: start;
       text-decoration: none;
       color: inherit;
+      transition: box-shadow 0.24s ease, transform 0.24s ease, border-color 0.24s ease;
     }
 
     .home-project-card:hover {
@@ -311,6 +398,99 @@
       opacity: 0.92;
     }
 
+    .home-project-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.42rem;
+      margin-top: 0.62rem;
+    }
+
+    .home-project-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      border: 1px solid var(--border-color);
+      border-radius: 999px;
+      padding: 0.24rem 0.56rem;
+      font-size: 0.8rem;
+      text-decoration: none;
+      color: var(--text-color);
+      background: var(--card-bg);
+    }
+
+    .home-project-link:hover {
+      text-decoration: none;
+      border-color: var(--accent-color);
+    }
+
+    .home-project-expandable {
+      padding: 0;
+    }
+
+    .home-project-summary {
+      list-style: none;
+      cursor: pointer;
+      display: block;
+    }
+
+    .home-project-summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .home-project-summary:focus {
+      outline: none;
+    }
+
+    .home-project-expandable[open] {
+      border-color: color-mix(in oklab, var(--accent-color) 38%, var(--border-color));
+    }
+
+    .home-project-toggle {
+      display: inline-flex;
+      align-items: center;
+      margin-top: 0.56rem;
+      font-size: 0.81rem;
+      color: var(--accent-color);
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+
+    .home-project-toggle::after {
+      content: "▾";
+      margin-left: 0.35rem;
+      line-height: 1;
+    }
+
+    .home-project-expandable[open] .home-project-toggle::after {
+      content: "▴";
+    }
+
+    .home-project-detail {
+      border-top: 1px dashed var(--border-color);
+      padding: 0.78rem 0.86rem 0.9rem;
+    }
+
+    .home-project-detail p {
+      margin: 0;
+      font-size: 0.92rem;
+      line-height: 1.56;
+      opacity: 0.95;
+    }
+
+    .home-project-preview {
+      margin-top: 0.65rem;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      overflow: hidden;
+      background: var(--card-bg);
+    }
+
+    .home-project-preview img {
+      width: 100%;
+      display: block;
+      height: auto;
+    }
+
     @media (min-width: 960px) {
       .home-hero {
         grid-template-columns: 1.4fr 1fr;
@@ -319,6 +499,16 @@
 
       .home-project-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 680px) {
+      .home-work-list {
+        padding-left: 1.95rem;
+      }
+
+      .timeline-year {
+        left: -2.72rem;
       }
     }
   </style>
@@ -390,138 +580,209 @@
       <section class="home-work" aria-labelledby="work-title">
         <div class="home-section-head">
           <h2 id="work-title">Work</h2>
-          <p class="home-section-note">Key research and industry roles. Organization names link to their official pages.</p>
+          <p class="home-section-note">Chronological path across research and industry. Scroll to reveal each step; organization names link to official pages.</p>
         </div>
         <ul class="home-work-list">
           <li class="home-work-item">
-            <div class="home-work-header">
-              <img src="icons/avslabIcon.jpeg" alt="AVS Lab" class="icon-logo">
-              <p class="home-work-title">
-                <a class="home-company-link" href="https://hanspeterschaub.info/AVSlab.html" target="_blank" rel="noopener">Autonomous Vehicle Systems Lab</a>
-                <span class="home-role">Graduate Researcher - Boulder, CO</span>
-              </p>
-            </div>
-            <p class="home-work-desc">Developing Basilisk-based RL frameworks for autonomous RSO imaging under power, field-of-view, and pointing constraints.</p>
-          </li>
-
-          <li class="home-work-item">
-            <div class="home-work-header">
-              <img src="icons/lasp_icon.jpg" alt="LASP" class="icon-logo">
-              <p class="home-work-title">
-                <a class="home-company-link" href="https://lasp.colorado.edu/" target="_blank" rel="noopener">Laboratory for Atmospheric and Space Physics</a>
-                <span class="home-role">GNC Engineer - Boulder, CO</span>
-              </p>
-            </div>
-            <p class="home-work-desc">Ran Monte Carlo campaign analyses for the Emirates Mission to the Asteroid Belt and supported trajectory and gravity-assist assessments.</p>
-          </li>
-
-          <li class="home-work-item" id="infinite-orbits">
-            <div class="home-work-header">
-              <img src="icons/io_icon.png" alt="Infinite Orbits" class="icon-logo">
-              <p class="home-work-title">
-                <a class="home-company-link" href="https://www.infiniteorbits.io/" target="_blank" rel="noopener">Infinite Orbits</a>
-                <span class="home-role">Main Systems Engineer - Toulouse, France</span>
-              </p>
-            </div>
-            <p class="home-work-desc">Led system development for GEO servicing concepts, including safety architecture and FDIR for docking and life-extension scenarios.</p>
-          </li>
-
-          <li class="home-work-item">
-            <div class="home-work-header">
-              <img src="icons/new_alten_logo.png" alt="ALTEN" class="icon-logo">
-              <p class="home-work-title">
-                <a class="home-company-link" href="https://www.alten.com/" target="_blank" rel="noopener">ALTEN</a>
-                <span class="home-role">Aerospace Consultant - Toulouse, France</span>
-              </p>
-            </div>
-            <p class="home-work-desc">Managed ESSP fast-monitoring operations for signal processing and GNSS service performance across the European region.</p>
-          </li>
-
-          <li class="home-work-item">
-            <div class="home-work-header">
-              <img src="icons/Logo_UPC.svg.png" alt="UPC" class="icon-logo">
-              <p class="home-work-title">
-                <a class="home-company-link" href="https://www.upc.edu/en" target="_blank" rel="noopener">UPC</a>
-                <span class="home-role">Space Systems Project Lead - Barcelona, Spain</span>
-              </p>
-            </div>
-            <p class="home-work-desc">Led end-to-end design of a wildfire-tracking mission concept, with emphasis on payload and AOCS architecture.</p>
-          </li>
-
-          <li class="home-work-item">
-            <div class="home-work-header">
-              <img src="icons/nyuad_icon.png.webp" alt="NYUAD" class="icon-logo">
-              <p class="home-work-title">
-                <a class="home-company-link" href="https://nyuad.nyu.edu/" target="_blank" rel="noopener">NYU Abu Dhabi</a>
-                <span class="home-role">Rocketry Team Chief Engineer / Researcher - Abu Dhabi, UAE</span>
-              </p>
-            </div>
-            <p class="home-work-desc">Built high-power rocketry and conducted research in astrophysics and exoplanet-atmosphere modeling during undergraduate studies.</p>
-          </li>
-
-          <li class="home-work-item">
+            <span class="timeline-year">May 2019</span>
             <div class="home-work-header">
               <img src="icons/cap3_icon.png" alt="Galaxy Formation Group" class="icon-logo">
               <p class="home-work-title">
                 <a class="home-company-link" href="https://nyuad.nyu.edu/en/research/faculty-labs-and-projects/galaxy-formation-group.html" target="_blank" rel="noopener">NYUAD Galaxy Formation Group</a>
-                <span class="home-role">Undergraduate Researcher - Abu Dhabi, UAE</span>
+                <span class="home-role">Undergraduate Research Assistant - Abu Dhabi, UAE - May 2019 to Jun 2023</span>
               </p>
             </div>
-            <p class="home-work-desc">Co-developed efficient mapping techniques to accelerate baryonic simulation insight from dark-matter-only runs.</p>
+            <p class="home-work-desc">Analyzed NIHAO galaxy simulations and tidal stripping effects to study dark matter and baryonic structure evolution across dwarf galaxies.</p>
+          </li>
+
+          <li class="home-work-item">
+            <span class="timeline-year">Jun 2021</span>
+            <div class="home-work-header">
+              <img src="icons/nyuad_icon.png.webp" alt="NYUAD" class="icon-logo">
+              <p class="home-work-title">
+                <a class="home-company-link" href="https://nyuad.nyu.edu/" target="_blank" rel="noopener">NYU Abu Dhabi</a>
+                <span class="home-role">Lead Project Engineer / Summer Research Assistant - Abu Dhabi, UAE - Jun 2021 to Aug 2022</span>
+              </p>
+            </div>
+            <p class="home-work-desc">Led high-power rocketry development and built ML-ready planetary-science data pipelines for atmospheric opacity and temperature-pressure modeling.</p>
+          </li>
+
+          <li class="home-work-item">
+            <span class="timeline-year">Sep 2022</span>
+            <div class="home-work-header">
+              <img src="icons/Logo_UPC.svg.png" alt="UPC" class="icon-logo">
+              <p class="home-work-title">
+                <a class="home-company-link" href="https://www.upc.edu/en" target="_blank" rel="noopener">UPC</a>
+                <span class="home-role">Space Systems Lead + Astrodynamics Research - Barcelona, Spain - Sep 2022 to Jul 2023</span>
+              </p>
+            </div>
+            <p class="home-work-desc">Led wildfire-tracking mission design and developed a multi-gravity-assist optimization tool balancing transfer delta-v and arrival time.</p>
+          </li>
+
+          <li class="home-work-item">
+            <span class="timeline-year">Aug 2023</span>
+            <div class="home-work-header">
+              <img src="icons/new_alten_logo.png" alt="ALTEN" class="icon-logo">
+              <p class="home-work-title">
+                <a class="home-company-link" href="https://www.alten.com/" target="_blank" rel="noopener">ALTEN</a>
+                <span class="home-role">Aerospace Consultant - Toulouse, France - Aug 2023 to Jan 2024</span>
+              </p>
+            </div>
+            <p class="home-work-desc">Owned ESSP FastMon updates and GNSS monitoring pipelines, and contributed to aerodynamics optimization work for Olympic track cycling.</p>
+          </li>
+
+          <li class="home-work-item" id="infinite-orbits">
+            <span class="timeline-year">Jan 2024</span>
+            <div class="home-work-header">
+              <img src="icons/io_icon.png" alt="Infinite Orbits" class="icon-logo">
+              <p class="home-work-title">
+                <a class="home-company-link" href="https://www.infiniteorbits.io/" target="_blank" rel="noopener">Infinite Orbits</a>
+                <span class="home-role">Systems Engineer and Project Coordinator - Toulouse, France - Jan 2024 to Aug 2024</span>
+              </p>
+            </div>
+            <p class="home-work-desc">Led systems engineering and project coordination for a European Commission OTV consortium, including rendezvous and docking safety concepts.</p>
+          </li>
+
+          <li class="home-work-item">
+            <span class="timeline-year">Aug 2024</span>
+            <div class="home-work-header">
+              <img src="icons/lasp_icon.jpg" alt="LASP" class="icon-logo">
+              <p class="home-work-title">
+                <a class="home-company-link" href="https://lasp.colorado.edu/" target="_blank" rel="noopener">Laboratory for Atmospheric and Space Physics</a>
+                <span class="home-role">GNC Engineer - Boulder, CO - Aug 2024 to Jan 2025</span>
+              </p>
+            </div>
+            <p class="home-work-desc">Simulated open/closed-loop maneuvers for the Emirates Mission to the Asteroid Belt and ran Monte Carlo analyses for gravity-assist and flyby scenarios.</p>
+          </li>
+
+          <li class="home-work-item">
+            <span class="timeline-year">Aug 2024+</span>
+            <div class="home-work-header">
+              <img src="icons/avslabIcon.jpeg" alt="AVS Lab" class="icon-logo">
+              <p class="home-work-title">
+                <a class="home-company-link" href="https://hanspeterschaub.info/AVSlab.html" target="_blank" rel="noopener">Autonomous Vehicle Systems Lab</a>
+                <span class="home-role">Graduate Research Assistant - Boulder, CO - Aug 2024 to Present</span>
+              </p>
+            </div>
+            <p class="home-work-desc">Developing Basilisk RL environments for LEO-to-space surveillance and autonomous scheduling with strict safety and illumination constraints.</p>
           </li>
         </ul>
       </section>
 
       <section class="home-projects" aria-labelledby="projects-title">
         <div class="home-section-head">
-          <h2 id="projects-title">Projects</h2>
-          <p class="home-section-note">Non-redundant project highlights that complement, rather than duplicate, the Research and Publications pages.</p>
+          <h2 id="projects-title">Selected Projects and Papers</h2>
+          <p class="home-section-note">Highlighted conference papers and core projects, with expandable previews for selected works.</p>
         </div>
 
         <div class="home-project-grid">
-          <a class="home-project-card" href="orbital-elements.html">
+          <article class="home-project-card">
             <div class="home-project-media">
-              <img src="images/orbital-elements-thumbnail.jpg" alt="Orbital elements visualization" loading="lazy" decoding="async" />
+              <img src="files/AMOS_SBSS/Daniel_presenting_AMOS2.PNG" alt="AMOS 2025 presentation photo" loading="lazy" decoding="async" />
             </div>
             <div class="home-project-content">
-              <span class="home-project-type">Interactive Demo</span>
-              <h3>Orbital Elements Visualizer</h3>
-              <p>Interactive geometry tool for inclination, RAAN, argument of perigee, and anomaly intuition in orbit design.</p>
+              <span class="home-project-type">AMOS 2025 • Conference</span>
+              <h3>RL for LEO-to-LEO Space-to-Space Imaging</h3>
+              <p>Actor-critic scheduling for autonomous imaging in LEO under downlink latency, LOS, power, storage, and pointing constraints.</p>
+              <div class="home-project-links">
+                <a class="home-project-link" href="files/AMOS_SBSS/Amos_sbss.html">Project Page</a>
+                <a class="home-project-link" href="https://amostech.com/TechnicalPapers/2025/Machine-Learning-for-SDA-Applications/Huterer%20Prats.pdf" target="_blank" rel="noopener">Paper PDF</a>
+                <a class="home-project-link" href="https://www.youtube.com/watch?v=nU8sa1a_Ijs" target="_blank" rel="noopener">Talk Video</a>
+              </div>
             </div>
-          </a>
+          </article>
 
-          <a class="home-project-card" href="attitude-dynamics.html">
+          <article class="home-project-card">
             <div class="home-project-media">
-              <img src="images/reentry-traj.png" alt="Attitude dynamics and trajectory style visualization" loading="lazy" decoding="async" />
+              <img src="images/space_to_space_surveillance.png" alt="LEO-to-any space-to-space imaging concept art" loading="lazy" decoding="async" />
             </div>
             <div class="home-project-content">
-              <span class="home-project-type">Interactive Demo</span>
-              <h3>Attitude Dynamics Explorer</h3>
-              <p>Hands-on controls for spacecraft rotational behavior, orientation propagation, and dynamics interpretation.</p>
+              <span class="home-project-type">AAS GN&amp;C 2026 • Conference</span>
+              <h3>RL for LEO-to-Any Space-to-Space Imaging</h3>
+              <p>Extends autonomous imaging beyond same-regime targeting with resource-aware actions and latency-aware downlink behavior.</p>
+              <div class="home-project-links">
+                <a class="home-project-link" href="https://hanspeterschaub.info/Papers/HutererPrats2026.pdf" target="_blank" rel="noopener">Paper PDF</a>
+                <a class="home-project-link" href="https://www.xcdsystem.com/aas/program/w8LRlcl/index.cfm" target="_blank" rel="noopener">Conference Program</a>
+                <a class="home-project-link" href="https://www.youtube.com/watch?v=o_yLNhcnVEM" target="_blank" rel="noopener">Talk Video</a>
+              </div>
             </div>
-          </a>
+          </article>
 
-          <a class="home-project-card" href="files/MGA_Paper.pdf" target="_blank" rel="noopener">
-            <div class="home-project-media">
-              <img src="images/interplanetary_trajectory_final.png" alt="Multi-gravity assist trajectory plot" loading="lazy" decoding="async" />
+          <details class="home-project-card home-project-expandable">
+            <summary class="home-project-summary">
+              <div class="home-project-media">
+                <img src="images/home-darkmatter-collision.jpg" alt="Two colliding galaxies" loading="lazy" decoding="async" />
+              </div>
+              <div class="home-project-content">
+                <span class="home-project-type">Journal (MNRAS)</span>
+                <h3>Dark Matter and Galaxy Formation</h3>
+                <p>Co-authored work on how tidal interactions can produce dark-matter-deficient galaxies in realistic cosmological contexts.</p>
+                <span class="home-project-toggle">Preview and links</span>
+              </div>
+            </summary>
+            <div class="home-project-detail">
+              <p>This study connects simulated tidal stripping dynamics with observed low dark-matter signatures in dwarf galaxies.</p>
+              <div class="home-project-preview">
+                <a href="https://arxiv.org/pdf/2010.02245" target="_blank" rel="noopener">
+                  <img src="images/galaxies_lacking_dark_matter_thumbnail.png" alt="Dark matter paper preview" loading="lazy" decoding="async" />
+                </a>
+              </div>
+              <div class="home-project-links">
+                <a class="home-project-link" href="https://arxiv.org/pdf/2010.02245" target="_blank" rel="noopener">Paper PDF</a>
+                <a class="home-project-link" href="https://ui.adsabs.harvard.edu/abs/2021MNRAS.501..693M/abstract" target="_blank" rel="noopener">ADS Abstract</a>
+              </div>
             </div>
-            <div class="home-project-content">
-              <span class="home-project-type">Paper</span>
-              <h3>Multi-Gravity Assist Optimization</h3>
-              <p>Genetic-algorithm framework for complex interplanetary transfers balancing arrival time and total delta-v.</p>
-            </div>
-          </a>
+          </details>
 
-          <a class="home-project-card" href="files/Water_Extraction_and_Purification_on_Moon_and_Mars.pdf" target="_blank" rel="noopener">
-            <div class="home-project-media">
-              <img src="images/UPC_water_thumbnail.png" alt="Moon and Mars water extraction and purification project" loading="lazy" decoding="async" />
+          <details class="home-project-card home-project-expandable">
+            <summary class="home-project-summary">
+              <div class="home-project-media">
+                <img src="images/home-mga-flyby.jpg" alt="Spacecraft flyby around Jupiter" loading="lazy" decoding="async" />
+              </div>
+              <div class="home-project-content">
+                <span class="home-project-type">Trajectory Design</span>
+                <h3>Multi-Gravity Assist Optimization</h3>
+                <p>Evolutionary trajectory design for gravity-assist sequences, trading transfer time against total delta-v.</p>
+                <span class="home-project-toggle">Preview and links</span>
+              </div>
+            </summary>
+            <div class="home-project-detail">
+              <p>The optimization pipeline orders planetary flybys and timing windows to discover efficient and non-intuitive interplanetary transfers.</p>
+              <div class="home-project-preview">
+                <a href="files/MGA_Paper.pdf" target="_blank" rel="noopener">
+                  <img src="images/interplanetary_trajectory_final.png" alt="MGA trajectory paper preview plot" loading="lazy" decoding="async" />
+                </a>
+              </div>
+              <div class="home-project-links">
+                <a class="home-project-link" href="files/MGA_Paper.pdf" target="_blank" rel="noopener">Paper PDF</a>
+              </div>
             </div>
-            <div class="home-project-content">
-              <span class="home-project-type">Mission Concept Study</span>
-              <h3>Moon and Mars Water Purification</h3>
-              <p>Comparative analysis of extraction and purification strategies for in-situ resource utilization under lunar and Martian constraints.</p>
+          </details>
+
+          <details class="home-project-card home-project-expandable">
+            <summary class="home-project-summary">
+              <div class="home-project-media">
+                <img src="images/SEVIR.png" alt="Moon and Mars water purification concept visual" loading="lazy" decoding="async" />
+              </div>
+              <div class="home-project-content">
+                <span class="home-project-type">Systems Study</span>
+                <h3>Moon and Mars Water Purification</h3>
+                <p>Comparative architecture study for extraction and purification of subsurface water under planetary constraints.</p>
+                <span class="home-project-toggle">Preview and links</span>
+              </div>
+            </summary>
+            <div class="home-project-detail">
+              <p>Evaluates purification chains and energy-resource tradeoffs for sustained lunar and Martian in-situ operations.</p>
+              <div class="home-project-preview">
+                <a href="files/Water_Extraction_and_Purification_on_Moon_and_Mars.pdf" target="_blank" rel="noopener">
+                  <img src="images/UPC_water_thumbnail.png" alt="Moon and Mars water purification paper preview" loading="lazy" decoding="async" />
+                </a>
+              </div>
+              <div class="home-project-links">
+                <a class="home-project-link" href="files/Water_Extraction_and_Purification_on_Moon_and_Mars.pdf" target="_blank" rel="noopener">Paper PDF</a>
+              </div>
             </div>
-          </a>
+          </details>
         </div>
       </section>
     </main>
@@ -530,5 +791,43 @@
       <p>© 2025 Daniel Huterer Prats. Built from scratch with care 🛰️</p>
     </footer>
   </div>
+  <script>
+    (function () {
+      var items = document.querySelectorAll(".home-work-item");
+      if (!items.length) {
+        return;
+      }
+
+      items.forEach(function (item) {
+        item.classList.add("reveal-pending");
+      });
+
+      if (!("IntersectionObserver" in window) || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        items.forEach(function (item) {
+          item.classList.remove("reveal-pending");
+          item.classList.add("is-visible");
+        });
+        return;
+      }
+
+      var observer = new IntersectionObserver(
+        function (entries, obs) {
+          entries.forEach(function (entry) {
+            if (!entry.isIntersecting) {
+              return;
+            }
+            entry.target.classList.remove("reveal-pending");
+            entry.target.classList.add("is-visible");
+            obs.unobserve(entry.target);
+          });
+        },
+        { threshold: 0.2, rootMargin: "0px 0px -8% 0px" }
+      );
+
+      items.forEach(function (item) {
+        observer.observe(item);
+      });
+    })();
+  </script>
 </body>
 </html>
