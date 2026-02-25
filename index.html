@@ -713,6 +713,16 @@
       background: color-mix(in oklab, var(--bg-color) 88%, #091d38 12%);
     }
 
+    .iss-mobile-panel {
+      border: 0;
+      margin: 0;
+      padding: 0;
+    }
+
+    .iss-mobile-panel > summary {
+      display: none;
+    }
+
     .iss-custom-title {
       margin: 0;
       font-size: 0.87rem;
@@ -975,12 +985,140 @@
     }
 
     @media (max-width: 680px) {
+      .home-main {
+        padding-top: 0.7rem;
+      }
+
+      .home-work,
+      .home-projects,
+      .home-mission {
+        margin-top: 1.05rem;
+        padding: 0.82rem;
+        border-radius: 12px;
+      }
+
+      .home-section-head {
+        margin-bottom: 0.62rem;
+      }
+
+      .home-section-note {
+        font-size: 0.86rem;
+        line-height: 1.45;
+      }
+
       .home-work-list {
-        padding-left: 1.95rem;
+        padding-left: 0;
+        gap: 0.72rem;
+      }
+
+      .home-work-list::before,
+      .home-work-item::before,
+      .home-work-item::after {
+        display: none;
+      }
+
+      .home-work-item {
+        padding: 0.74rem;
       }
 
       .timeline-year {
-        left: -2.72rem;
+        position: static;
+        display: inline-flex;
+        margin-bottom: 0.42rem;
+        font-size: 0.72rem;
+        padding: 0.2rem 0.42rem;
+      }
+
+      .home-work-header .icon-logo {
+        width: 36px;
+        height: 36px;
+      }
+
+      .home-work-title {
+        font-size: 0.94rem;
+      }
+
+      .home-role {
+        font-size: 0.82rem;
+      }
+
+      .home-work-desc {
+        font-size: 0.88rem;
+      }
+
+      .home-project-grid {
+        gap: 0.72rem;
+      }
+
+      .home-project-content {
+        padding: 0.72rem 0.74rem 0.82rem;
+      }
+
+      .home-project-content h3 {
+        font-size: 0.97rem;
+      }
+
+      .home-project-content p,
+      .home-project-detail p {
+        font-size: 0.88rem;
+      }
+
+      .home-project-links {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.42rem;
+      }
+
+      .home-project-link {
+        justify-content: center;
+        min-height: 38px;
+        font-size: 0.86rem;
+        padding: 0.45rem 0.7rem;
+      }
+
+      .iss-mobile-panel {
+        margin-top: 0.56rem;
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        background: color-mix(in oklab, var(--bg-color) 90%, #091d38 10%);
+        overflow: hidden;
+      }
+
+      .iss-mobile-panel > summary {
+        display: flex;
+        align-items: center;
+        list-style: none;
+        cursor: pointer;
+        padding: 0.48rem 0.58rem;
+        font-size: 0.84rem;
+        font-weight: 650;
+      }
+
+      .iss-mobile-panel > summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .iss-mobile-panel > summary::after {
+        content: "▾";
+        margin-left: auto;
+        font-size: 0.92rem;
+      }
+
+      .iss-mobile-panel[open] > summary::after {
+        content: "▴";
+      }
+
+      .iss-mobile-panel .iss-stats,
+      .iss-mobile-panel .iss-pass-row,
+      .iss-mobile-panel .iss-custom-check {
+        margin-top: 0;
+        padding: 0 0.58rem 0.58rem;
+      }
+
+      .iss-mobile-panel .iss-custom-check {
+        border: 0;
+        border-radius: 0;
+        background: transparent;
       }
 
       .iss-stats {
@@ -1045,7 +1183,10 @@
           </div>
 
           <div class="quick-links" style="margin-top: 0.84rem;">
-            <a href="mailto:dahu1128@colorado.edu" class="cv-link" id="cv-link">Download CV</a>
+            <a href="mailto:dahu1128@colorado.edu" class="cv-link" id="cv-link">
+              <span class="cv-label-default">Download CV</span>
+              <span class="cv-label-mobile">Request CV via Email</span>
+            </a>
           </div>
         </div>
 
@@ -1290,27 +1431,33 @@
               <span class="iss-city-pill">🟣 Your temporary custom location</span>
             </div>
             <p class="iss-visible-now" id="iss-visible-now">Above-horizon now from tracked cities: --</p>
-            <div class="iss-stats" aria-live="polite">
-              <p><span>Latitude</span><strong id="iss-lat">--</strong></p>
-              <p><span>Longitude</span><strong id="iss-lon">--</strong></p>
-              <p><span>Altitude</span><strong id="iss-alt">--</strong></p>
-              <p><span>Velocity</span><strong id="iss-vel">--</strong></p>
-              <p><span>Updated</span><strong id="iss-updated">--</strong></p>
-              <p><span>Refresh</span><strong>~4s</strong></p>
-            </div>
-            <div class="iss-pass-row">
-              <span class="iss-pass-status" id="iss-pass-status">Next Boulder pass: loading...</span>
-              <a class="iss-pass-link" href="https://spotthestation.nasa.gov/" target="_blank" rel="noopener">Official alerts</a>
-            </div>
-            <div class="iss-custom-check" aria-labelledby="iss-custom-title">
-              <p id="iss-custom-title" class="iss-custom-title">Curious about ISS visibility from your location?</p>
-              <p class="iss-custom-help">Type a city name, or use <code>City, Country</code> for ambiguous places (for example: <code>London, UK</code>).</p>
-              <form id="iss-location-form" class="iss-location-form">
-                <input id="iss-location-input" type="text" placeholder="Los Angeles or London, UK" autocomplete="off" />
-                <button type="submit">Check visibility</button>
-              </form>
-              <p id="iss-location-status" class="iss-location-status">Enter a location to check current visibility and the next viewing window.</p>
-            </div>
+            <details class="iss-mobile-panel" open>
+              <summary>Live Stats</summary>
+              <div class="iss-stats" aria-live="polite">
+                <p><span>Latitude</span><strong id="iss-lat">--</strong></p>
+                <p><span>Longitude</span><strong id="iss-lon">--</strong></p>
+                <p><span>Altitude</span><strong id="iss-alt">--</strong></p>
+                <p><span>Velocity</span><strong id="iss-vel">--</strong></p>
+                <p><span>Updated</span><strong id="iss-updated">--</strong></p>
+                <p><span>Refresh</span><strong>~4s</strong></p>
+              </div>
+              <div class="iss-pass-row">
+                <span class="iss-pass-status" id="iss-pass-status">Next Boulder pass: loading...</span>
+                <a class="iss-pass-link" href="https://spotthestation.nasa.gov/" target="_blank" rel="noopener">Official alerts</a>
+              </div>
+            </details>
+            <details class="iss-mobile-panel" open>
+              <summary>Check Your City</summary>
+              <div class="iss-custom-check" aria-labelledby="iss-custom-title">
+                <p id="iss-custom-title" class="iss-custom-title">Curious about ISS visibility from your location?</p>
+                <p class="iss-custom-help">Type a city name, or use <code>City, Country</code> for ambiguous places (for example: <code>London, UK</code>).</p>
+                <form id="iss-location-form" class="iss-location-form">
+                  <input id="iss-location-input" type="text" placeholder="Los Angeles or London, UK" autocomplete="off" />
+                  <button type="submit">Check visibility</button>
+                </form>
+                <p id="iss-location-status" class="iss-location-status">Enter a location to check current visibility and the next viewing window.</p>
+              </div>
+            </details>
           </article>
 
           <article class="mission-card mission-pathway-hidden" aria-labelledby="pathway-title" hidden aria-hidden="true">
@@ -2071,14 +2218,49 @@
         animate();
       }
 
-      if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", initIssGlobe);
-      } else {
+      var missionBooted = false;
+      function bootMissionControl() {
+        if (missionBooted) {
+          return;
+        }
+        missionBooted = true;
         initIssGlobe();
+        updatePassStatus();
+        setInterval(updatePassStatus, 10 * 60 * 1000);
       }
 
-      updatePassStatus();
-      setInterval(updatePassStatus, 10 * 60 * 1000);
+      function scheduleMissionBoot() {
+        var shouldDeferOnMobile = window.matchMedia("(max-width: 760px)").matches && "IntersectionObserver" in window;
+        if (!shouldDeferOnMobile) {
+          bootMissionControl();
+          return;
+        }
+
+        var missionSection = document.querySelector(".home-mission");
+        if (!missionSection) {
+          bootMissionControl();
+          return;
+        }
+
+        var observer = new IntersectionObserver(
+          function (entries, obs) {
+            var visible = entries.some(function (entry) { return entry.isIntersecting; });
+            if (!visible) {
+              return;
+            }
+            obs.disconnect();
+            bootMissionControl();
+          },
+          { rootMargin: "140px 0px" }
+        );
+        observer.observe(missionSection);
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", scheduleMissionBoot);
+      } else {
+        scheduleMissionBoot();
+      }
 
       if (customForm && customInput) {
         customForm.addEventListener("submit", function (event) {
