@@ -162,6 +162,21 @@
       border: 1px solid rgba(255, 255, 255, 0.24);
     }
 
+    .home-profile-trigger {
+      border: 0;
+      background: transparent;
+      padding: 0;
+      border-radius: 50%;
+      line-height: 0;
+      cursor: zoom-in;
+      position: relative;
+    }
+
+    .home-profile-trigger:focus-visible {
+      outline: 2px solid rgba(255, 255, 255, 0.92);
+      outline-offset: 3px;
+    }
+
     .home-hero-art img.home-profile-circle {
       width: min(220px, 70vw);
       height: min(220px, 70vw);
@@ -170,6 +185,54 @@
       border: 2px solid rgba(255, 255, 255, 0.55);
       background: rgba(12, 24, 48, 0.45);
       padding: 0;
+    }
+
+    .headshot-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 2500;
+      background: rgba(4, 10, 22, 0.84);
+      backdrop-filter: blur(3px);
+      display: grid;
+      place-items: center;
+      padding: 1rem;
+    }
+
+    .headshot-modal[hidden] {
+      display: none !important;
+    }
+
+    .headshot-modal-dialog {
+      position: relative;
+      max-width: min(95vw, 1100px);
+      max-height: 92vh;
+    }
+
+    .headshot-modal-img {
+      display: block;
+      max-width: 100%;
+      max-height: 92vh;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.34);
+      box-shadow: 0 24px 44px rgba(0, 0, 0, 0.42);
+      background: #0e1f3f;
+    }
+
+    .headshot-modal-close {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      width: 2rem;
+      height: 2rem;
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      border-radius: 999px;
+      background: rgba(8, 16, 31, 0.74);
+      color: #fff;
+      font-size: 1.12rem;
+      line-height: 1;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
     }
 
     .home-hero-caption {
@@ -987,7 +1050,9 @@
         </div>
 
         <aside class="home-hero-art" aria-label="Profile and mission context">
-          <img class="home-profile-circle" src="Headshot-photo-NYU.png" alt="Daniel Huterer Prats" />
+          <button type="button" class="home-profile-trigger" id="headshot-open" aria-controls="headshot-modal" aria-expanded="false" aria-label="Expand headshot">
+            <img class="home-profile-circle" src="images/home-headshot.jpg" alt="Daniel Huterer Prats" width="960" height="880" fetchpriority="high" />
+          </button>
           <p class="home-hero-caption">
             Based in Boulder, CO, collaborating across research and industry to build robust autonomous space systems.
           </p>
@@ -1295,6 +1360,12 @@
       <p>© 2025 Daniel Huterer Prats. Built from scratch with care 🛰️</p>
     </footer>
   </div>
+  <div id="headshot-modal" class="headshot-modal" hidden aria-hidden="true">
+    <div class="headshot-modal-dialog" role="dialog" aria-modal="true" aria-label="High-resolution headshot">
+      <button type="button" id="headshot-close" class="headshot-modal-close" aria-label="Close expanded image">×</button>
+      <img id="headshot-modal-image" class="headshot-modal-img" data-src="Headshot-photo-NYU.png" alt="Daniel Huterer Prats high-resolution portrait" />
+    </div>
+  </div>
   <script>
     (function () {
       var items = document.querySelectorAll(".home-work-item");
@@ -1330,6 +1401,53 @@
 
       items.forEach(function (item) {
         observer.observe(item);
+      });
+    })();
+
+    (function () {
+      var openBtn = document.getElementById("headshot-open");
+      var modal = document.getElementById("headshot-modal");
+      var closeBtn = document.getElementById("headshot-close");
+      var modalImg = document.getElementById("headshot-modal-image");
+      if (!openBtn || !modal || !closeBtn || !modalImg) {
+        return;
+      }
+
+      function openModal() {
+        if (!modalImg.getAttribute("src")) {
+          modalImg.setAttribute("src", modalImg.getAttribute("data-src"));
+        }
+        modal.hidden = false;
+        modal.setAttribute("aria-hidden", "false");
+        openBtn.setAttribute("aria-expanded", "true");
+        document.body.style.overflow = "hidden";
+      }
+
+      function closeModal() {
+        modal.hidden = true;
+        modal.setAttribute("aria-hidden", "true");
+        openBtn.setAttribute("aria-expanded", "false");
+        document.body.style.overflow = "";
+      }
+
+      openBtn.addEventListener("click", function () {
+        openModal();
+      });
+
+      closeBtn.addEventListener("click", function () {
+        closeModal();
+      });
+
+      modal.addEventListener("click", function (event) {
+        if (event.target === modal) {
+          closeModal();
+        }
+      });
+
+      document.addEventListener("keydown", function (event) {
+        if (!modal.hidden && event.key === "Escape") {
+          closeModal();
+        }
       });
     })();
 
