@@ -1,487 +1,534 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Daniel Huterer Prats</title>
-    <link rel="stylesheet" href="style.css" />
-    <script src="theme-toggle.js" defer></script>
-    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
-    <link rel="icon" href="icons/astronaut.ico" type="image/x-icon"/>
-    <link rel="canonical" href="https://dhutererprats.github.io/"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Daniel Huterer Prats</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="theme-toggle.js" defer></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <link rel="icon" href="icons/astronaut.ico" type="image/x-icon"/>
+  <link rel="canonical" href="https://dhutererprats.github.io/"/>
+  <style>
+    .home-main {
+      padding-top: 1.2rem;
+    }
+
+    .home-hero {
+      position: relative;
+      overflow: hidden;
+      border-radius: 18px;
+      border: 1px solid var(--border-color);
+      background:
+        radial-gradient(circle at 82% 18%, rgba(250, 192, 109, 0.16), transparent 30%),
+        linear-gradient(140deg, rgba(12, 21, 58, 0.92), rgba(22, 63, 118, 0.82)),
+        url("images/reentry-traj.png") center/cover;
+      color: #fff;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.15rem;
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .home-hero h1 {
+      margin: 0 0 0.48rem;
+      color: #fff;
+      font-size: clamp(1.8rem, 4.2vw, 2.8rem);
+    }
+
+    .home-eyebrow {
+      margin: 0 0 0.4rem;
+      font-size: 0.88rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.82);
+    }
+
+    .home-intro {
+      margin: 0;
+      line-height: 1.65;
+      max-width: 72ch;
+      color: rgba(255, 255, 255, 0.95);
+    }
+
+    .home-meta {
+      margin-top: 0.85rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+    }
+
+    .home-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.32rem;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 999px;
+      padding: 0.26rem 0.66rem;
+      font-size: 0.84rem;
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+
+    .home-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.95rem;
+    }
+
+    .home-link-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.34rem;
+      border-radius: 999px;
+      padding: 0.34rem 0.72rem;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      color: #fff;
+      text-decoration: none;
+      font-size: 0.86rem;
+      background: rgba(10, 20, 40, 0.34);
+    }
+
+    .home-link-btn:hover {
+      text-decoration: none;
+      border-color: rgba(255, 255, 255, 0.72);
+    }
+
+    .home-hero-art {
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(0, 0, 0, 0.24);
+      padding: 0.85rem;
+      display: grid;
+      gap: 0.6rem;
+      justify-items: center;
+      align-content: center;
+    }
+
+    .home-hero-art img {
+      width: 100%;
+      height: 186px;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+    }
+
+    .home-hero-art img.home-profile-circle {
+      width: min(220px, 70vw);
+      height: min(220px, 70vw);
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid rgba(255, 255, 255, 0.55);
+      background: rgba(12, 24, 48, 0.45);
+      padding: 0;
+    }
+
+    .home-hero-caption {
+      margin: 0;
+      font-size: 0.83rem;
+      color: rgba(255, 255, 255, 0.87);
+      line-height: 1.45;
+    }
+
+    .home-social {
+      display: flex;
+      align-items: center;
+      gap: 0.56rem;
+      margin-top: 0.82rem;
+    }
+
+    .home-social a {
+      color: #fff;
+      font-size: 1.15rem;
+      opacity: 0.95;
+    }
+
+    .home-social a:hover {
+      opacity: 1;
+      text-decoration: none;
+    }
+
+    .home-work,
+    .home-projects {
+      margin-top: 1.55rem;
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      background: var(--card-bg);
+      padding: 1rem;
+    }
+
+    .home-section-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.45rem;
+      margin-bottom: 0.78rem;
+    }
+
+    .home-section-head h2 {
+      margin: 0;
+    }
+
+    .home-section-note {
+      margin: 0;
+      font-size: 0.92rem;
+      opacity: 0.78;
+      max-width: 70ch;
+    }
+
+    .home-work-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.72rem;
+    }
+
+    .home-work-item {
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      background: var(--bg-color);
+      padding: 0.82rem;
+    }
+
+    .home-work-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.72rem;
+      margin-bottom: 0.46rem;
+    }
+
+    .home-work-header .icon-logo {
+      width: 44px;
+      height: 44px;
+      margin: 0;
+      flex-shrink: 0;
+    }
+
+    .home-work-title {
+      margin: 0;
+      font-size: 1rem;
+      line-height: 1.34;
+    }
+
+    .home-company-link {
+      font-weight: 600;
+      color: var(--text-color);
+      text-decoration: none;
+      border-bottom: 1px dashed transparent;
+    }
+
+    .home-company-link:hover {
+      color: var(--accent-color);
+      border-bottom-color: var(--accent-color);
+      text-decoration: none;
+    }
+
+    .home-role {
+      display: block;
+      font-size: 0.88rem;
+      opacity: 0.82;
+      margin-top: 0.1rem;
+    }
+
+    .home-work-desc {
+      margin: 0;
+      font-size: 0.93rem;
+      line-height: 1.56;
+    }
+
+    .home-project-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.86rem;
+      margin-top: 0.78rem;
+    }
+
+    .home-project-card {
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--bg-color);
+      display: grid;
+      align-content: start;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .home-project-card:hover {
+      text-decoration: none;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+      transform: translateY(-1px);
+    }
+
+    .home-project-media {
+      aspect-ratio: 16 / 7;
+      overflow: hidden;
+      background: #112245;
+    }
+
+    .home-project-media img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.22s ease;
+    }
+
+    .home-project-card:hover .home-project-media img {
+      transform: scale(1.03);
+    }
+
+    .home-project-content {
+      padding: 0.78rem 0.86rem 0.9rem;
+    }
+
+    .home-project-type {
+      display: inline-block;
+      font-size: 0.74rem;
+      border: 1px solid var(--border-color);
+      border-radius: 999px;
+      padding: 0.18rem 0.52rem;
+      margin-bottom: 0.42rem;
+      opacity: 0.84;
+    }
+
+    .home-project-content h3 {
+      margin: 0 0 0.36rem;
+      font-size: 1.02rem;
+      line-height: 1.34;
+      color: var(--text-color);
+    }
+
+    .home-project-content p {
+      margin: 0;
+      font-size: 0.92rem;
+      line-height: 1.55;
+      color: var(--text-color);
+      opacity: 0.92;
+    }
+
+    @media (min-width: 960px) {
+      .home-hero {
+        grid-template-columns: 1.4fr 1fr;
+        padding: 1.7rem;
+      }
+
+      .home-project-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+  </style>
 </head>
 <body>
-    <nav class="site-nav" aria-label="Primary">
-      <a href="index.html" class="active" aria-current="page">Home</a>
-      <a href="research.html">Research</a>
-      <a href="about.html">About Me</a>
-      <a href="publications.html">Publications</a>
-      <button class="theme-toggle" aria-label="Toggle theme">
-        <span class="theme-toggle-icon" aria-hidden="true">◑</span>
-        <span class="theme-toggle-text">Dark mode</span>
-      </button>
-    </nav>
-    
-    <div class="homepage-container">
-        <header>
-            <div class="header-text">
-                <h1>Daniel Huterer Prats</h1>
-                <p class="location">
-                    <a href="https://www.google.com/maps/place/Boulder,+CO" target="_blank" rel="noopener noreferrer">
-                        <i class="fas fa-globe"></i>
-                        Boulder, CO
-                    </a>
-                </p>
-                <div class="social-links">
-                    <a href="mailto:dhp291@nyu.edu" aria-label="Email"><iconify-icon icon="mdi:email"></iconify-icon></a>
-                    <a href="https://github.com/dhutererprats" aria-label="GitHub"><iconify-icon icon="mdi:github"></iconify-icon></a>
-                    <a href="https://www.linkedin.com/in/dhutererprats/" aria-label="LinkedIn"><iconify-icon icon="mdi:linkedin"></iconify-icon></a>
-                </div>
-                <div class="quick-links">
-                    <!-- <a href="files/Daniel_Huterer_Prats_CV.pdf" download class="quick-link">
-                        <iconify-icon icon="mdi:file-document"></iconify-icon>
-                        Download CV
-                    </a> -->
-                    <a href="mailto:dahu1128@colorado.edu" class="cv-link" id="cv-link">
-                        Download CV
-                      </a>
-                      
-                </div>
+  <nav class="site-nav" aria-label="Primary">
+    <a href="index.html" class="active" aria-current="page">Home</a>
+    <a href="research.html">Research</a>
+    <a href="about.html">About Me</a>
+    <a href="publications.html">Publications</a>
+    <button class="theme-toggle" aria-label="Toggle theme">
+      <span class="theme-toggle-icon" aria-hidden="true">◑</span>
+      <span class="theme-toggle-text">Dark mode</span>
+    </button>
+  </nav>
+
+  <div class="homepage-container">
+    <main class="home-main">
+      <header class="home-hero">
+        <div>
+          <p class="home-eyebrow">Autonomous Space Ops - Astrodynamics - Machine Learning</p>
+          <h1>Daniel Huterer Prats</h1>
+          <p class="home-intro">
+            PhD student in Aerospace Engineering at CU Boulder AVS Lab, building autonomous scheduling and inspection systems for spacecraft operations under real mission constraints.
+          </p>
+          <p class="home-intro" style="margin-top: 0.55rem;">
+            My work combines reinforcement learning, orbital mechanics, and safety-aware planning to support scalable on-orbit decision-making for surveillance, servicing, and exploration missions.
+          </p>
+
+          <p class="location" style="margin-top: 0.62rem;">
+            <a href="https://www.google.com/maps/place/Boulder,+CO" target="_blank" rel="noopener noreferrer" style="color: #fff;">
+              Boulder, CO
+            </a>
+          </p>
+
+          <div class="home-meta" aria-label="Core focus areas">
+            <span class="home-pill"><iconify-icon icon="mdi:satellite-variant"></iconify-icon>Autonomous Space Ops</span>
+            <span class="home-pill"><iconify-icon icon="mdi:brain"></iconify-icon>Reinforcement Learning</span>
+            <span class="home-pill"><iconify-icon icon="mdi:orbit"></iconify-icon>Astrodynamics</span>
+            <span class="home-pill"><iconify-icon icon="mdi:shield-check"></iconify-icon>Safety-Critical Planning</span>
+          </div>
+
+          <div class="home-links">
+            <a class="home-link-btn" href="research.html"><iconify-icon icon="mdi:flask-outline"></iconify-icon>Research Highlights</a>
+            <a class="home-link-btn" href="publications.html"><iconify-icon icon="mdi:file-document-outline"></iconify-icon>Publications</a>
+            <a class="home-link-btn" href="about.html"><iconify-icon icon="mdi:account-circle-outline"></iconify-icon>About Me</a>
+          </div>
+
+          <div class="home-social" aria-label="Contact and profiles">
+            <a href="mailto:dhp291@nyu.edu" aria-label="Email"><iconify-icon icon="mdi:email"></iconify-icon></a>
+            <a href="https://github.com/dhutererprats" target="_blank" rel="noopener" aria-label="GitHub"><iconify-icon icon="mdi:github"></iconify-icon></a>
+            <a href="https://www.linkedin.com/in/dhutererprats/" target="_blank" rel="noopener" aria-label="LinkedIn"><iconify-icon icon="mdi:linkedin"></iconify-icon></a>
+            <a href="https://www.google.com/maps/place/Boulder,+CO" target="_blank" rel="noopener" aria-label="Boulder location"><iconify-icon icon="mdi:map-marker"></iconify-icon></a>
+          </div>
+
+          <div class="quick-links" style="margin-top: 0.84rem;">
+            <a href="mailto:dahu1128@colorado.edu" class="cv-link" id="cv-link">Download CV</a>
+          </div>
+        </div>
+
+        <aside class="home-hero-art" aria-label="Profile and mission context">
+          <img class="home-profile-circle" src="Headshot-photo-NYU.png" alt="Daniel Huterer Prats" />
+          <p class="home-hero-caption">
+            Based in Boulder, CO, collaborating across research and industry to build robust autonomous space systems.
+          </p>
+        </aside>
+      </header>
+
+      <section class="home-work" aria-labelledby="work-title">
+        <div class="home-section-head">
+          <h2 id="work-title">Work</h2>
+          <p class="home-section-note">Key research and industry roles. Organization names link to their official pages.</p>
+        </div>
+        <ul class="home-work-list">
+          <li class="home-work-item">
+            <div class="home-work-header">
+              <img src="icons/avslabIcon.jpeg" alt="AVS Lab" class="icon-logo">
+              <p class="home-work-title">
+                <a class="home-company-link" href="https://hanspeterschaub.info/AVSlab.html" target="_blank" rel="noopener">Autonomous Vehicle Systems Lab</a>
+                <span class="home-role">Graduate Researcher - Boulder, CO</span>
+              </p>
             </div>
-            <img src="Headshot-photo-NYU.png" alt="Daniel Huterer Prats" class="profile-image">
-        </header>
+            <p class="home-work-desc">Developing Basilisk-based RL frameworks for autonomous RSO imaging under power, field-of-view, and pointing constraints.</p>
+          </li>
 
-        <main>
-            <section class="bio">
-                <p>I am a PhD student in Aerospace Engineering at the University of Colorado Boulder, working in the <a href="https://hanspeterschaub.info/AVS/index.html" target="_blank">Autonomous Vehicle Systems Laboratory</a> under Dr. Hanspeter Schaub.</p>
-                <p>My research focuses on applying deep reinforcement learning to autonomous spacecraft scheduling and inspection, particularly under strict operational constraints such as power, wheel momentum saturation, data storage, and illumination geometry.</p>
-                <p>Previously, I led mission design efforts for a green orbit transfer vehicle at Infinite Orbits, conducted maneuver simulations for the Emirates Mission to the Asteroid Belt at LASP, and co-authored research on space-based inspection and safety-aware planning.</p>
-                <p>My background spans physics, aerospace systems, and machine learning — across Europe, the Middle East, and the U.S. I’m passionate about pushing the boundaries of autonomy in orbit to support next-generation space exploration missions.</p>
-            </section>
-
-            <!-- <section class="work">
-                <h2>Work</h2>
-                <ul class="work-list">
-                    <li class="work-item">
-                        <div class="work-item-header">
-                            <img src="icons/avslabIcon.jpeg" alt="AVS Lab" />
-                            <div class="work-title">
-                                <span class="company-name">Autonomous Vehicle Systems Lab</span>
-                                <span class="role">Graduate Researcher</span>
-                            </div>
-                            <iconify-icon class="dropdown-arrow" icon="mdi:chevron-down"></iconify-icon>
-                        </div>
-                        <div class="work-item-content">
-                            <p>Developing a Basilisk-based RL simulation for RSO surveillance under complex constraints.</p>
-                            <p>Presented research at AMOS and the Planning & Scheduling for Space Workshop.</p>
-                        </div>
-                    </li>
-
-                    <li class="work-item">
-                        <div class="work-item-header">
-                            <img src="lasp_icon.jpg" alt="LASP" class="icon-logo">
-                            <div class="work-title">
-                                <span class="company-name">Laboratory for Atmospheric and Space Physics</span>
-                                <span class="role">GNC Engineer</span>
-                            </div>
-                            <iconify-icon class="dropdown-arrow" icon="mdi:chevron-down"></iconify-icon>
-                        </div>
-                        <div class="work-item-content">
-                            <p>Ran Monte Carlo simulations for the Emirates Mission to the Asteroid Belt (EMA).</p>
-                            <p>Evaluated gravity assist insertion and flyby performance across mission phases.</p>
-                        </div>
-                    </li>
-
-                    <li class="work-item">
-                        <div class="work-item-header">
-                            <img src="io_icon.png" alt="Infinite Orbits" class="icon-logo">
-                            <div class="work-title">
-                                <span class="company-name">Infinite Orbits</span>
-                                <span class="role">Main Systems Engineer</span>
-                            </div>
-                            <iconify-icon class="dropdown-arrow" icon="mdi:chevron-down"></iconify-icon>
-                        </div>
-                        <div class="work-item-content">
-                            <p>Led system design for European GEO transfer vehicle including CONOPS and FDIR.</p>
-                            <p>Managed a consortium of 8 space companies and presented at project milestones.</p>
-                        </div>
-                    </li>
-
-                </ul>
-            </section> -->
-            <section class="work">
-                <h2>Work</h2>
-                <ul class="work-list">
-              
-                  <!-- AVS Lab -->
-                  <li class="work-item">
-                    <div class="work-item-header">
-                      <img src="icons/avslabIcon.jpeg" alt="AVS Lab" class="icon-logo">
-                      <div class="work-title">
-                        <span class="company-name">Autonomous Vehicle Systems Lab</span>
-                        <span class="title-separator">—</span>
-                        <span class="role">Graduate Researcher</span>
-                      </div>
-                      <iconify-icon class="dropdown-arrow" icon="mdi:chevron-down"></iconify-icon>
-                    </div>
-                    <div class="work-item-content">
-                      <p>Developing Basilisk-based RL simulation for RSO surveillance under power, FOV, and pointing constraints.</p>
-                      <p>Presented at AMOS 2025 and Planning & Scheduling for Space Workshop in Toulouse.</p>
-                    </div>
-                  </li>
-              
-                  <!-- LASP -->
-                  <li class="work-item" id="infinite-orbits">
-                    <div class="work-item-header">
-                      <img src="icons/lasp_icon.jpg" alt="LASP" class="icon-logo">
-                      <div class="work-title">
-                        <span class="company-name">Laboratory for Atmospheric and Space Physics</span>
-                        <span class="title-separator">—</span>
-                        <span class="role">GNC Engineer</span>
-                      </div>
-                      <iconify-icon class="dropdown-arrow" icon="mdi:chevron-down"></iconify-icon>
-                    </div>
-                    <div class="work-item-content">
-                      <p>Ran Monte Carlo simulations for the Emirates Mission to the Asteroid Belt (EMA).</p>
-                      <p>Supported trajectory design, gravity assist performance, and interplanetary phase planning.</p>
-                    </div>
-                  </li>
-              
-                  <!-- Infinite Orbits -->
-                  <li class="work-item">
-                    <div class="work-item-header">
-                      <img src="icons/io_icon.png" alt="Infinite Orbits" class="icon-logo">
-                      <div class="work-title">
-                        <span class="company-name">Infinite Orbits</span>
-                        <span class="title-separator">—</span>
-                        <span class="role">Main Systems Engineer</span>
-                      </div>
-                      <iconify-icon class="dropdown-arrow" icon="mdi:chevron-down"></iconify-icon>
-                    </div>
-                    <div class="work-item-content">
-                      <p>Led system development of GEO Ryder OTV with consortium of 8 European companies.</p>
-                      <p>Designed safety concepts and FDIR architecture for a servicer docking with GEO clients for life extension.</p>
-                    </div>
-                  </li>
-              
-                  <!-- ALTEN -->
-                  <li class="work-item">
-                    <div class="work-item-header">
-                      <img src="icons/new_alten_logo.png" alt="ALTEN" class="icon-logo">
-                      <div class="work-title">
-                        <span class="company-name">ALTEN</span>
-                        <span class="title-separator">—</span>
-                        <span class="role">Aerospace Consultant</span>
-                      </div>
-                      <iconify-icon class="dropdown-arrow" icon="mdi:chevron-down"></iconify-icon>
-                    </div>
-                    <div class="work-item-content">
-                      <p>Managed the Fast-Monitoring suite for ESSP, automating ground and satellite signal processing pipeline.</p>
-                      <p>Oversaw GNSS receiver tracking and performance metrics across entire European service region.</p>
-                    </div>
-                  </li>
-              
-                  <!-- UPC -->
-                  <li class="work-item">
-                    <div class="work-item-header">
-                      <img src="icons/Logo_UPC.svg.png" alt="UPC" class="icon-logo">
-                      <div class="work-title">
-                        <span class="company-name">UPC</span>
-                        <span class="title-separator">—</span>
-                        <span class="role">Space Systems Project Lead</span>
-                      </div>
-                      <iconify-icon class="dropdown-arrow" icon="mdi:chevron-down"></iconify-icon>
-                    </div>
-                    <div class="work-item-content">
-                      <p>Led design of wildfire-tracking satellite over Australia, with focus on instrument and AOCS design.</p>
-                      <p>Developed sub-pixel resolution imaging concept to detect fires smaller than sensor resolution.</p>
-                    </div>
-                  </li>
-              
-                  <!-- NYUAD Rocketry -->
-                  <li class="work-item">
-                    <div class="work-item-header">
-                      <img src="icons/nyuad_icon.png.webp" alt="NYUAD" class="icon-logo">
-                      <div class="work-title">
-                        <span class="company-name">NYUAD</span>
-                        <span class="title-separator">—</span>
-                        <span class="role">Rocketry Team Chief Engineer</span>
-                      </div>
-                      <iconify-icon class="dropdown-arrow" icon="mdi:chevron-down"></iconify-icon>
-                    </div>
-                    <div class="work-item-content">
-                      <p>Led development of Level-3 solid-fuel rocket for international competition.</p>
-                      <p>Oversaw propulsion, avionics, and structural integration; first UAE university to compete internationally.</p>
-                    </div>
-                  </li>
-              
-                  <!-- Galaxy Formation -->
-                  <li class="work-item">
-                    <div class="work-item-header">
-                        <img src="icons/cap3_icon.png" alt="CAP3-center" class="icon-logo">
-                        <div class="work-title">
-                        <span class="company-name">NYUAD Galaxy Formation Group (Center for Astro, Particle and Planetary Physics)</span>
-                        <span class="title-separator">—</span>
-                        <span class="role">Undergraduate Researcher</span>
-                      </div>
-                      <iconify-icon class="dropdown-arrow" icon="mdi:chevron-down"></iconify-icon>
-                    </div>
-                    <div class="work-item-content">
-                      <p>Developed novel mapping technique to accelerate baryonic simulations from dark matter-only data.</p>
-                      <p>Reduced hydrodynamic sim times by 90%, enabling large-scale analysis of ‘missing’ dark matter structure.</p>
-                    </div>
-                  </li>
-              
-                  <!-- Exoplanet Atmospheres -->
-                  <li class="work-item">
-                    <div class="work-item-header">
-                        <img src="icons/nyuad_icon.png.webp" alt="NYUAD" class="icon-logo">
-                        <div class="work-title">
-                        <span class="company-name">NYUAD</span>
-                        <span class="title-separator">—</span>
-                        <span class="role">Exoplanet Atmospheres Researcher</span>
-                      </div>
-                      <iconify-icon class="dropdown-arrow" icon="mdi:chevron-down"></iconify-icon>
-                    </div>
-                    <div class="work-item-content">
-                      <p>Developed ML-based data structures for modeling exoplanet atmospheres and JWST spectral profiles.</p>
-                      <p>Simulated atmospheric retrieval models for different planetary mass/radius classes.</p>
-                    </div>
-                  </li>
-              
-                </ul>
-              </section>
-              
-
-            <!-- <section class="projects">
-                <h2>Projects</h2>
-                <div class="project-item project-item-large">
-                    <img src="images/polaris_sim.jpg" alt="Polaris RL Simulation" />
-                    <p><strong>Polaris: RL Scheduling for RSO Imaging</strong></p>
-                    <p>Trained RL agents to prioritize and image RSOs under power, data, and control constraints in Basilisk.</p>
-                    <p><a href="https://amostech.com/TechnicalPapers/2025/Huterer_Prats_Polaris.pdf" target="_blank" class="underline">View abstract (AMOS 2025)</a></p>
-                </div>
-                <div class="project-item">
-                    <img src="images/RSO-inspection_illustration.png" alt="RSO Inspection Simulation">
-                    <p>Autonomous space-to-space imaging scheduler for RSO inspection under safety and illumination constraints.</p>
-                </div>
-                  
-                <div class="project-item">
-                    <img src="images/satellite_inspection.png" alt="Satellite Inspection" />
-                    <p>Developed a shielded SMDP planner for impulsive spacecraft maneuvers under relative motion dynamics.</p>
-                    <p><a href="https://planningworkshop2025.com/papers/huterer_prats_inspection" target="_blank" class="underline">View workshop paper</a></p>
-                </div>
-                <div class="project-item">
-                    <img src="images/Research_Paper_Thumbnail.png" alt="Autonomous Satellite Inspection in LEO">
-                    <p><strong>Autonomous Satellite Inspection in Low Earth Orbit<br>
-                    with Optimization-Based Safety Guarantees</strong></p>
-                    <p>
-                      <a href="https://hanspeterschaub.info/Papers/Stephenson2025a.pdf" 
-                         target="_blank" 
-                         rel="noopener noreferrer" 
-                         class="underline">
-                         📄 Download Paper
-                      </a>
-                    </p>
-                  </div>
-        
-            </section> -->
-            <section class="projects">
-                <h2>Projects</h2>
-              
-                <!-- Polaris -->
-                <div class="project-item expandable">
-                    <div class="image-container" onclick="toggleProject(this)">
-                      <img src="images/space_to_space_surveillance.png" alt="Space-to-Space Surveillance" />
-                      <div class="overlay">
-                        <div class="overlay-text">Space-to-Space Surveillance for SSA</div>
-                        <div class="expand-arrow">▼</div>
-                      </div>
-                    </div>
-                  
-                    <div class="project-description">
-                      <p><strong>RL-Driven Scheduling for Autonomous Space-to-Space Surveillance</strong></p>
-                      <p>This project introduces a reinforcement learning (RL)-based approach for autonomous inspection and imaging of Resident Space Objects (RSOs) from a spacecraft in orbit. Unlike Earth observation missions with predictable ground tracks, RSOs exhibit dynamic, evolving motion, requiring real-time scheduling decisions by the inspecting agent.</p>
-                  
-                      <p>The task is formulated as a Markov Decision Process (MDP), and the agent is trained in a high-fidelity Basilisk simulation. The RL agent dynamically selects imaging targets while managing LOS constraints, battery and reaction wheel states, and data limits. This autonomy enables persistent, priority-based surveillance without human intervention or ground-tasked commands.</p>
-                  
-                      <p>As space becomes more congested, this research offers a scalable, intelligent solution to Space Situational Awareness (SSA) and Space Domain Awareness (SDA). The project extends MDP-based scheduling, previously used in Earth observation, to the domain of active space-based surveillance—significantly improving responsiveness and operational coverage.</p>
-                  
-                      <p><strong>Project Phases:</strong></p>
-                      <ul>
-                        <li><strong>Phase 1:</strong> Single-target RL imaging with LOS, battery, and wheel saturation constraints.</li>
-                        <li><strong>Phase 2:</strong> Multi-RSO scheduling with dynamic, priority-based observation logic.</li>
-                        <li><strong>Phase 3:</strong> Integration of eclipse and solar constraints for realistic observability windows.</li>
-                      </ul>                      
-                  
-                      <p>The system is benchmarked against traditional optimization-based Earth Observation scheduling agents, evaluating imaging efficiency, resource balancing, and adaptability to dynamic conditions.</p>
-                    <!-- VIDEO -->
-                    <div class="media-block">
-                        <h4>🎥 Project Video</h4>
-
-                        <video controls>
-                        <source src="files/space_to_space_animation.mp4" type="video/mp4">
-                        Your browser does not support the video tag.
-                        </video>
-                    </div>
-                    
-                    <!-- ABSTRACT THUMBNAIL -->
-                    <div class="media-block abstract-thumbnail">
-                        <h4>📄 Abstract: Space-to-Space Surveillance</h4>
-                        <div class="thumbnail-hover">
-                        <img src="images/StSS_BostonAbstract.png" alt="Abstract Thumbnail" />
-                        <div class="hover-text">
-                            <a href="files/StSS_BostonAbstract.pdf" download>📥 Download Abstract</a>
-                        </div>
-                        </div>
-                    </div>
-                    </div>
-                  </div>
-                  
-              
-                <!-- RSO Inspection
-                <div class="project-item">
-                  <div class="image-container">
-                    <img src="images/RSO-inspection_illustration.png" alt="RSO Inspection" />
-                    <div class="overlay">
-                      <div class="overlay-text">RL-Based RSO Inspection</div>
-                    </div>
-                  </div>
-                  <p>Autonomous space-to-space imaging scheduler for RSO inspection under safety and illumination constraints.</p>
-                </div>
-              
-                <div class="project-item">
-                  <div class="image-container">
-                    <img src="images/Research_Paper_Thumbnail.png" alt="LEO Inspection" />
-                    <div class="overlay">
-                      <div class="overlay-text">LEO Inspection Research</div>
-                    </div>
-                  </div>
-                  <p><strong>Autonomous Satellite Inspection in Low Earth Orbit<br> with Optimization-Based Safety Guarantees</strong></p>
-                  <p><a href="https://hanspeterschaub.info/Papers/Stephenson2025a.pdf" target="_blank" class="underline">📄 Download Paper</a></p>
-                </div> -->
-              
-
-                <!-- RSO Inspection -->
-                <div class="project-item expandable">
-                    <div class="image-container" onclick="toggleProject(this)">
-                    <img src="images/RSO-inspection_illustration.png" alt="RSO Inspection" />
-                    <div class="overlay">
-                        <div class="overlay-text">RL-Based RSO Inspection</div>
-                        <div class="expand-arrow">▼</div>
-                    </div>
-                    </div>
-                
-                    <div class="project-description">
-                    <p>
-                        This project develops a reinforcement learning (RL)-based scheduler for autonomous Resident Space Object (RSO) inspection under strict safety and lighting constraints. It integrates spacecraft health management (battery, data storage, wheel desaturation) and environmental observability (eclipses, line-of-sight) into a high-fidelity Basilisk simulation.
-                    </p>
-                    <p>
-                        The motivation for this work stems from challenges encountered during my time at 
-                        <a href="#infinite-orbits" class="inline-link">Infinite Orbits</a>, where I led safety concept development for the docking and life-extension of a large GEO satellite client. Precise visual navigation during the final rendezvous phase required careful handling of lighting conditions — an experience that sparked this line of research into optimizing autonomous RSO inspection with real-world constraints.
-                    </p>
-                
-                    <!-- <p>
-                        The inspiration for this research stems from challenges I tackled while working at <a href="#infinite-orbits" class="inline-link">Infinite Orbits</a>, where I led safety concept design for rendezvous and docking with a large GEO satellite. Because visual navigation in these scenarios relies heavily on illumination conditions, I began exploring how RL agents could optimize RSO inspections in dynamic lighting environments, with spacecraft safety in mind.
-                    </p> -->
-                
-                    <p><strong>Key Features:</strong></p>
-                    <ul>
-                        <li><strong>Phase 1:</strong> Train RL agent for single-target imaging with LOS, battery, and wheel saturation constraints.</li>
-                        <li><strong>Phase 2:</strong> Enable multi-target scheduling using dynamic, priority-based task selection.</li>
-                        <li><strong>Phase 3:</strong> Integrate eclipse observability into target selection to optimize real-world inspection windows.</li>
-                    </ul>
-                
-                    <!-- Abstract Thumbnail -->
-                    <div class="media-block abstract-thumbnail">
-                        <h4>📄 Abstract: Autonomous Satellite Inspection</h4>
-                        <p>The most recent paper on this work is titled "<strong>Autonomous Satellite Inspection in Low Earth Orbit with Optimization-Based Safety Guarantees</strong>." Ongoing research extends this work to multiple inspecting satellites operating collaboratively and to richer illumination constraints, including glare and self-shadowing.</p>
-
-                        <div class="thumbnail-hover">
-                        <img src="images/Research_Paper_Thumbnail.png" alt="LEO Inspection Abstract" />
-                        <div class="hover-text">
-                            <a href="https://hanspeterschaub.info/Papers/Stephenson2025a.pdf" target="_blank">📥 Download Paper</a>
-                        </div>
-                        </div>
-                    </div>
-                    </div>
-                </div>
-
-  
-                <!-- Astrophysics Paper -->
-                <div class="project-item">
-                  <div class="image-container">
-                    <img src="images/galaxies_lacking_dark_matter_thumbnail.png" alt="Dark Matter & Galaxy Formation" />
-                    <div class="overlay">
-                      <div class="overlay-text">Dark Matter & Galaxy Formation</div>
-                    </div>
-                  </div>
-                  <p>Co-authored paper on dwarf galaxy dark matter depletion published in MNRAS (2021).</p>
-                  <p>
-                    <a href="https://arxiv.org/pdf/2010.02245" target="_blank" class="underline">📄 View Paper</a>
-                  </p>
-                </div>
-              
-                <!-- MGA Genetic Algorithm -->
-                <div class="project-item expandable">
-                  <div class="image-container" onclick="toggleProject(this)">
-                    <img src="images/interplanetary_trajectory_final.png" alt="MGA Optimization" />
-                    <div class="overlay">
-                      <div class="overlay-text">Multi-Gravity Assist Trajectory Optimization</div>
-                      <div class="expand-arrow">▼</div>
-                    </div>
-                  </div>
-                  <div class="project-description">
-                    <p>Developed a genetic algorithm capable of optimizing complex interplanetary missions using gravity assists and impulsive maneuvers.</p>
-                    <p>The algorithm balances low ∆v and fast arrival time, avoiding pruning of non-intuitive solutions. Compared results with existing codes and real-world trajectories.</p>
-                    <p><a href="files/MGA_Paper.pdf" target="_blank" class="underline">📄 Download Paper</a></p>
-                  </div>
-                </div>
-              </section>
-
-              <!-- Water Extraction and Purification Project -->
-            <div class="project-item-expandable project-item expandable">
-                <div class="expandable-header" onclick="this.parentElement.classList.toggle('open')">
-                <div class="image-container">
-                    <img src="images/SEVIR.png" alt="Water Extraction and Purification" />
-                    <div class="overlay">
-                    <div class="overlay-text">Moon & Mars Water Purification</div>
-                    <div class="expand-arrow">▾</div>
-                    </div>
-                </div>
-                </div>
-                
-                <div class="project-description project-item-content">
-                <p>This research explores the development of a robust, scalable system for extracting and purifying water from subsurface resources on the Moon and Mars. Water is essential for life support, agriculture, fuel generation, and in-situ construction. A comparative analysis of technologies such as sublimation, filtration membranes, and electrochemical purification is conducted under lunar and Martian conditions.</p>
-            
-                <p>The project culminated in a model that combines multiple methods for optimized water yield and purity, considering local regolith composition, temperature cycles, and energy constraints. The study was carried out at the <strong>Castelldefels School of Telecommunications and Aerospace Engineering (EETAC)</strong> in Barcelona, Spain.</p>
-            
-                <div class="abstract-thumbnail">
-                    <div class="thumbnail-hover">
-                    <img src="images/UPC_water_thumbnail.png" alt="Water Extraction Abstract" />
-                    <div class="hover-text"><a href="files/Water_Extraction_and_Purification_on_Moon_and_Mars.pdf" target="_blank" style="color:white;">📄 Download Abstract</a></div>
-                    </div>
-                </div>
-                </div>
+          <li class="home-work-item">
+            <div class="home-work-header">
+              <img src="icons/lasp_icon.jpg" alt="LASP" class="icon-logo">
+              <p class="home-work-title">
+                <a class="home-company-link" href="https://lasp.colorado.edu/" target="_blank" rel="noopener">Laboratory for Atmospheric and Space Physics</a>
+                <span class="home-role">GNC Engineer - Boulder, CO</span>
+              </p>
             </div>
-            
-              
-        </main>
+            <p class="home-work-desc">Ran Monte Carlo campaign analyses for the Emirates Mission to the Asteroid Belt and supported trajectory and gravity-assist assessments.</p>
+          </li>
 
-        <footer>
-            <p>© 2025 Daniel Huterer Prats. Built from scratch with care 🛰️</p>
-        </footer>
-    </div>
-    <script>
-        function toggleProject(el) {
-          const parent = el.closest('.project-item.expandable');
-          parent.classList.toggle('active');
-          const arrow = parent.querySelector('.expand-arrow');
-          arrow.textContent = parent.classList.contains('active') ? '▲' : '▼';
-        }
-      </script>
-      
+          <li class="home-work-item" id="infinite-orbits">
+            <div class="home-work-header">
+              <img src="icons/io_icon.png" alt="Infinite Orbits" class="icon-logo">
+              <p class="home-work-title">
+                <a class="home-company-link" href="https://www.infiniteorbits.io/" target="_blank" rel="noopener">Infinite Orbits</a>
+                <span class="home-role">Main Systems Engineer - Toulouse, France</span>
+              </p>
+            </div>
+            <p class="home-work-desc">Led system development for GEO servicing concepts, including safety architecture and FDIR for docking and life-extension scenarios.</p>
+          </li>
+
+          <li class="home-work-item">
+            <div class="home-work-header">
+              <img src="icons/new_alten_logo.png" alt="ALTEN" class="icon-logo">
+              <p class="home-work-title">
+                <a class="home-company-link" href="https://www.alten.com/" target="_blank" rel="noopener">ALTEN</a>
+                <span class="home-role">Aerospace Consultant - Toulouse, France</span>
+              </p>
+            </div>
+            <p class="home-work-desc">Managed ESSP fast-monitoring operations for signal processing and GNSS service performance across the European region.</p>
+          </li>
+
+          <li class="home-work-item">
+            <div class="home-work-header">
+              <img src="icons/Logo_UPC.svg.png" alt="UPC" class="icon-logo">
+              <p class="home-work-title">
+                <a class="home-company-link" href="https://www.upc.edu/en" target="_blank" rel="noopener">UPC</a>
+                <span class="home-role">Space Systems Project Lead - Barcelona, Spain</span>
+              </p>
+            </div>
+            <p class="home-work-desc">Led end-to-end design of a wildfire-tracking mission concept, with emphasis on payload and AOCS architecture.</p>
+          </li>
+
+          <li class="home-work-item">
+            <div class="home-work-header">
+              <img src="icons/nyuad_icon.png.webp" alt="NYUAD" class="icon-logo">
+              <p class="home-work-title">
+                <a class="home-company-link" href="https://nyuad.nyu.edu/" target="_blank" rel="noopener">NYU Abu Dhabi</a>
+                <span class="home-role">Rocketry Team Chief Engineer / Researcher - Abu Dhabi, UAE</span>
+              </p>
+            </div>
+            <p class="home-work-desc">Built high-power rocketry and conducted research in astrophysics and exoplanet-atmosphere modeling during undergraduate studies.</p>
+          </li>
+
+          <li class="home-work-item">
+            <div class="home-work-header">
+              <img src="icons/cap3_icon.png" alt="Galaxy Formation Group" class="icon-logo">
+              <p class="home-work-title">
+                <a class="home-company-link" href="https://nyuad.nyu.edu/en/research/faculty-labs-and-projects/galaxy-formation-group.html" target="_blank" rel="noopener">NYUAD Galaxy Formation Group</a>
+                <span class="home-role">Undergraduate Researcher - Abu Dhabi, UAE</span>
+              </p>
+            </div>
+            <p class="home-work-desc">Co-developed efficient mapping techniques to accelerate baryonic simulation insight from dark-matter-only runs.</p>
+          </li>
+        </ul>
+      </section>
+
+      <section class="home-projects" aria-labelledby="projects-title">
+        <div class="home-section-head">
+          <h2 id="projects-title">Projects</h2>
+          <p class="home-section-note">Non-redundant project highlights that complement, rather than duplicate, the Research and Publications pages.</p>
+        </div>
+
+        <div class="home-project-grid">
+          <a class="home-project-card" href="orbital-elements.html">
+            <div class="home-project-media">
+              <img src="images/orbital-elements-thumbnail.jpg" alt="Orbital elements visualization" loading="lazy" decoding="async" />
+            </div>
+            <div class="home-project-content">
+              <span class="home-project-type">Interactive Demo</span>
+              <h3>Orbital Elements Visualizer</h3>
+              <p>Interactive geometry tool for inclination, RAAN, argument of perigee, and anomaly intuition in orbit design.</p>
+            </div>
+          </a>
+
+          <a class="home-project-card" href="attitude-dynamics.html">
+            <div class="home-project-media">
+              <img src="images/reentry-traj.png" alt="Attitude dynamics and trajectory style visualization" loading="lazy" decoding="async" />
+            </div>
+            <div class="home-project-content">
+              <span class="home-project-type">Interactive Demo</span>
+              <h3>Attitude Dynamics Explorer</h3>
+              <p>Hands-on controls for spacecraft rotational behavior, orientation propagation, and dynamics interpretation.</p>
+            </div>
+          </a>
+
+          <a class="home-project-card" href="files/MGA_Paper.pdf" target="_blank" rel="noopener">
+            <div class="home-project-media">
+              <img src="images/interplanetary_trajectory_final.png" alt="Multi-gravity assist trajectory plot" loading="lazy" decoding="async" />
+            </div>
+            <div class="home-project-content">
+              <span class="home-project-type">Paper</span>
+              <h3>Multi-Gravity Assist Optimization</h3>
+              <p>Genetic-algorithm framework for complex interplanetary transfers balancing arrival time and total delta-v.</p>
+            </div>
+          </a>
+
+          <a class="home-project-card" href="files/Water_Extraction_and_Purification_on_Moon_and_Mars.pdf" target="_blank" rel="noopener">
+            <div class="home-project-media">
+              <img src="images/UPC_water_thumbnail.png" alt="Moon and Mars water extraction and purification project" loading="lazy" decoding="async" />
+            </div>
+            <div class="home-project-content">
+              <span class="home-project-type">Mission Concept Study</span>
+              <h3>Moon and Mars Water Purification</h3>
+              <p>Comparative analysis of extraction and purification strategies for in-situ resource utilization under lunar and Martian constraints.</p>
+            </div>
+          </a>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>© 2025 Daniel Huterer Prats. Built from scratch with care 🛰️</p>
+    </footer>
+  </div>
 </body>
-
 </html>
