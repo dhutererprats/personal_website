@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pilot Training | Daniel Huterer Prats</title>
+  <meta name="description" content="PHAK-based pilot training with chapter flashcards, fast quiz mode, and progress tracking."/>
+  <meta name="robots" content="index,follow"/>
+  <meta property="og:type" content="website"/>
+  <meta property="og:site_name" content="Daniel Huterer Prats"/>
+  <meta property="og:title" content="Pilot Training | Daniel Huterer Prats"/>
+  <meta property="og:description" content="Dedicated pilot training page with chapter-based PHAK study and quiz mode."/>
+  <meta property="og:url" content="https://dhutererprats.github.io/pilot-training.html"/>
+  <meta property="og:image" content="https://dhutererprats.github.io/images/research-hero-space.jpg"/>
+  <meta name="twitter:card" content="summary_large_image"/>
+  <meta name="twitter:title" content="Pilot Training | Daniel Huterer Prats"/>
+  <meta name="twitter:description" content="Study pilot fundamentals by chapter and track quiz progress."/>
+  <meta name="twitter:image" content="https://dhutererprats.github.io/images/research-hero-space.jpg"/>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="pilot-training.css" />
+  <script src="theme-toggle.js" defer></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <script src="pilot-training-data.js" defer></script>
+  <script src="pilot-training.js" defer></script>
+  <link rel="icon" href="icons/astronaut.ico" type="image/x-icon"/>
+  <link rel="canonical" href="https://dhutererprats.github.io/pilot-training.html"/>
+</head>
+<body>
+  <nav class="site-nav" aria-label="Primary">
+    <a href="index.html">Home</a>
+    <a href="research.html">Research</a>
+    <a href="about.html">About Me</a>
+    <a href="publications.html">Publications</a>
+    <a href="astronaut-training.html">Astronaut Training</a>
+    <a href="pilot-training.html" class="active" aria-current="page">Pilot Training</a>
+    <button class="theme-toggle" aria-label="Toggle theme">
+      <span class="theme-toggle-icon" aria-hidden="true">◑</span>
+      <span class="theme-toggle-text">Dark mode</span>
+    </button>
+  </nav>
+
+  <div class="homepage-container">
+    <main class="pilot-main">
+      <header class="pilot-hero">
+        <h1>Pilot Training - PHAK Chapters</h1>
+        <p>
+          Dedicated pilot study area with chapter-by-chapter flashcards, one-tap quizzes, and progress tracking.
+          Questions are organized by Pilot's Handbook of Aeronautical Knowledge themes and applied flight scenarios.
+        </p>
+        <div class="pilot-hero-pills">
+          <span class="pilot-pill"><iconify-icon icon="mdi:airplane"></iconify-icon>Aerodynamics</span>
+          <span class="pilot-pill"><iconify-icon icon="mdi:weather-partly-cloudy"></iconify-icon>Weather</span>
+          <span class="pilot-pill"><iconify-icon icon="mdi:map-marker-path"></iconify-icon>Navigation</span>
+          <span class="pilot-pill"><iconify-icon icon="mdi:shield-check"></iconify-icon>ADM & Safety</span>
+          <span class="pilot-pill"><iconify-icon icon="mdi:calculator-variant"></iconify-icon>Performance</span>
+        </div>
+      </header>
+
+      <section class="pilot-panel">
+        <div class="panel-head">
+          <h2>Chapters</h2>
+          <p>Select a chapter to focus your flashcards and chapter quiz.</p>
+        </div>
+        <div id="pilot-chapter-grid" class="pilot-chapter-grid"></div>
+      </section>
+
+      <section class="pilot-panel">
+        <div class="panel-head">
+          <h2>Flashcards</h2>
+          <p>Tap the card to flip. Use chapter filter and random/series order.</p>
+        </div>
+
+        <div class="pilot-controls">
+          <label for="pilot-flash-chapter">
+            Chapter
+            <select id="pilot-flash-chapter"></select>
+          </label>
+          <label for="pilot-flash-order">
+            Card order
+            <select id="pilot-flash-order">
+              <option value="series">In order</option>
+              <option value="random">Random</option>
+            </select>
+          </label>
+        </div>
+
+        <article id="pilot-flash-card" class="pilot-flash-card" tabindex="0">
+          <div class="pilot-flash-face front">
+            <h3>Prompt</h3>
+            <p id="pilot-flash-q">Select a chapter to begin.</p>
+          </div>
+          <div class="pilot-flash-face back">
+            <h3>Answer</h3>
+            <p id="pilot-flash-a">Answer appears here.</p>
+          </div>
+        </article>
+
+        <div class="pilot-actions">
+          <button id="pilot-flash-prev" class="astro-btn" type="button">Previous</button>
+          <button id="pilot-flash-flip" class="astro-btn" type="button">Flip</button>
+          <button id="pilot-flash-next" class="astro-btn primary" type="button">Next</button>
+          <button id="pilot-flash-random" class="astro-btn" type="button">Random</button>
+        </div>
+        <p id="pilot-flash-meta" class="pilot-meta"></p>
+      </section>
+
+      <section class="pilot-panel">
+        <div class="panel-head">
+          <h2>Quiz Mode</h2>
+          <p>One-tap answering is enabled by default. Distractors are chapter-consistent and topic-similar.</p>
+        </div>
+
+        <form id="pilot-quiz-setup" class="pilot-controls">
+          <label for="pilot-quiz-mode">
+            Question mode
+            <select id="pilot-quiz-mode">
+              <option value="random-all">Random from all chapters</option>
+              <option value="random-chapter">Random within chapter</option>
+              <option value="series-chapter">Series within chapter</option>
+            </select>
+          </label>
+          <label for="pilot-quiz-chapter">
+            Chapter
+            <select id="pilot-quiz-chapter"></select>
+          </label>
+          <label for="pilot-quiz-count">
+            Number of questions
+            <input id="pilot-quiz-count" type="number" min="5" max="100" step="1" value="20" />
+          </label>
+          <label for="pilot-quiz-instant">
+            Answer mode
+            <span class="pilot-inline">
+              <input id="pilot-quiz-instant" type="checkbox" checked />
+              <span>One-tap answer</span>
+            </span>
+          </label>
+          <div class="pilot-inline" style="align-self:end;">
+            <button id="pilot-quiz-start" class="astro-btn primary" type="button">Start Quiz</button>
+          </div>
+        </form>
+
+        <div id="pilot-quiz-live" hidden>
+          <div class="pilot-question">
+            <h3 id="pilot-quiz-title">Question</h3>
+            <p id="pilot-quiz-text"></p>
+            <div id="pilot-quiz-options" class="pilot-options"></div>
+          </div>
+          <div class="pilot-footer-row">
+            <span id="pilot-quiz-progress" class="pilot-meta"></span>
+            <div class="pilot-inline">
+              <button id="pilot-quiz-submit" class="astro-btn" type="button">Submit</button>
+              <button id="pilot-quiz-next" class="astro-btn primary" type="button" disabled>Next</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="pilot-quiz-result" class="pilot-result" hidden>
+          <h3 id="pilot-quiz-score-title">Score</h3>
+          <p id="pilot-quiz-score-text"></p>
+          <button id="pilot-quiz-restart" class="astro-btn primary" type="button">Start Another Quiz</button>
+          <ol id="pilot-quiz-review"></ol>
+        </div>
+      </section>
+
+      <section class="pilot-panel">
+        <div class="panel-head">
+          <h2>Progress</h2>
+          <p>Local progress for pilot quizzes on this browser.</p>
+        </div>
+        <div class="pilot-stat-grid">
+          <div class="pilot-stat"><span class="k">Quizzes</span><span id="pilot-stat-quizzes" class="v">0</span></div>
+          <div class="pilot-stat"><span class="k">Average</span><span id="pilot-stat-avg" class="v">0%</span></div>
+          <div class="pilot-stat"><span class="k">Best</span><span id="pilot-stat-best" class="v">0%</span></div>
+          <div class="pilot-stat"><span class="k">Last</span><span id="pilot-stat-last" class="v">Never</span></div>
+        </div>
+        <div class="pilot-chart-wrap">
+          <canvas id="pilot-chart" width="860" height="260" aria-label="Pilot quiz score chart"></canvas>
+        </div>
+        <div class="history-table-wrap" style="margin-top:0.7rem;">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Mode</th>
+                <th>Chapter</th>
+                <th>Score</th>
+                <th>Result</th>
+              </tr>
+            </thead>
+            <tbody id="pilot-history-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="pilot-panel">
+        <div class="panel-head">
+          <h2>References</h2>
+          <p>Primary FAA references used for this pilot page.</p>
+        </div>
+        <ul id="pilot-sources" class="sources-list"></ul>
+      </section>
+    </main>
+  </div>
+
+  <footer>
+    <p>&copy; <span id="year"></span> Daniel Huterer Prats</p>
+  </footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
