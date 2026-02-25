@@ -3,155 +3,292 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Research — Daniel Huterer Prats</title>
+  <title>Research - Daniel Huterer Prats</title>
   <link rel="stylesheet" href="style.css" />
+  <script src="theme-toggle.js" defer></script>
   <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
   <link rel="icon" href="icons/astronaut.ico" type="image/x-icon"/>
   <link rel="canonical" href="https://dhutererprats.github.io/research.html"/>
+  <style>
+    .research-main {
+      padding-top: 1.25rem;
+    }
+
+    .research-hero {
+      position: relative;
+      overflow: hidden;
+      border-radius: 18px;
+      border: 1px solid var(--border-color);
+      background:
+        linear-gradient(140deg, rgba(12, 21, 58, 0.9), rgba(22, 63, 118, 0.8)),
+        url("images/reentry-traj.png") center/cover;
+      color: #fff;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.2rem;
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .research-hero h1 {
+      margin: 0 0 0.45rem;
+      color: #fff;
+      font-size: clamp(1.7rem, 4vw, 2.6rem);
+    }
+
+    .research-hero p {
+      margin: 0;
+      line-height: 1.65;
+      max-width: 72ch;
+      color: rgba(255, 255, 255, 0.94);
+    }
+
+    .research-pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin-top: 0.85rem;
+    }
+
+    .research-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      border: 1px solid rgba(255, 255, 255, 0.32);
+      border-radius: 999px;
+      padding: 0.26rem 0.68rem;
+      font-size: 0.85rem;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .research-hero-art {
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(0, 0, 0, 0.25);
+      padding: 0.85rem;
+      display: grid;
+      gap: 0.7rem;
+      align-content: start;
+    }
+
+    .research-hero-art img {
+      width: 100%;
+      height: 190px;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+    }
+
+    .research-icons {
+      display: flex;
+      justify-content: space-between;
+      font-size: 1.45rem;
+      opacity: 0.92;
+    }
+
+    .research-location {
+      margin-top: 0.45rem;
+      font-size: 0.95rem;
+      opacity: 0.94;
+    }
+
+    .research-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.2rem;
+      align-items: start;
+    }
+
+    .research-grid .project-item {
+      margin: 0;
+      max-width: none;
+      text-align: left;
+      transform: none;
+    }
+
+    .research-grid .project-item:hover {
+      transform: none;
+    }
+
+    .research-grid .image-container {
+      max-height: 230px;
+      border-radius: 10px;
+    }
+
+    .research-grid .image-container img {
+      height: 230px;
+      object-fit: cover;
+    }
+
+    .project-note {
+      margin-top: 0.6rem;
+      font-size: 0.92rem;
+      opacity: 0.88;
+    }
+
+    @media (min-width: 930px) {
+      .research-hero {
+        grid-template-columns: 1.5fr 1fr;
+        padding: 1.7rem;
+      }
+    }
+
+    @media (min-width: 1080px) {
+      .research-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+  </style>
 </head>
 <body>
-  <button class="theme-toggle" onclick="toggleTheme()">🌓 Toggle Theme</button>
-
   <nav class="site-nav" aria-label="Primary">
     <a href="index.html">Home</a>
     <a href="research.html" class="active" aria-current="page">Research</a>
     <a href="about.html">About Me</a>
-  </nav>  
+    <a href="publications.html">Publications</a>
+    <button class="theme-toggle" aria-label="Toggle theme">
+      <span class="theme-toggle-icon" aria-hidden="true">◑</span>
+      <span class="theme-toggle-text">Dark mode</span>
+    </button>
+  </nav>
 
   <div class="homepage-container">
-    <header>
-      <div class="header-text">
-        <h1>Research</h1>
-        <p class="location">
-          <a href="https://www.google.com/maps/place/Boulder,+CO" target="_blank" rel="noopener noreferrer">
-            <i class="fas fa-globe"></i>
-            Boulder, CO
-          </a>
-        </p>
-      </div>
-      <img src="Headshot-photo-NYU.png" alt="Daniel Huterer Prats" class="profile-image">
-    </header>
+    <main class="research-main">
+      <header class="research-hero">
+        <div>
+          <h1>Research</h1>
+          <p>
+            My work sits at the intersection of autonomy, astrodynamics, and machine learning. At CU Boulder's Autonomous Vehicle Systems Lab, I focus on RL-driven scheduling and guidance for space-to-space surveillance and spacecraft inspection under real mission constraints (power, observability, pointing, and onboard resources). In parallel, I work on robust interplanetary trajectory design, inspection safety methods, and optimization tools for complex gravity-assist transfers.
+          </p>
+          <div class="research-pill-row" aria-label="Research themes">
+            <span class="research-pill"><iconify-icon icon="mdi:satellite-variant"></iconify-icon>Autonomous Space Ops</span>
+            <span class="research-pill"><iconify-icon icon="mdi:brain"></iconify-icon>Reinforcement Learning</span>
+            <span class="research-pill"><iconify-icon icon="mdi:orbit"></iconify-icon>Astrodynamics</span>
+            <span class="research-pill"><iconify-icon icon="mdi:star-four-points-circle"></iconify-icon>Astrophysics</span>
+            <span class="research-pill"><iconify-icon icon="mdi:shield-check"></iconify-icon>Safety-Critical Planning</span>
+          </div>
+          <p class="research-location">Boulder, CO</p>
+        </div>
+        <aside class="research-hero-art" aria-label="Research visual collage">
+          <img src="images/interplanetary_trajectory_final.png" alt="Interplanetary transfer visualization" />
+          <div class="research-icons" aria-hidden="true">
+            <span>🌌</span>
+            <span>🚀</span>
+            <span>🛰️</span>
+            <span>🌕</span>
+            <span>🤖</span>
+          </div>
+        </aside>
+      </header>
 
-    <main>
       <section class="projects">
         <h2>Selected Projects & Papers</h2>
-        <!-- Deep Dive Blog Post -->
-        <div class="project-item">
+        <div class="research-grid">
+          <article class="project-item">
             <a class="image-container" href="blog/robust-trajectory-rl.html">
-            <img src="images/blog/traj_compare.png"
-                alt="Trajectories under robust policies (Earth→Mars)"
-                loading="lazy" decoding="async"/>
-            <div class="overlay">
+              <img src="images/blog/traj_compare.png" alt="Trajectories under robust policies (Earth to Mars)" loading="lazy" decoding="async"/>
+              <div class="overlay">
                 <div class="overlay-text">Deep Dive: Robust Interplanetary Trajectory Design with RL</div>
                 <div class="expand-arrow">↗</div>
-            </div>
+              </div>
             </a>
-            <p>
-            A blog-style exploration of PPO for robust Earth→Mars low-thrust guidance,
-            with interactive visuals, equations, and code.
-            <a class="underline" href="blog/robust-trajectory-rl.html">Read the post</a>
-            </p>
-        </div>
+            <p>A blog-style deep dive into PPO-based robust Earth-to-Mars low-thrust guidance with equations, implementation notes, and interactive visuals.</p>
+            <p><a class="underline" href="blog/robust-trajectory-rl.html">Read the post</a></p>
+          </article>
 
-        <!-- AMOS SBSS project -->
-        <div class="project-item">
+          <article class="project-item">
             <a class="image-container" href="files/AMOS_SBSS/Amos_sbss.html">
-            <img src="files/AMOS_SBSS/Daniel_presenting_AMOS2.PNG"
-                alt="AMOS: RL for Space-to-Space Imaging"/>
-            <div class="overlay">
-                <div class="overlay-text">AMOS: RL for Space-to-Space Imaging</div>
+              <img src="files/AMOS_SBSS/Daniel_presenting_AMOS2.PNG" alt="AMOS 2025 space-to-space imaging presentation" loading="lazy" decoding="async"/>
+              <div class="overlay">
+                <div class="overlay-text">AMOS 2025: RL for Space-to-Space Imaging</div>
                 <div class="expand-arrow">↗</div>
-            </div>
+              </div>
             </a>
-            <p>
-            Actor–critic scheduling for autonomous RSO imaging with Basilisk and BSK-RL.
-            <a class="underline" href="files/AMOS_SBSS/Amos_sbss.html" title="Open the AMOS Space-to-Space Surveillance project page">See page</a>
-            </p>
-        </div>
-  
-  
+            <p>Actor-critic scheduling for autonomous RSO imaging in Basilisk/BSK-RL, presented at AMOS 2025.</p>
+            <p><a class="underline" href="files/AMOS_SBSS/Amos_sbss.html">Open full AMOS page</a></p>
+          </article>
 
-        <!-- Polaris / Space-to-Space Surveillance (copied from Home) -->
-        <div class="project-item expandable">
-          <div class="image-container" onclick="toggleProject(this)">
-            <img src="images/space_to_space_surveillance.png" alt="Space-to-Space Surveillance" />
-            <div class="overlay">
-              <div class="overlay-text">Space-to-Space Surveillance for SSA</div>
-              <div class="expand-arrow">▼</div>
+          <article class="project-item expandable">
+            <div class="image-container" onclick="toggleProject(this)">
+              <img src="images/space_to_space_surveillance.png" alt="Space-to-space surveillance project" />
+              <div class="overlay">
+                <div class="overlay-text">Space-to-Space Surveillance for SSA</div>
+                <div class="expand-arrow">▼</div>
+              </div>
             </div>
-          </div>
-          <div class="project-description">
-            <p><strong>RL-Driven Scheduling for Autonomous Space-to-Space Surveillance</strong></p>
-            <p>This project introduces a reinforcement learning (RL)-based approach for autonomous inspection and imaging of Resident Space Objects (RSOs) from a spacecraft in orbit. The agent is trained in a high-fidelity Basilisk simulation and dynamically selects imaging targets while managing LOS, battery/wheel states, and data limits.</p>
-            <div class="media-block">
-              <h4>🎥 Project Video</h4>
-              <video controls>
-                <source src="files/space_to_space_animation.mp4" type="video/mp4">
-                Your browser does not support the video tag.
-              </video>
-            </div>
-            <div class="media-block abstract-thumbnail">
-              <h4>📄 Abstract: Space-to-Space Surveillance</h4>
-              <div class="thumbnail-hover">
-                <img src="images/StSS_BostonAbstract.png" alt="Abstract Thumbnail" />
-                <div class="hover-text">
-                  <a href="files/StSS_BostonAbstract.pdf" download>📥 Download Abstract</a>
+            <div class="project-description">
+              <p><strong>RL-Driven Scheduling for Autonomous Space-to-Space Surveillance</strong></p>
+              <p>This project trains an RL policy to select imaging and downlink actions for Resident Space Objects while respecting line-of-sight, power, wheel momentum, and data constraints in a high-fidelity Basilisk simulation.</p>
+              <div class="media-block">
+                <h4>Video Summary</h4>
+                <iframe
+                  src="https://www.youtube.com/embed/Aas0z43uS9M"
+                  title="AVS Lab: RL for Space-to-Space Imaging"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  referrerpolicy="strict-origin-when-cross-origin"
+                  allowfullscreen
+                  style="width:100%; min-height:320px; border:0; border-radius:12px;"></iframe>
+                <p class="project-note">Hosted on YouTube to avoid large-file playback issues on static hosting.</p>
+              </div>
+              <div class="media-block abstract-thumbnail">
+                <h4>Abstract: Space-to-Space Surveillance</h4>
+                <div class="thumbnail-hover">
+                  <img src="images/StSS_BostonAbstract.png" alt="Space-to-space surveillance abstract thumbnail" />
+                  <div class="hover-text">
+                    <a href="files/StSS_BostonAbstract.pdf" download>Download Abstract</a>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+          </article>
 
-        <!-- RSO Inspection (copied from Home) -->
-        <div class="project-item expandable">
-          <div class="image-container" onclick="toggleProject(this)">
-            <img src="images/RSO-inspection_illustration.png" alt="RSO Inspection" />
-            <div class="overlay">
-              <div class="overlay-text">RL-Based RSO Inspection</div>
-              <div class="expand-arrow">▼</div>
+          <article class="project-item expandable">
+            <div class="image-container" onclick="toggleProject(this)">
+              <img src="images/RSO-inspection_illustration.png" alt="RL-based RSO inspection project" />
+              <div class="overlay">
+                <div class="overlay-text">RL-Based RSO Inspection</div>
+                <div class="expand-arrow">▼</div>
+              </div>
             </div>
-          </div>
-          <div class="project-description">
-            <p>Reinforcement learning scheduler for autonomous RSO inspection with safety and lighting constraints in a high-fidelity Basilisk simulation. Integrates battery, data storage, wheel desaturation, and eclipse/LOS observability.</p>
-            <div class="media-block abstract-thumbnail">
-              <h4>📄 Abstract: Autonomous Satellite Inspection</h4>
-              <div class="thumbnail-hover">
-                <img src="images/Research_Paper_Thumbnail.png" alt="LEO Inspection Abstract" />
-                <div class="hover-text">
-                  <a href="https://hanspeterschaub.info/Papers/Stephenson2025a.pdf" target="_blank" rel="noopener">📥 Download Paper</a>
+            <div class="project-description">
+              <p>Reinforcement learning scheduler for autonomous RSO inspection with safety and illumination constraints. The environment includes battery, wheel desaturation, data storage, and eclipse/LOS observability effects.</p>
+              <div class="media-block abstract-thumbnail">
+                <h4>Paper: Autonomous Satellite Inspection</h4>
+                <div class="thumbnail-hover">
+                  <img src="images/Research_Paper_Thumbnail.png" alt="Autonomous satellite inspection paper thumbnail" />
+                  <div class="hover-text">
+                    <a href="https://hanspeterschaub.info/Papers/Stephenson2025a.pdf" target="_blank" rel="noopener">Download Paper</a>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+          </article>
 
-        <!-- Dark Matter & Galaxy Formation (copied from Home) -->
-        <div class="project-item">
-          <div class="image-container">
-            <img src="images/galaxies_lacking_dark_matter_thumbnail.png" alt="Dark Matter & Galaxy Formation" />
-            <div class="overlay">
-              <div class="overlay-text">Dark Matter & Galaxy Formation</div>
+          <article class="project-item">
+            <div class="image-container">
+              <img src="images/galaxies_lacking_dark_matter_thumbnail.png" alt="Dark matter and galaxy formation research" />
+              <div class="overlay">
+                <div class="overlay-text">Dark Matter & Galaxy Formation</div>
+              </div>
             </div>
-          </div>
-          <p>Co-authored paper on dwarf galaxy dark matter depletion published in MNRAS (2021).</p>
-          <p><a href="https://arxiv.org/pdf/2010.02245" target="_blank" rel="noopener" class="underline">📄 View Paper</a></p>
-        </div>
+            <p>Co-authored work on dwarf galaxy dark matter depletion, published in MNRAS (2021).</p>
+            <p><a href="https://arxiv.org/pdf/2010.02245" target="_blank" rel="noopener" class="underline">View Paper</a></p>
+          </article>
 
-        <!-- Multi-Gravity Assist GA (copied from Home) -->
-        <div class="project-item expandable" id="MGA">
-          <div class="image-container" onclick="toggleProject(this)">
-            <img src="images/interplanetary_trajectory_final.png" alt="MGA Optimization" />
-            <div class="overlay">
-              <div class="overlay-text">Multi-Gravity Assist Trajectory Optimization</div>
-              <div class="expand-arrow">▼</div>
+          <article class="project-item expandable" id="MGA">
+            <div class="image-container" onclick="toggleProject(this)">
+              <img src="images/interplanetary_trajectory_final.png" alt="Multi-gravity assist trajectory optimization" />
+              <div class="overlay">
+                <div class="overlay-text">Multi-Gravity Assist Trajectory Optimization</div>
+                <div class="expand-arrow">▼</div>
+              </div>
             </div>
-          </div>
-          <div class="project-description">
-            <p>Genetic algorithm for optimizing complex interplanetary missions using gravity assists and impulsive maneuvers. Balances low ∆v and fast arrival time without pruning non-intuitive solutions.</p>
-            <p><a href="files/MGA_Paper.pdf" target="_blank" rel="noopener" class="underline">📄 Download Paper</a></p>
-          </div>
+            <div class="project-description">
+              <p>Genetic-algorithm-based optimization for interplanetary trajectories with gravity assists and impulsive maneuvers, balancing low delta-v against transfer time.</p>
+              <p><a href="files/MGA_Paper.pdf" target="_blank" rel="noopener" class="underline">Download Paper</a></p>
+            </div>
+          </article>
         </div>
-
       </section>
     </main>
 
@@ -161,27 +298,26 @@
   </div>
 
   <script>
-    function toggleTheme() {
-      const html = document.documentElement;
-      const current = html.getAttribute("data-theme") || "light";
-      html.setAttribute("data-theme", current === "dark" ? "light" : "dark");
-    }
     function toggleProject(el) {
-      const parent = el.closest('.project-item.expandable');
-      parent.classList.toggle('active');
-      const arrow = parent.querySelector('.expand-arrow');
-      arrow.textContent = parent.classList.contains('active') ? '▲' : '▼';
+      const parent = el.closest(".project-item.expandable");
+      parent.classList.toggle("active");
+      const arrow = parent.querySelector(".expand-arrow");
+      arrow.textContent = parent.classList.contains("active") ? "▲" : "▼";
     }
-  </script>
-  <script>
-    (function(){
-      const here = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
-      document.querySelectorAll('.site-nav a').forEach(a => {
-        const href = (a.getAttribute('href')||'').toLowerCase();
-        if (href.endsWith(here)) { a.classList.add('active'); a.setAttribute('aria-current','page'); }
-        else { a.classList.remove('active'); a.removeAttribute('aria-current'); }
+
+    (function markActiveNav() {
+      const here = (location.pathname.split("/").pop() || "index.html").toLowerCase();
+      document.querySelectorAll(".site-nav a").forEach(a => {
+        const href = (a.getAttribute("href") || "").toLowerCase();
+        if (href.endsWith(here)) {
+          a.classList.add("active");
+          a.setAttribute("aria-current", "page");
+        } else {
+          a.classList.remove("active");
+          a.removeAttribute("aria-current");
+        }
       });
     })();
-    </script>
+  </script>
 </body>
 </html>

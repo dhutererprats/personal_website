@@ -4,91 +4,252 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Reinforcement Learning for Space-to-Space Imaging (AMOS 2025)</title>
-
-  <!-- IMPORTANT: from files/AMOS_SBSS/ back to the root -->
   <link rel="stylesheet" href="../../style.css"/>
+  <script src="../../theme-toggle.js" defer></script>
   <link rel="icon" href="../../icons/astronaut.ico" type="image/x-icon"/>
-
-  <!-- MathJax (keeps equations consistent across the site) -->
   <script>
-    window.MathJax = { tex: { inlineMath: [['$','$'],['\\(','\\)']] } };
+    window.MathJax = { tex: { inlineMath: [["$","$"],["\\(","\\)"]] } };
   </script>
   <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-
   <style>
-    /* Page-local polish that blends with your theme */
-    .page { max-width: 1100px; margin: 0 auto; padding: 0 1rem 2rem; }
+    .page {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 1rem 2rem;
+    }
 
-    /* Hero with cross-fade images + title overlay */
     .hero {
-      position: relative; height: 56vh; min-height: 380px; border-radius: 14px;
-      overflow: hidden; background: var(--page-bg);
-      box-shadow: 0 10px 30px rgba(0,0,0,.15);
+      position: relative;
+      height: 56vh;
+      min-height: 380px;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
       margin: 1rem 0 1.25rem;
     }
+
     .hero img {
-      position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0;
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
       transition: opacity 900ms ease;
+      background: #0f172a;
     }
-    .hero img.active { opacity: 1; }
+
+    .hero img.active {
+      opacity: 1;
+    }
+
     .hero .overlay {
-      position:absolute; inset:auto 0 0 0; padding: 1.25rem 1.25rem 1.4rem;
-      color: #fff; background: linear-gradient(180deg, rgba(0,0,0,0) 0, rgba(0,0,0,.65) 65%, rgba(0,0,0,.85) 100%);
+      position: absolute;
+      inset: auto 0 0 0;
+      padding: 1.25rem 1.25rem 1.4rem;
+      color: #fff;
+      background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0, rgba(0, 0, 0, .65) 65%, rgba(0, 0, 0, .85) 100%);
     }
-    .hero h1 { margin: 0 0 .2rem; color: #fff; }
-    .hero .kicker { font-size: .95rem; opacity:.9 }
 
-    /* Section spacing */
-    section { margin: 1.25rem 0 2rem; }
-    .toc { margin: 1rem 0; padding: .75rem 1rem; border-left: 3px solid var(--accent-color); background: var(--card-bg); border-radius: 10px;}
-    .media { border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); background: var(--card-bg); }
-    .media video, .media iframe, .media object { width:100%; display:block; }
+    .hero h1 {
+      margin: 0 0 .2rem;
+      color: #fff;
+    }
 
-    .two-col { display:grid; gap:1rem; grid-template-columns: 1fr; }
-    @media (min-width: 900px){ .two-col { grid-template-columns: 1fr 1fr; } }
+    .hero .kicker {
+      font-size: .95rem;
+      opacity: .9;
+    }
 
-    /* Photo row */
-    .photo-row { display:grid; grid-template-columns: 1fr; gap:1rem; }
-    @media (min-width: 900px){ .photo-row { grid-template-columns: 1fr 1fr; } }
-    .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; overflow:hidden;}
-    .card img { width:100%; display:block; }
-    .caption { padding:.65rem .9rem; border-top:1px solid var(--border-color); font-size:.95rem; opacity:.9 }
+    section {
+      margin: 1.25rem 0 2rem;
+    }
 
-    /* Link pills for downloads */
-    .pills { display:flex; flex-wrap: wrap; gap:.5rem; }
-    .pill { display:inline-flex; align-items:center; gap:.5rem; padding:.35rem .7rem; border-radius:999px; border:1px solid var(--border-color); background:var(--card-bg); }
-    .pill:hover { border-color: var(--accent-color); }
+    .toc {
+      margin: 1rem 0;
+      padding: .75rem 1rem;
+      border-left: 3px solid var(--accent-color);
+      background: var(--card-bg);
+      border-radius: 10px;
+    }
 
-    /* Hide PDF fallback text unless needed */
-    .pdf-fallback { padding:.8rem; font-size:.95rem; opacity:.9; }
+    .media {
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      background: var(--card-bg);
+    }
 
-    /* Ensure site nav from global CSS is visible against the hero */
-    .site-nav a { color: var(--text-color); }
+    .media iframe {
+      width: 100%;
+      min-height: 360px;
+      display: block;
+      border: 0;
+    }
+
+    .media video {
+      width: 100%;
+      display: block;
+    }
+
+    .subtle {
+      opacity: 0.86;
+    }
+
+    .two-col {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: 1fr;
+    }
+
+    @media (min-width: 900px) {
+      .two-col {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .photo-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    @media (min-width: 900px) {
+      .photo-row {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .card img {
+      width: 100%;
+      display: block;
+      min-height: 220px;
+      object-fit: cover;
+      background: #1f2937;
+    }
+
+    .caption {
+      padding: .65rem .9rem;
+      border-top: 1px solid var(--border-color);
+      font-size: .95rem;
+      opacity: .9;
+    }
+
+    .pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .35rem .7rem;
+      border-radius: 999px;
+      border: 1px solid var(--border-color);
+      background: var(--card-bg);
+    }
+
+    .pill:hover {
+      border-color: var(--accent-color);
+      text-decoration: none;
+    }
+
+    .plot-grid {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: 1fr;
+    }
+
+    @media (min-width: 980px) {
+      .plot-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .plot-card {
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 0.9rem;
+      background: linear-gradient(160deg, #ffffff 0%, #eef4ff 100%);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    [data-theme="dark"] .plot-card {
+      background: linear-gradient(160deg, #20242d 0%, #1a2435 100%);
+    }
+
+    .plot-card h3 {
+      margin: 0 0 0.65rem;
+      font-size: 1rem;
+    }
+
+    .plot-frame {
+      width: 100%;
+      min-height: 450px;
+      border: 1px solid #d4dae8;
+      border-radius: 10px;
+      background: #fff;
+    }
+
+    .plot-link {
+      margin-top: 0.55rem;
+      display: inline-block;
+      font-size: 0.9rem;
+    }
+
+    .video-fallback {
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 0.7rem;
+      background: var(--card-bg);
+    }
+
+    .video-fallback iframe {
+      width: 100%;
+      min-height: 360px;
+      border: 0;
+      border-radius: 10px;
+      display: block;
+    }
+
+    .video-fallback p {
+      margin: 0.5rem 0 0;
+      font-size: 0.88rem;
+      opacity: 0.85;
+    }
   </style>
 </head>
 <body>
-
-  <!-- your global nav -->
   <nav class="site-nav" aria-label="Primary">
     <a href="../../index.html">Home</a>
     <a href="../../research.html">Research</a>
     <a href="../../about.html">About</a>
+    <a href="../../publications.html">Publications</a>
+    <button class="theme-toggle" aria-label="Toggle theme">
+      <span class="theme-toggle-icon" aria-hidden="true">◑</span>
+      <span class="theme-toggle-text">Dark mode</span>
+    </button>
   </nav>
 
   <main class="page">
-
-    <!-- HERO -->
     <header class="hero" aria-label="AMOS stage photos">
-      <!-- Use PNGs (not HEIC). Add any others here; they’ll cross-fade. -->
-      <img src="./Daniel_presenting_AMOS2.PNG" alt="Presenting at AMOS" class="active">
-      <img src="./group_picture_with_Schaub_and%20Mark.PNG" alt="With Dr. Hanspeter Schaub and Mark">
+      <img src="./Daniel_presenting_AMOS2.PNG" alt="Presenting at AMOS" class="active" loading="eager" fetchpriority="high" decoding="sync">
+      <img src="./group_picture_with_Schaub_and%20Mark.PNG" alt="With Dr. Hanspeter Schaub and Mark" loading="eager" decoding="async">
       <div class="overlay">
         <h1>Reinforcement Learning for Space-to-Space Imaging</h1>
         <div class="kicker">Autonomous scheduling for imaging Resident Space Objects (RSOs) • AMOS 2025 • CU Boulder AVS Lab • Daniel Huterer Prats</div>
       </div>
     </header>
 
-    <!-- TOC -->
     <nav class="toc">
       <strong>On this page</strong>
       <ul>
@@ -98,13 +259,12 @@
         <li><a href="#training">RL agent & training</a></li>
         <li><a href="#results">Results: behaviors & plots</a></li>
         <li><a href="#generalization">Generalization: mixed LEO/MEO/GEO</a></li>
-        <li><a href="#media">Paper, talk & videos</a></li>
+        <li><a href="#media">Paper, slides & videos</a></li>
         <li><a href="#photos">Photos</a></li>
         <li><a href="#conclusion">Conclusion</a></li>
       </ul>
     </nav>
 
-    <!-- OVERVIEW -->
     <section id="overview">
       <h2>Overview & motivation</h2>
       <p>
@@ -113,23 +273,21 @@
         <em>when</em> to downlink, while keeping the spacecraft healthy for the next opportunity.
       </p>
       <p>
-        The main study focuses on <strong>LEO → LEO imaging</strong>, which is the hardest regime: large relative motion, long eclipse
-        periods, and frequent geometry changes—even complete target eclipses.
+        The main study focuses on <strong>LEO to LEO imaging</strong>, which is the hardest regime: large relative motion, long eclipse
+        periods, and frequent geometry changes, including complete target eclipses.
       </p>
     </section>
 
-    <!-- SCENARIO -->
     <section id="scenario">
       <h2>Scenario & simulator</h2>
       <div class="media">
-        <video preload="metadata" controls poster="../../images/space_to_space_surveillance.png">
+        <video class="lfs-aware-video" preload="metadata" controls poster="../../images/space_to_space_surveillance.png" data-youtube="https://www.youtube.com/embed/Aas0z43uS9M?start=0">
           <source src="./LEO-RSO%20set%20up.mp4" type="video/mp4">
         </video>
       </div>
       <p class="subtle">Setup clip: LEO chaser with power/thermal/storage constraints imaging catalogued RSOs.</p>
     </section>
 
-    <!-- POMDP -->
     <section id="pomdp">
       <h2>Formulating SBSS as a POMDP</h2>
       <p>
@@ -137,16 +295,14 @@
       </p>
     </section>
 
-    <!-- TRAINING -->
     <section id="training">
       <h2>RL agent & training</h2>
       <div class="media">
-        <video preload="metadata" controls>
+        <video class="lfs-aware-video" preload="metadata" controls data-youtube="https://www.youtube.com/embed/Aas0z43uS9M?start=18">
           <source src="./ssa_close.mp4" type="video/mp4">
         </video>
       </div>
-      <p class="subtle">Close-up: the agent opportunistically images, banks energy in eclipse, and downlinks during windows to preserve margins.</p>
-
+      <p class="subtle">Representative rollout segment showing target-selection and downlink behavior while respecting LOS, battery, and onboard data constraints.</p>
       <p>
         PPO trains over many randomized orbital seeds. Two repeating phases:
         <strong>rollouts</strong> in \(n_{\text{env}}\) parallel environments for \(n_b\) episodes each, then
@@ -156,51 +312,45 @@
       </p>
     </section>
 
-    <!-- RESULTS -->
     <section id="results">
       <h2>Results: behaviors & plots</h2>
-      <div class="two-col">
-        <div class="media">
-          <object data="./seed20_latest_obsv7_1e_5lr_batch5000_gamma9997_40d60i+SHIELD_battery_storage_reward_over_time_1.pdf#view=FitH" type="application/pdf" height="520">
-            <div class="pdf-fallback">Battery, storage, downlink and reward over time (PDF). If your browser can’t display PDFs inline, <a href="./seed20_latest_obsv7_1e_5lr_batch5000_gamma9997_40d60i+SHIELD_battery_storage_reward_over_time_1.pdf" target="_blank" rel="noopener">open it in a new tab</a>.</div>
-          </object>
-        </div>
-        <div class="media">
-          <object data="./seed20_latest_obsv7_1e_5lr_batch5000_gamma9997_40d60i+SHIELD_azimuth_and_elevation_pointing_over_time_1.pdf#view=FitH" type="application/pdf" height="520">
-            <div class="pdf-fallback">Azimuth/elevation pointing and ground-station windows (PDF). <a href="./seed20_latest_obsv7_1e_5lr_batch5000_gamma9997_40d60i+SHIELD_azimuth_and_elevation_pointing_over_time_1.pdf" target="_blank" rel="noopener">Open in a new tab</a>.</div>
-          </object>
-        </div>
+      <div class="plot-grid">
+        <article class="plot-card">
+          <h3>Battery, storage, and cumulative reward timeline</h3>
+          <iframe class="plot-frame" src="./seed20_latest_obsv7_1e_5lr_batch5000_gamma9997_40d60i+SHIELD_battery_storage_reward_over_time_1.pdf#view=FitH" title="Battery, storage, and cumulative reward timeline"></iframe>
+          <a class="plot-link" href="./seed20_latest_obsv7_1e_5lr_batch5000_gamma9997_40d60i+SHIELD_battery_storage_reward_over_time_1.pdf" target="_blank" rel="noopener">Open full-resolution PDF</a>
+        </article>
+        <article class="plot-card">
+          <h3>Azimuth/elevation pointing and downlink windows</h3>
+          <iframe class="plot-frame" src="./seed20_latest_obsv7_1e_5lr_batch5000_gamma9997_40d60i+SHIELD_azimuth_and_elevation_pointing_over_time_1.pdf#view=FitH" title="Azimuth and elevation pointing and downlink windows"></iframe>
+          <a class="plot-link" href="./seed20_latest_obsv7_1e_5lr_batch5000_gamma9997_40d60i+SHIELD_azimuth_and_elevation_pointing_over_time_1.pdf" target="_blank" rel="noopener">Open full-resolution PDF</a>
+        </article>
       </div>
-
       <ul>
-        <li><strong>Energy/storage habits:</strong> bank during eclipse, spend during visibility, keep buffers healthy.</li>
-        <li><strong>Opportunistic imaging:</strong> favors targets with short-term geometry advantage instead of pre-planned rigid schedules.</li>
-        <li><strong>Timely delivery:</strong> the policy bursts downlink when windows appear, improving image freshness over a myopic heuristic.</li>
+        <li><strong>Energy/storage habits:</strong> preserves health margins while opportunistically imaging valid targets.</li>
+        <li><strong>Opportunistic imaging:</strong> adapts target choice to short-term geometry instead of rigid preplanned schedules.</li>
+        <li><strong>Timely delivery:</strong> executes downlink when windows open, improving delivered-image freshness.</li>
       </ul>
     </section>
 
-    <!-- GENERALIZATION -->
     <section id="generalization">
       <h2>Generalization: mixed LEO/MEO/GEO</h2>
       <div class="media">
-        <video preload="metadata" controls>
+        <video class="lfs-aware-video" preload="metadata" controls data-youtube="https://www.youtube.com/embed/Aas0z43uS9M?start=43">
           <source src="./mixed_orbit_SSA_1min_video.mp4" type="video/mp4">
         </video>
       </div>
       <p>
-        With a target mix of ~50% LEO, 30% MEO, and 20% GEO, a policy trained on LEO still performs well.
-        It re-uses the same resource-management reflexes—bank energy in eclipse, favor visible targets with short-term symmetry advantage,
-        and schedule downlink bursts—so it continues to deliver timely imagery in the mixed environment.
+        With a target mix of around 50% LEO, 30% MEO, and 20% GEO, a policy trained on LEO still performs well.
+        It reuses resource-management behavior and remains effective at selecting valid opportunities and scheduling downlink actions in the mixed environment.
       </p>
     </section>
 
-    <!-- MEDIA / LINKS -->
     <section id="media">
-      <h2>Paper, talk & videos</h2>
+      <h2>Paper, slides & videos</h2>
       <div class="pills" style="margin-bottom:.75rem">
-        <a class="pill" href="./Huterer_AMOS_Paper_SBSS.pdf" target="_blank" rel="noopener">📄 Full paper (PDF)</a>
-        <a class="pill" href="./AMOS_SBSS_presentation.pdf" target="_blank" rel="noopener">🖥️ Slide deck (PDF)</a>
-        <!-- If you host a talk recording, link it here -->
+        <a class="pill" href="./Huterer_AMOS_Paper_SBSS.pdf" target="_blank" rel="noopener">Paper manuscript (PDF)</a>
+        <a class="pill" href="./AMOS_SBSS_presentation.pdf" target="_blank" rel="noopener">AMOS presentation slides (PDF)</a>
       </div>
 
       <div class="media" style="margin-top:.5rem">
@@ -208,40 +358,37 @@
           src="https://www.youtube.com/embed/Aas0z43uS9M"
           title="AVS Lab video: RL for Space-to-Space Imaging"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          referrerpolicy="strict-origin-when-cross-origin" allowfullscreen height="420"></iframe>
+          referrerpolicy="strict-origin-when-cross-origin"
+          allowfullscreen></iframe>
       </div>
       <p class="subtle">Short visual summary from the AVS Lab YouTube channel.</p>
 
       <div class="media">
-        <video preload="metadata" controls>
+        <video class="lfs-aware-video" preload="metadata" controls data-youtube="https://www.youtube.com/embed/Aas0z43uS9M?start=58">
           <source src="./ssa_world.mp4" type="video/mp4">
         </video>
       </div>
       <p class="subtle">Global perspective clip of the same run.</p>
     </section>
 
-    <!-- PHOTOS -->
     <section id="photos">
       <h2>Photos</h2>
       <div class="photo-row">
         <div class="card">
-          <img src="./Daniel_presenting_AMOS2.PNG" alt="Presenting at AMOS">
+          <img src="./Daniel_presenting_AMOS2.PNG" alt="Presenting at AMOS" loading="eager" decoding="async">
           <div class="caption">Stage photo: AMOS presentation.</div>
         </div>
         <div class="card">
-          <img src="./group_picture_with_Schaub_and%20Mark.PNG" alt="Group photo with Dr. Hanspeter Schaub and Mark">
+          <img src="./group_picture_with_Schaub_and%20Mark.PNG" alt="Group photo with Dr. Hanspeter Schaub and Mark" loading="eager" decoding="async">
           <div class="caption">With Dr. Hanspeter Schaub and Mark after the session.</div>
         </div>
       </div>
     </section>
 
-    <!-- CONCLUSION -->
     <section id="conclusion">
       <h2>Conclusion</h2>
       <p>
-        RL-enabled scheduling learns practical habits: bank energy in eclipse, downlink in bursts when windows open,
-        guard margins so opportunities aren’t missed, and generalize across orbital seeds and mixed-orbit target sets.
-        This points toward scalable, onboard autonomy for future SSA missions.
+        RL-enabled scheduling learns practical resource-management behavior, balances imaging and downlink decisions under constraints, and generalizes across orbital seeds and mixed-orbit target sets. This supports scalable onboard autonomy for future SSA missions.
       </p>
     </section>
 
@@ -251,26 +398,55 @@
   </main>
 
   <script>
-    /* Cross-fade hero images */
-    (function(){
-      const imgs = document.querySelectorAll('.hero img');
+    (function cycleHeroImages() {
+      const imgs = document.querySelectorAll(".hero img");
       let i = 0;
-      setInterval(()=>{
-        imgs[i].classList.remove('active');
-        i = (i+1) % imgs.length;
-        imgs[i].classList.add('active');
-      }, 4500);
+      setInterval(() => {
+        imgs[i].classList.remove("active");
+        i = (i + 1) % imgs.length;
+        imgs[i].classList.add("active");
+      }, 5000);
     })();
 
-    /* Helpful error message if a video fails to load */
-    document.querySelectorAll('video').forEach(v=>{
-      v.addEventListener('error', () => {
-        const msg = document.createElement('div');
-        msg.className = 'pdf-fallback';
-        msg.innerHTML = 'This video failed to load. Confirm the file exists next to this page in <code>files/AMOS_SBSS/</code> and the path matches (<em>remember to URL-encode spaces as %20</em>).';
-        v.insertAdjacentElement('afterend', msg);
-      });
-    });
+    async function looksLikeLfsPointer(url) {
+      const response = await fetch(url, { headers: { Range: "bytes=0-180" } });
+      const buffer = await response.arrayBuffer();
+      const head = new TextDecoder().decode(buffer);
+      return head.includes("git-lfs.github.com/spec/v1");
+    }
+
+    function replaceVideoWithFallback(videoElement) {
+      const youtube = videoElement.dataset.youtube;
+      const fallback = document.createElement("div");
+      fallback.className = "video-fallback";
+      if (youtube) {
+        fallback.innerHTML = `
+          <iframe src="${youtube}" title="Fallback video from YouTube" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+          <p>Using YouTube fallback because the local video file is stored as a Git LFS pointer in this static site build.</p>
+        `;
+      } else {
+        fallback.innerHTML = "<p>Video is unavailable in this build.</p>";
+      }
+      videoElement.replaceWith(fallback);
+    }
+
+    (async function installVideoFallbacks() {
+      const videos = document.querySelectorAll("video.lfs-aware-video");
+      for (const video of videos) {
+        const source = video.querySelector("source");
+        if (!source) continue;
+        const src = source.getAttribute("src");
+        try {
+          if (await looksLikeLfsPointer(src)) {
+            replaceVideoWithFallback(video);
+            continue;
+          }
+        } catch (err) {
+          console.warn("Video pointer check failed:", err);
+        }
+        video.addEventListener("error", () => replaceVideoWithFallback(video), { once: true });
+      }
+    })();
   </script>
 </body>
 </html>
