@@ -34,7 +34,8 @@
       index: 0,
       selectedIndex: null,
       answered: false,
-      records: []
+      records: [],
+      autoNextTimer: null
     },
     profile: {
       xp: 0,
@@ -106,6 +107,66 @@
     return Array.from(map.values());
   }
 
+  function normalizeTokens(text) {
+    return String(text || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9 ]/g, " ")
+      .split(/\s+/)
+      .filter(function (token) { return token.length > 2; });
+  }
+
+  function extractAnswerFeatures(text) {
+    var lower = String(text || "").toLowerCase();
+    return {
+      hasYear: /\b(19|20)\d{2}\b/.test(lower),
+      hasEquation: /[=+\-*/^]/.test(lower),
+      hasNumber: /\d/.test(lower),
+      hasUnits: /\b(km|m|s|sec|ms|kg|lb|ft|knots|kt|mph|hpa|inhg|percent|%)\b/.test(lower),
+      hasPersonName: /([A-Z][a-z]+(?: [A-Z][a-z]+){1,3})/.test(String(text || "")),
+      tokenSet: new Set(normalizeTokens(text)),
+      wordCount: normalizeTokens(text).length
+    };
+  }
+
+  function answerSimilarity(aText, bText) {
+    var a = extractAnswerFeatures(aText);
+    var b = extractAnswerFeatures(bText);
+    var score = 0;
+
+    if (a.hasYear === b.hasYear) {
+      score += a.hasYear ? 4 : 1;
+    }
+    if (a.hasEquation === b.hasEquation) {
+      score += a.hasEquation ? 4 : 1;
+    }
+    if (a.hasUnits === b.hasUnits) {
+      score += a.hasUnits ? 3 : 1;
+    }
+    if (a.hasPersonName === b.hasPersonName) {
+      score += a.hasPersonName ? 4 : 1;
+    }
+    if (a.hasNumber === b.hasNumber) {
+      score += a.hasNumber ? 2 : 1;
+    }
+
+    var overlap = 0;
+    a.tokenSet.forEach(function (token) {
+      if (b.tokenSet.has(token)) {
+        overlap += 1;
+      }
+    });
+    score += Math.min(overlap, 4);
+
+    var wordDelta = Math.abs(a.wordCount - b.wordCount);
+    if (wordDelta <= 2) {
+      score += 2;
+    } else if (wordDelta <= 5) {
+      score += 1;
+    }
+
+    return score;
+  }
+
   function todayKey() {
     var now = new Date();
     var y = now.getFullYear();
@@ -175,6 +236,7 @@
     els.quizMode = byId("quiz-mode");
     els.quizTopic = byId("quiz-topic");
     els.quizCount = byId("quiz-count");
+    els.quizInstant = byId("quiz-instant");
     els.quizStart = byId("quiz-start");
     els.quizLive = byId("quiz-live");
     els.quizQuestionTitle = byId("quiz-question-title");
@@ -511,36 +573,47 @@
   }
 
   function buildQuestion(card, mode) {
-    var basePool;
-    if (mode === "random-topic" || mode === "series-topic") {
-      basePool = appState.allCards.filter(function (c) {
-        return c.topicId === card.topicId && c.id !== card.id;
-      });
-    } else {
-      basePool = appState.allCards.filter(function (c) {
-        return c.id !== card.id;
-      });
+    var sameTopicPool = appState.allCards.filter(function (c) {
+      return c.topicId === card.topicId && c.id !== card.id;
+    });
+    var globalPool = appState.allCards.filter(function (c) {
+      return c.id !== card.id;
+    });
+
+    var prioritizedPool = sameTopicPool.slice();
+    if (prioritizedPool.length < 8) {
+      prioritizedPool = prioritizedPool.concat(globalPool.filter(function (c) {
+        return c.topicId !== card.topicId;
+      }));
     }
 
-    var uniquePool = uniqueBy(basePool, function (c) {
+    var uniquePool = uniqueBy(prioritizedPool, function (c) {
       return c.a;
     });
 
-    var distractors = sample(uniquePool, 3).map(function (c) {
-      return c.a;
+    var ranked = uniquePool.map(function (candidate) {
+      var base = candidate.topicId === card.topicId ? 6 : 0;
+      return {
+        card: candidate,
+        score: base + answerSimilarity(card.a, candidate.a)
+      };
+    }).sort(function (a, b) {
+      return b.score - a.score;
     });
 
-    if (distractors.length < 3) {
-      var fallbackPool = uniqueBy(appState.allCards.filter(function (c) {
-        return c.id !== card.id;
-      }), function (c) {
-        return c.a;
+    var topBand = ranked.slice(0, Math.max(12, Math.min(40, ranked.length)));
+    var distractorCards = sample(topBand, Math.min(3, topBand.length)).map(function (entry) {
+      return entry.card;
+    });
+
+    if (distractorCards.length < 3) {
+      var remaining = uniqueBy(globalPool, function (c) { return c.a; }).filter(function (candidate) {
+        return !distractorCards.some(function (d) { return d.id === candidate.id; });
       });
-      distractors = sample(fallbackPool, 3).map(function (c) {
-        return c.a;
-      });
+      distractorCards = distractorCards.concat(sample(remaining, 3 - distractorCards.length));
     }
 
+    var distractors = distractorCards.map(function (d) { return d.a; });
     var options = shuffle([card.a].concat(distractors.slice(0, 3)));
 
     return {
@@ -589,6 +662,10 @@
 
   function renderQuizQuestion() {
     var quiz = appState.quiz;
+    if (quiz.autoNextTimer) {
+      clearTimeout(quiz.autoNextTimer);
+      quiz.autoNextTimer = null;
+    }
     var question = quiz.questions[quiz.index];
     if (!question) {
       return;
@@ -616,6 +693,17 @@
         Array.from(els.quizOptions.children).forEach(function (child, childIndex) {
           child.classList.toggle("selected", childIndex === idx);
         });
+
+        if (els.quizInstant && els.quizInstant.checked) {
+          submitQuizAnswer();
+          if (quiz.running) {
+            quiz.autoNextTimer = setTimeout(function () {
+              if (quiz.running && quiz.answered) {
+                handleQuizNext();
+              }
+            }, 650);
+          }
+        }
       });
       els.quizOptions.appendChild(btn);
     });
@@ -638,6 +726,10 @@
     appState.quiz.questions = setup.questions;
     appState.quiz.index = 0;
     appState.quiz.records = [];
+    if (appState.quiz.autoNextTimer) {
+      clearTimeout(appState.quiz.autoNextTimer);
+      appState.quiz.autoNextTimer = null;
+    }
 
     els.quizResult.hidden = true;
     els.quizLive.hidden = false;
@@ -834,6 +926,10 @@
   }
 
   function finishQuiz() {
+    if (appState.quiz.autoNextTimer) {
+      clearTimeout(appState.quiz.autoNextTimer);
+      appState.quiz.autoNextTimer = null;
+    }
     var attempt = saveQuizAttempt();
     var level = Math.floor(appState.profile.xp / 500) + 1;
 
@@ -862,6 +958,11 @@
   function handleQuizNext() {
     if (!appState.quiz.running) {
       return;
+    }
+
+    if (appState.quiz.autoNextTimer) {
+      clearTimeout(appState.quiz.autoNextTimer);
+      appState.quiz.autoNextTimer = null;
     }
 
     if (appState.quiz.index < appState.quiz.questions.length - 1) {
@@ -1099,9 +1200,13 @@
     var delay = 1100 + Math.random() * 2500;
     appState.reaction.timer = setTimeout(function () {
       appState.reaction.waiting = false;
-      appState.reaction.ready = true;
-      appState.reaction.readyAt = performance.now();
       setReactionState("CLICK NOW", "ready");
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          appState.reaction.ready = true;
+          appState.reaction.readyAt = performance.now();
+        });
+      });
     }, delay);
   }
 
@@ -1150,7 +1255,16 @@
 
     els.reactionStart.addEventListener("click", startReactionTrial);
     els.reactionReset.addEventListener("click", resetReaction);
-    els.reactionTarget.addEventListener("click", handleReactionClick);
+    els.reactionTarget.addEventListener("pointerdown", function (event) {
+      event.preventDefault();
+      handleReactionClick();
+    });
+    els.reactionTarget.addEventListener("keydown", function (event) {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        handleReactionClick();
+      }
+    });
 
     renderReactionStatus();
   }

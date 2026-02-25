@@ -371,6 +371,12 @@
   font-size: 0.9rem;
 }
 
+#quiz-instant {
+  width: auto;
+  margin: 0;
+  transform: translateY(1px);
+}
+
 .quiz-question {
   border: 1px solid var(--border-color);
   border-radius: 12px;
@@ -543,6 +549,7 @@
   text-align: center;
   cursor: pointer;
   user-select: none;
+  touch-action: manipulation;
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 

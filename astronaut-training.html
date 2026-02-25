@@ -46,6 +46,7 @@
     <a href="about.html">About Me</a>
     <a href="publications.html">Publications</a>
     <a href="astronaut-training.html" class="active" aria-current="page">Astronaut Training</a>
+    <a href="pilot-training.html">Pilot Training</a>
     <button class="theme-toggle" aria-label="Toggle theme">
       <span class="theme-toggle-icon" aria-hidden="true">◑</span>
       <span class="theme-toggle-text">Dark mode</span>
@@ -187,6 +188,13 @@
             <label for="quiz-count">
               Number of questions
               <input id="quiz-count" type="number" min="5" max="100" step="1" value="20" />
+            </label>
+            <label for="quiz-instant">
+              Answer mode
+              <span class="cog-row" style="gap:0.35rem;">
+                <input id="quiz-instant" type="checkbox" checked />
+                <span>One-tap answer (auto-check and auto-next)</span>
+              </span>
             </label>
             <div class="cog-row" style="align-self:end;">
               <button id="quiz-start" class="astro-btn primary" type="button">Start Quiz</button>
