@@ -269,6 +269,56 @@
               </div>
               <p id="reaction-status" class="astro-status"></p>
             </article>
+
+            <article class="cog-card" id="rms-card">
+              <h3>Running Memory Span (RMS)</h3>
+              <p>Watch the digit stream and recall only the last N digits.</p>
+              <div class="cog-meta" id="rms-meta">Recall length: 3</div>
+              <div id="rms-stream" class="cog-sequence" aria-live="polite">-</div>
+              <div class="cog-row">
+                <input id="rms-input" class="cog-input" type="text" inputmode="numeric" placeholder="Type last digits" />
+                <button id="rms-start" class="astro-btn" type="button">Start Stream</button>
+                <button id="rms-check" class="astro-btn primary" type="button">Check</button>
+              </div>
+              <p id="rms-status" class="astro-status"></p>
+            </article>
+
+            <article class="cog-card" id="speed-card">
+              <h3>Perceptual Speed (OWT/SKT)</h3>
+              <p>Select every code that exactly matches the target before time runs out.</p>
+              <div class="cog-meta">Target code: <span id="speed-target">-</span></div>
+              <div class="cog-meta">Time left: <span id="speed-timer">-</span></div>
+              <div id="speed-grid" class="speed-grid" role="group" aria-label="Perceptual speed code choices"></div>
+              <div class="cog-row">
+                <button id="speed-start" class="astro-btn" type="button">New Round</button>
+                <button id="speed-submit" class="astro-btn primary" type="button">Submit Selection</button>
+              </div>
+              <p id="speed-status" class="astro-status"></p>
+            </article>
+
+            <article class="cog-card" id="rotation-card">
+              <h3>Spatial Rotation (ROT/VLR)</h3>
+              <p>Mentally apply the listed rotations and choose the final pointing direction.</p>
+              <div id="rot-prompt" class="rot-prompt">Press New Scenario to begin.</div>
+              <div id="rot-options" class="rot-options" role="group" aria-label="Spatial rotation answer options"></div>
+              <div class="cog-row">
+                <button id="rot-start" class="astro-btn" type="button">New Scenario</button>
+              </div>
+              <p id="rot-status" class="astro-status"></p>
+            </article>
+
+            <article class="cog-card" id="math-card">
+              <h3>Math + Physics Sprint (RAG/TVT)</h3>
+              <p>Answer as many aerospace-relevant calculations as possible in 60 seconds.</p>
+              <div class="cog-meta">Session timer: <span id="math-timer">60.0s</span></div>
+              <div id="math-question" class="math-question">Press Start Sprint.</div>
+              <div id="math-options" class="math-options" role="group" aria-label="Math physics answer options"></div>
+              <div class="cog-row">
+                <button id="math-start" class="astro-btn" type="button">Start Sprint</button>
+                <button id="math-stop" class="astro-btn" type="button">Stop</button>
+              </div>
+              <p id="math-status" class="astro-status"></p>
+            </article>
           </div>
         </section>
 

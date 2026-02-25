@@ -17,6 +17,42 @@
     { id: "wide_coverage", label: "Wide Coverage", icon: "ALL", check: function (ctx) { return ctx.topicCoverage >= Math.min(ctx.topicCount, 8); } }
   ];
 
+  var DIRECTION_AXES = [
+    { id: "+X", label: "Right (+X)", vec: [1, 0, 0] },
+    { id: "-X", label: "Left (-X)", vec: [-1, 0, 0] },
+    { id: "+Y", label: "Forward (+Y)", vec: [0, 1, 0] },
+    { id: "-Y", label: "Backward (-Y)", vec: [0, -1, 0] },
+    { id: "+Z", label: "Up (+Z)", vec: [0, 0, 1] },
+    { id: "-Z", label: "Down (-Z)", vec: [0, 0, -1] }
+  ];
+
+  var ROTATION_OPS = [
+    {
+      label: "Rotate +90 deg about Z",
+      apply: function (v) { return [-v[1], v[0], v[2]]; }
+    },
+    {
+      label: "Rotate -90 deg about Z",
+      apply: function (v) { return [v[1], -v[0], v[2]]; }
+    },
+    {
+      label: "Rotate +90 deg about Y",
+      apply: function (v) { return [v[2], v[1], -v[0]]; }
+    },
+    {
+      label: "Rotate -90 deg about Y",
+      apply: function (v) { return [-v[2], v[1], v[0]]; }
+    },
+    {
+      label: "Rotate +90 deg about X",
+      apply: function (v) { return [v[0], -v[2], v[1]]; }
+    },
+    {
+      label: "Rotate -90 deg about X",
+      apply: function (v) { return [v[0], v[2], -v[1]]; }
+    }
+  ];
+
   var els = {};
   var appState = {
     topics: [],
@@ -50,6 +86,14 @@
       digitBest: 4,
       visualLevel: 3,
       visualBest: 3,
+      rmsLevel: 3,
+      rmsBest: 3,
+      speedLevel: 1,
+      speedBest: 1,
+      rotationLevel: 2,
+      rotationBest: 2,
+      mathLevel: 1,
+      mathBest: 1,
       reactionRuns: [],
       drillLogs: []
     },
@@ -67,6 +111,37 @@
       waiting: false,
       ready: false,
       readyAt: 0
+    },
+    rms: {
+      sequence: [],
+      target: "",
+      index: 0,
+      timer: null,
+      running: false,
+      readyForInput: false
+    },
+    speed: {
+      timer: null,
+      target: "",
+      options: [],
+      correctIndices: [],
+      selected: new Set(),
+      deadline: 0,
+      durationMs: 0,
+      running: false
+    },
+    rotation: {
+      scenario: null,
+      answered: false
+    },
+    math: {
+      timer: null,
+      nextTimer: null,
+      active: false,
+      endAt: 0,
+      total: 0,
+      correct: 0,
+      question: null
     }
   };
 
@@ -268,6 +343,32 @@
     els.reactionReset = byId("reaction-reset");
     els.reactionStatus = byId("reaction-status");
 
+    els.rmsMeta = byId("rms-meta");
+    els.rmsStream = byId("rms-stream");
+    els.rmsInput = byId("rms-input");
+    els.rmsStart = byId("rms-start");
+    els.rmsCheck = byId("rms-check");
+    els.rmsStatus = byId("rms-status");
+
+    els.speedTarget = byId("speed-target");
+    els.speedTimer = byId("speed-timer");
+    els.speedGrid = byId("speed-grid");
+    els.speedStart = byId("speed-start");
+    els.speedSubmit = byId("speed-submit");
+    els.speedStatus = byId("speed-status");
+
+    els.rotPrompt = byId("rot-prompt");
+    els.rotOptions = byId("rot-options");
+    els.rotStart = byId("rot-start");
+    els.rotStatus = byId("rot-status");
+
+    els.mathTimer = byId("math-timer");
+    els.mathQuestion = byId("math-question");
+    els.mathOptions = byId("math-options");
+    els.mathStart = byId("math-start");
+    els.mathStop = byId("math-stop");
+    els.mathStatus = byId("math-status");
+
     els.progressAverage = byId("progress-average");
     els.progressBest = byId("progress-best");
     els.progressQuestions = byId("progress-questions");
@@ -356,6 +457,14 @@
       appState.cognitive.digitBest = Number(cogRaw.digitBest) || appState.cognitive.digitLevel;
       appState.cognitive.visualLevel = Number(cogRaw.visualLevel) || 3;
       appState.cognitive.visualBest = Number(cogRaw.visualBest) || appState.cognitive.visualLevel;
+      appState.cognitive.rmsLevel = Number(cogRaw.rmsLevel) || 3;
+      appState.cognitive.rmsBest = Number(cogRaw.rmsBest) || appState.cognitive.rmsLevel;
+      appState.cognitive.speedLevel = Number(cogRaw.speedLevel) || 1;
+      appState.cognitive.speedBest = Number(cogRaw.speedBest) || appState.cognitive.speedLevel;
+      appState.cognitive.rotationLevel = Number(cogRaw.rotationLevel) || 2;
+      appState.cognitive.rotationBest = Number(cogRaw.rotationBest) || appState.cognitive.rotationLevel;
+      appState.cognitive.mathLevel = Number(cogRaw.mathLevel) || 1;
+      appState.cognitive.mathBest = Number(cogRaw.mathBest) || appState.cognitive.mathLevel;
       appState.cognitive.reactionRuns = Array.isArray(cogRaw.reactionRuns) ? cogRaw.reactionRuns.slice(-20) : [];
       appState.cognitive.drillLogs = Array.isArray(cogRaw.drillLogs) ? cogRaw.drillLogs.slice(-400) : [];
     }
@@ -1010,7 +1119,7 @@
       appState.digit.revealTimer = null;
     }
 
-    var level = clamp(appState.cognitive.digitLevel, 3, 12);
+    var level = clamp(appState.cognitive.digitLevel, 3, 14);
     var seq = generateDigits(level);
     appState.digit.current = seq;
 
@@ -1020,7 +1129,7 @@
     els.digitStatus.textContent = "Memorize the sequence.";
     els.digitStatus.className = "astro-status";
 
-    var revealMs = clamp(900 + level * 180, 1600, 4200);
+    var revealMs = clamp(720 + level * 130, 1200, 3000);
     appState.digit.revealTimer = setTimeout(function () {
       els.digitSequence.textContent = "*".repeat(seq.length);
       els.digitInput.disabled = false;
@@ -1031,7 +1140,7 @@
 
   function checkDigitRound() {
     var guess = String(els.digitInput.value || "").replace(/\s+/g, "");
-    var priorLevel = clamp(appState.cognitive.digitLevel, 3, 12);
+    var priorLevel = clamp(appState.cognitive.digitLevel, 3, 14);
     if (!appState.digit.current) {
       els.digitStatus.textContent = "Start a sequence first.";
       els.digitStatus.className = "astro-status error";
@@ -1047,14 +1156,14 @@
     var score;
     var logEntry;
     if (guess === appState.digit.current) {
-      appState.cognitive.digitLevel = clamp(appState.cognitive.digitLevel + 1, 3, 12);
+      appState.cognitive.digitLevel = clamp(appState.cognitive.digitLevel + 1, 3, 14);
       appState.cognitive.digitBest = Math.max(appState.cognitive.digitBest, appState.cognitive.digitLevel);
       score = clamp(58 + priorLevel * 4, 40, 100);
       logEntry = logCognitiveActivity("digit-span", score, "correct");
       els.digitStatus.textContent = "Correct. Next level: " + appState.cognitive.digitLevel + " | +" + logEntry.xpEarned + " XP";
       els.digitStatus.className = "astro-status success";
     } else {
-      appState.cognitive.digitLevel = clamp(appState.cognitive.digitLevel - 1, 3, 12);
+      appState.cognitive.digitLevel = clamp(appState.cognitive.digitLevel - 1, 3, 14);
       score = clamp(34 + priorLevel * 3, 20, 90);
       logEntry = logCognitiveActivity("digit-span", score, "incorrect");
       els.digitStatus.textContent = "Not quite. Correct sequence: " + appState.digit.current + " | +" + logEntry.xpEarned + " XP";
@@ -1097,7 +1206,7 @@
     clearMemoryPicks();
     appState.memory.revealLock = true;
 
-    var level = clamp(appState.cognitive.visualLevel, 3, 9);
+    var level = clamp(appState.cognitive.visualLevel, 3, 10);
     var allIndices = Array.from({ length: 16 }, function (_, idx) { return idx; });
     appState.memory.activePattern = sample(allIndices, level).sort(function (a, b) { return a - b; });
 
@@ -1117,7 +1226,7 @@
       });
       appState.memory.revealLock = false;
       els.memoryStatus.textContent = "Now reproduce the pattern and press Submit Pattern.";
-    }, 1800 + level * 140);
+    }, 1300 + level * 110);
   }
 
   function submitMemoryPattern() {
@@ -1133,7 +1242,7 @@
       return;
     }
 
-    var priorLevel = clamp(appState.cognitive.visualLevel, 3, 9);
+    var priorLevel = clamp(appState.cognitive.visualLevel, 3, 10);
     var picked = Array.from(appState.memory.picks).sort(function (a, b) { return a - b; });
     var target = appState.memory.activePattern;
     var ok = picked.length === target.length && picked.every(function (val, idx) {
@@ -1143,14 +1252,14 @@
     var score;
     var logEntry;
     if (ok) {
-      appState.cognitive.visualLevel = clamp(appState.cognitive.visualLevel + 1, 3, 9);
+      appState.cognitive.visualLevel = clamp(appState.cognitive.visualLevel + 1, 3, 10);
       appState.cognitive.visualBest = Math.max(appState.cognitive.visualBest, appState.cognitive.visualLevel);
       score = clamp(60 + priorLevel * 5, 40, 100);
       logEntry = logCognitiveActivity("visual-pattern", score, "correct");
       els.memoryStatus.textContent = "Correct. Next level: " + appState.cognitive.visualLevel + " | +" + logEntry.xpEarned + " XP";
       els.memoryStatus.className = "astro-status success";
     } else {
-      appState.cognitive.visualLevel = clamp(appState.cognitive.visualLevel - 1, 3, 9);
+      appState.cognitive.visualLevel = clamp(appState.cognitive.visualLevel - 1, 3, 10);
       score = clamp(30 + priorLevel * 4, 20, 90);
       logEntry = logCognitiveActivity("visual-pattern", score, "incorrect");
       els.memoryStatus.textContent = "Not exact. Target was " + target.length + " tiles. | +" + logEntry.xpEarned + " XP";
@@ -1210,7 +1319,7 @@
     }, delay);
   }
 
-  function handleReactionClick() {
+  function handleReactionClick(event) {
     if (appState.reaction.waiting) {
       if (appState.reaction.timer) {
         clearTimeout(appState.reaction.timer);
@@ -1227,7 +1336,8 @@
       return;
     }
 
-    var elapsed = Math.round(performance.now() - appState.reaction.readyAt);
+    var clickTs = event && typeof event.timeStamp === "number" ? event.timeStamp : performance.now();
+    var elapsed = Math.max(80, Math.round(clickTs - appState.reaction.readyAt) - 15);
     appState.reaction.ready = false;
     setReactionState(elapsed + " ms", "");
 
@@ -1240,9 +1350,750 @@
     els.reactionStatus.className = "astro-status success";
   }
 
+  function randomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function randomCode(length) {
+    var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    var out = "";
+    for (var i = 0; i < length; i += 1) {
+      out += chars[randomInt(0, chars.length - 1)];
+    }
+    return out;
+  }
+
+  function mutateCodeSimilar(code) {
+    var letters = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+    var digits = "23456789";
+    var arr = String(code || "").split("");
+    if (!arr.length) {
+      return code;
+    }
+
+    if (Math.random() < 0.55 || arr.length < 2) {
+      var idx = randomInt(0, arr.length - 1);
+      var src = arr[idx];
+      var pool = /\d/.test(src) ? digits : letters;
+      var replacement = src;
+      while (replacement === src) {
+        replacement = pool[randomInt(0, pool.length - 1)];
+      }
+      arr[idx] = replacement;
+    } else {
+      var a = randomInt(0, arr.length - 1);
+      var b = randomInt(0, arr.length - 1);
+      while (b === a) {
+        b = randomInt(0, arr.length - 1);
+      }
+      var tmp = arr[a];
+      arr[a] = arr[b];
+      arr[b] = tmp;
+    }
+
+    var candidate = arr.join("");
+    if (candidate === code) {
+      return mutateCodeSimilar(code);
+    }
+    return candidate;
+  }
+
+  function disableContainerButtons(container, disabled) {
+    if (!container) {
+      return;
+    }
+    Array.from(container.querySelectorAll("button")).forEach(function (btn) {
+      btn.disabled = !!disabled;
+    });
+  }
+
+  function renderRmsMeta() {
+    var level = clamp(appState.cognitive.rmsLevel, 3, 10);
+    els.rmsMeta.textContent = "Recall length: " + level + " | Best: " + appState.cognitive.rmsBest;
+  }
+
+  function clearRmsTimer() {
+    if (appState.rms.timer) {
+      clearTimeout(appState.rms.timer);
+      appState.rms.timer = null;
+    }
+  }
+
+  function startRmsRound() {
+    clearRmsTimer();
+    var level = clamp(appState.cognitive.rmsLevel, 3, 10);
+    var streamLength = level + randomInt(2, 5);
+    var seq = generateDigits(streamLength).split("");
+
+    appState.rms.sequence = seq;
+    appState.rms.target = seq.slice(-level).join("");
+    appState.rms.index = 0;
+    appState.rms.running = true;
+    appState.rms.readyForInput = false;
+
+    els.rmsInput.value = "";
+    els.rmsInput.disabled = true;
+    els.rmsStream.textContent = "...";
+    els.rmsStatus.textContent = "Watch the stream. Recall only the final " + level + " digits.";
+    els.rmsStatus.className = "astro-status";
+    renderRmsMeta();
+
+    var stepMs = clamp(680 - level * 42, 260, 560);
+    function tick() {
+      if (appState.rms.index >= appState.rms.sequence.length) {
+        appState.rms.running = false;
+        appState.rms.readyForInput = true;
+        els.rmsStream.textContent = "*";
+        els.rmsInput.disabled = false;
+        els.rmsInput.focus();
+        els.rmsStatus.textContent = "Enter the last " + level + " digits and press Check.";
+        return;
+      }
+
+      els.rmsStream.textContent = appState.rms.sequence[appState.rms.index];
+      appState.rms.index += 1;
+      appState.rms.timer = setTimeout(tick, stepMs);
+    }
+
+    appState.rms.timer = setTimeout(tick, 280);
+  }
+
+  function checkRmsRound() {
+    if (appState.rms.running) {
+      els.rmsStatus.textContent = "Wait for the stream to finish.";
+      els.rmsStatus.className = "astro-status error";
+      return;
+    }
+
+    if (!appState.rms.readyForInput || !appState.rms.target) {
+      els.rmsStatus.textContent = "Start a stream first.";
+      els.rmsStatus.className = "astro-status error";
+      return;
+    }
+
+    var guess = String(els.rmsInput.value || "").replace(/\s+/g, "");
+    if (!guess) {
+      els.rmsStatus.textContent = "Enter your answer before checking.";
+      els.rmsStatus.className = "astro-status error";
+      return;
+    }
+
+    var target = appState.rms.target;
+    var priorLevel = clamp(appState.cognitive.rmsLevel, 3, 10);
+    var exact = guess === target;
+    var positionalHits = 0;
+    for (var i = 0; i < Math.min(guess.length, target.length); i += 1) {
+      if (guess[i] === target[i]) {
+        positionalHits += 1;
+      }
+    }
+    var hitRatio = target.length ? positionalHits / target.length : 0;
+
+    var score;
+    var logEntry;
+    if (exact) {
+      appState.cognitive.rmsLevel = clamp(appState.cognitive.rmsLevel + 1, 3, 10);
+      appState.cognitive.rmsBest = Math.max(appState.cognitive.rmsBest, appState.cognitive.rmsLevel);
+      score = clamp(62 + priorLevel * 4, 35, 100);
+      logEntry = logCognitiveActivity("running-memory-span", score, "exact");
+      els.rmsStatus.textContent = "Correct. Next level: " + appState.cognitive.rmsLevel + " | +" + logEntry.xpEarned + " XP";
+      els.rmsStatus.className = "astro-status success";
+    } else {
+      appState.cognitive.rmsLevel = clamp(appState.cognitive.rmsLevel - 1, 3, 10);
+      score = clamp(25 + Math.round(hitRatio * 45) + priorLevel * 2, 15, 90);
+      logEntry = logCognitiveActivity("running-memory-span", score, "partial");
+      els.rmsStatus.textContent = "Not exact. Target: " + target + " | Hits: " + positionalHits + "/" + target.length + " | +" + logEntry.xpEarned + " XP";
+      els.rmsStatus.className = "astro-status error";
+    }
+
+    appState.rms.readyForInput = false;
+    appState.rms.target = "";
+    renderRmsMeta();
+  }
+
+  function renderSpeedTimer() {
+    if (!appState.speed.running) {
+      if (appState.speed.durationMs > 0) {
+        els.speedTimer.textContent = "0.0s";
+      } else {
+        els.speedTimer.textContent = "-";
+      }
+      return;
+    }
+    var remainingMs = Math.max(0, appState.speed.deadline - performance.now());
+    els.speedTimer.textContent = (remainingMs / 1000).toFixed(1) + "s";
+  }
+
+  function clearSpeedTimer() {
+    if (appState.speed.timer) {
+      clearInterval(appState.speed.timer);
+      appState.speed.timer = null;
+    }
+  }
+
+  function renderSpeedOptions() {
+    els.speedGrid.innerHTML = "";
+    appState.speed.options.forEach(function (code, idx) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "speed-option";
+      btn.textContent = code;
+      btn.dataset.index = String(idx);
+      btn.disabled = !appState.speed.running;
+      btn.addEventListener("click", function () {
+        if (!appState.speed.running) {
+          return;
+        }
+        if (appState.speed.selected.has(idx)) {
+          appState.speed.selected.delete(idx);
+          btn.classList.remove("selected");
+        } else {
+          appState.speed.selected.add(idx);
+          btn.classList.add("selected");
+        }
+      });
+      els.speedGrid.appendChild(btn);
+    });
+  }
+
+  function startSpeedRound() {
+    clearSpeedTimer();
+
+    var level = clamp(appState.cognitive.speedLevel, 1, 8);
+    var codeLength = clamp(3 + Math.floor(level / 2), 3, 6);
+    var optionCount = clamp(6 + level, 6, 12);
+    var matchCount = level >= 7 ? 3 : (level >= 4 ? 2 : 1);
+    var target = randomCode(codeLength);
+
+    var options = [];
+    for (var i = 0; i < matchCount; i += 1) {
+      options.push(target);
+    }
+    while (options.length < optionCount) {
+      var candidate = Math.random() < 0.8 ? mutateCodeSimilar(target) : randomCode(codeLength);
+      if (candidate !== target) {
+        options.push(candidate);
+      }
+    }
+
+    appState.speed.options = shuffle(options);
+    appState.speed.target = target;
+    appState.speed.correctIndices = appState.speed.options
+      .map(function (value, idx) { return value === target ? idx : -1; })
+      .filter(function (idx) { return idx >= 0; });
+    appState.speed.selected = new Set();
+    appState.speed.durationMs = clamp(19000 - level * 1400, 7000, 19000);
+    appState.speed.deadline = performance.now() + appState.speed.durationMs;
+    appState.speed.running = true;
+
+    els.speedTarget.textContent = target;
+    els.speedStatus.textContent = "Select all exact matches. Similar distractors are intentional.";
+    els.speedStatus.className = "astro-status";
+    els.speedSubmit.disabled = false;
+    renderSpeedOptions();
+    renderSpeedTimer();
+
+    appState.speed.timer = setInterval(function () {
+      renderSpeedTimer();
+      if (performance.now() >= appState.speed.deadline) {
+        finalizeSpeedRound(true);
+      }
+    }, 90);
+  }
+
+  function finalizeSpeedRound(timedOut) {
+    if (!appState.speed.running) {
+      return;
+    }
+
+    appState.speed.running = false;
+    clearSpeedTimer();
+    renderSpeedTimer();
+
+    var selected = Array.from(appState.speed.selected).sort(function (a, b) { return a - b; });
+    var correct = appState.speed.correctIndices.slice().sort(function (a, b) { return a - b; });
+
+    var selectedSet = new Set(selected);
+    var correctSet = new Set(correct);
+    var truePos = selected.filter(function (idx) { return correctSet.has(idx); }).length;
+    var falsePos = selected.filter(function (idx) { return !correctSet.has(idx); }).length;
+    var falseNeg = correct.filter(function (idx) { return !selectedSet.has(idx); }).length;
+
+    var precision = truePos + falsePos > 0 ? truePos / (truePos + falsePos) : 0;
+    var recall = truePos + falseNeg > 0 ? truePos / (truePos + falseNeg) : 0;
+    var f1 = precision + recall > 0 ? (2 * precision * recall) / (precision + recall) : 0;
+    var exact = falsePos === 0 && falseNeg === 0 && truePos === correct.length;
+    var remainingMs = Math.max(0, appState.speed.deadline - performance.now());
+
+    Array.from(els.speedGrid.querySelectorAll("button")).forEach(function (btn, idx) {
+      var isCorrect = correctSet.has(idx);
+      var isSelected = selectedSet.has(idx);
+      btn.disabled = true;
+      if (isCorrect) {
+        btn.classList.add("correct");
+      }
+      if (isSelected && !isCorrect) {
+        btn.classList.add("wrong");
+      }
+    });
+
+    var priorLevel = clamp(appState.cognitive.speedLevel, 1, 8);
+    if (exact) {
+      appState.cognitive.speedLevel = clamp(appState.cognitive.speedLevel + 1, 1, 8);
+      appState.cognitive.speedBest = Math.max(appState.cognitive.speedBest, appState.cognitive.speedLevel);
+    } else if (f1 < 0.6) {
+      appState.cognitive.speedLevel = clamp(appState.cognitive.speedLevel - 1, 1, 8);
+    }
+
+    var score = clamp(Math.round(f1 * 85 + (remainingMs / appState.speed.durationMs) * 15 + (exact ? 8 : 0)), 10, 100);
+    var detail = "hits " + truePos + "/" + correct.length + ", false " + falsePos;
+    var logEntry = logCognitiveActivity("perceptual-speed", score, detail);
+    els.speedSubmit.disabled = true;
+
+    if (exact) {
+      els.speedStatus.textContent = "Excellent scan. Level " + appState.cognitive.speedLevel + " | +" + logEntry.xpEarned + " XP";
+      els.speedStatus.className = "astro-status success";
+    } else {
+      els.speedStatus.textContent =
+        (timedOut ? "Time expired. " : "Submitted. ") +
+        "Accuracy: " + Math.round(f1 * 100) + "% | Level " + appState.cognitive.speedLevel + " | +" + logEntry.xpEarned + " XP";
+      els.speedStatus.className = "astro-status error";
+    }
+  }
+
+  function submitSpeedRound() {
+    finalizeSpeedRound(false);
+  }
+
+  function vecKey(vec) {
+    return vec[0] + "," + vec[1] + "," + vec[2];
+  }
+
+  function directionFromVector(vec) {
+    var key = vecKey(vec);
+    return DIRECTION_AXES.find(function (d) {
+      return vecKey(d.vec) === key;
+    }) || DIRECTION_AXES[0];
+  }
+
+  function dotVec(a, b) {
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+  }
+
+  function startRotationScenario() {
+    var level = clamp(appState.cognitive.rotationLevel, 2, 8);
+    var stepCount = clamp(2 + Math.floor(level / 2), 2, 6);
+    var start = sample(DIRECTION_AXES, 1)[0];
+    var ops = [];
+    var vec = start.vec.slice();
+
+    for (var i = 0; i < stepCount; i += 1) {
+      var op = ROTATION_OPS[randomInt(0, ROTATION_OPS.length - 1)];
+      ops.push(op.label);
+      vec = op.apply(vec);
+    }
+
+    var finalDirection = directionFromVector(vec);
+    var distractors = sample(DIRECTION_AXES.filter(function (d) {
+      return d.id !== finalDirection.id;
+    }), 3);
+    var options = shuffle([finalDirection].concat(distractors));
+
+    appState.rotation.scenario = {
+      start: start,
+      steps: ops,
+      correct: finalDirection,
+      options: options
+    };
+    appState.rotation.answered = false;
+
+    var prompt = "Initial direction: " + start.label + "\n";
+    ops.forEach(function (label, idx) {
+      prompt += String(idx + 1) + ") " + label + "\n";
+    });
+    prompt += "Final direction?";
+    els.rotPrompt.textContent = prompt;
+
+    els.rotOptions.innerHTML = "";
+    options.forEach(function (opt) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "rot-option";
+      btn.textContent = opt.label;
+      btn.dataset.id = opt.id;
+      btn.addEventListener("click", function () {
+        submitRotationAnswer(opt.id);
+      });
+      els.rotOptions.appendChild(btn);
+    });
+
+    els.rotStatus.textContent = "Solve mentally, then choose one option.";
+    els.rotStatus.className = "astro-status";
+  }
+
+  function submitRotationAnswer(selectedId) {
+    if (!appState.rotation.scenario || appState.rotation.answered) {
+      return;
+    }
+
+    appState.rotation.answered = true;
+    var scenario = appState.rotation.scenario;
+    var selected = scenario.options.find(function (opt) { return opt.id === selectedId; }) || scenario.options[0];
+    var correct = scenario.correct;
+    var isCorrect = selected.id === correct.id;
+
+    var priorLevel = clamp(appState.cognitive.rotationLevel, 2, 8);
+    var score;
+    if (isCorrect) {
+      appState.cognitive.rotationLevel = clamp(appState.cognitive.rotationLevel + 1, 2, 8);
+      appState.cognitive.rotationBest = Math.max(appState.cognitive.rotationBest, appState.cognitive.rotationLevel);
+      score = clamp(66 + priorLevel * 4, 40, 100);
+    } else {
+      var dot = dotVec(selected.vec, correct.vec);
+      var partial = dot === 0 ? 42 : 22;
+      appState.cognitive.rotationLevel = clamp(appState.cognitive.rotationLevel - 1, 2, 8);
+      score = clamp(partial + priorLevel * 3, 20, 88);
+    }
+
+    disableContainerButtons(els.rotOptions, true);
+    Array.from(els.rotOptions.querySelectorAll("button")).forEach(function (btn) {
+      if (btn.dataset.id === correct.id) {
+        btn.classList.add("correct");
+      }
+      if (btn.dataset.id === selected.id && !isCorrect) {
+        btn.classList.add("wrong");
+      }
+    });
+
+    var logEntry = logCognitiveActivity("spatial-rotation", score, isCorrect ? "correct" : "incorrect");
+    if (isCorrect) {
+      els.rotStatus.textContent = "Correct. Level " + appState.cognitive.rotationLevel + " | +" + logEntry.xpEarned + " XP";
+      els.rotStatus.className = "astro-status success";
+    } else {
+      els.rotStatus.textContent = "Not quite. Correct: " + correct.label + " | Level " + appState.cognitive.rotationLevel + " | +" + logEntry.xpEarned + " XP";
+      els.rotStatus.className = "astro-status error";
+    }
+  }
+
+  function formatValue(value, decimals) {
+    var d = Number(decimals) || 0;
+    var factor = Math.pow(10, d);
+    var rounded = Math.round(value * factor) / factor;
+    if (d === 0) {
+      return String(Math.round(rounded));
+    }
+    return rounded.toFixed(d).replace(/\.?0+$/, "");
+  }
+
+  function buildNumericOptions(correctValue, distractorValues, unit, decimals) {
+    var unitSuffix = unit ? " " + unit : "";
+    var rawPool = [correctValue].concat(distractorValues || []);
+    var unique = [];
+    var seen = new Set();
+
+    rawPool.forEach(function (value) {
+      var key = formatValue(Number(value), decimals);
+      if (!Number.isFinite(Number(value))) {
+        return;
+      }
+      if (!seen.has(key)) {
+        seen.add(key);
+        unique.push(Number(value));
+      }
+    });
+
+    while (unique.length < 4) {
+      var offset = (Math.random() < 0.5 ? -1 : 1) * randomInt(1, 4) * Math.max(1, Math.abs(correctValue) * 0.08);
+      var candidate = Math.max(0, correctValue + offset);
+      var candidateKey = formatValue(candidate, decimals);
+      if (!seen.has(candidateKey)) {
+        seen.add(candidateKey);
+        unique.push(candidate);
+      }
+    }
+
+    var trimmed = unique.slice(0, 4);
+    var correctText = formatValue(correctValue, decimals) + unitSuffix;
+    var options = shuffle(trimmed.map(function (value) {
+      return formatValue(value, decimals) + unitSuffix;
+    }));
+
+    return {
+      options: options,
+      correctAnswer: correctText
+    };
+  }
+
+  function makeMathQuestion(level) {
+    var easyPool = ["force", "ohm", "power", "convert"];
+    var mediumPool = easyPool.concat(["relative", "orbit"]);
+    var hardPool = mediumPool.concat(["mdot", "kinetic"]);
+
+    var bucket = level <= 2 ? easyPool : (level <= 4 ? mediumPool : hardPool);
+    var type = bucket[randomInt(0, bucket.length - 1)];
+
+    if (type === "force") {
+      var m = randomInt(150, 950);
+      var a = randomInt(2, 8);
+      var force = m * a;
+      var forceSet = buildNumericOptions(force, [m * (a - 1), m * (a + 1), m + a], "N", 0);
+      return {
+        prompt: "A " + m + " kg spacecraft accelerates at " + a + " m/s^2. Required force?",
+        options: forceSet.options,
+        correctAnswer: forceSet.correctAnswer
+      };
+    }
+
+    if (type === "ohm") {
+      var resistance = randomInt(3, 24);
+      var current = randomInt(2, 10);
+      var voltage = resistance * current;
+      var ohmSet = buildNumericOptions(voltage, [resistance + current, voltage / 2, voltage + resistance], "V", 0);
+      return {
+        prompt: "A circuit has I = " + current + " A and R = " + resistance + " ohm. Voltage V = ?",
+        options: ohmSet.options,
+        correctAnswer: ohmSet.correctAnswer
+      };
+    }
+
+    if (type === "power") {
+      var v = randomInt(24, 120);
+      var i = randomInt(3, 14);
+      var power = v * i;
+      var powerSet = buildNumericOptions(power, [v + i, power / 2, v * (i + 2)], "W", 0);
+      return {
+        prompt: "Electrical power with V = " + v + " V and I = " + i + " A is:",
+        options: powerSet.options,
+        correctAnswer: powerSet.correctAnswer
+      };
+    }
+
+    if (type === "convert") {
+      var km = randomInt(2, 18);
+      var mVal = km * 1000;
+      var convSet = buildNumericOptions(mVal, [km * 100, km * 10000, mVal + 500], "m", 0);
+      return {
+        prompt: "Convert " + km + " km to meters.",
+        options: convSet.options,
+        correctAnswer: convSet.correctAnswer
+      };
+    }
+
+    if (type === "relative") {
+      var v1 = randomInt(2, 9) / 10;
+      var v2 = randomInt(2, 9) / 10;
+      var rel = v1 + v2;
+      var relSet = buildNumericOptions(rel, [Math.abs(v1 - v2), rel + 0.4, rel - 0.2], "km/s", 2);
+      return {
+        prompt: "Two satellites approach head-on at " + formatValue(v1, 2) + " km/s and " + formatValue(v2, 2) + " km/s. Relative speed?",
+        options: relSet.options,
+        correctAnswer: relSet.correctAnswer
+      };
+    }
+
+    if (type === "orbit") {
+      var radius = randomInt(6700, 8200);
+      var speed = randomInt(73, 82) / 10;
+      var period = (2 * Math.PI * radius) / speed / 60;
+      var orbitSet = buildNumericOptions(period, [period * 0.5, period * 1.2, period + 18], "min", 1);
+      return {
+        prompt: "For circular orbit radius " + radius + " km and speed " + formatValue(speed, 1) + " km/s, period is about:",
+        options: orbitSet.options,
+        correctAnswer: orbitSet.correctAnswer
+      };
+    }
+
+    if (type === "mdot") {
+      var thrust = randomInt(25, 120);
+      var isp = randomInt(210, 320);
+      var mdot = thrust / (isp * 9.81);
+      var mdotSet = buildNumericOptions(mdot, [thrust / isp, thrust / 9.81, mdot * 2], "kg/s", 3);
+      return {
+        prompt: "Using mdot = F / (Isp * g0), what is mdot for F = " + thrust + " N and Isp = " + isp + " s?",
+        options: mdotSet.options,
+        correctAnswer: mdotSet.correctAnswer
+      };
+    }
+
+    var mass = randomInt(150, 800);
+    var vel = randomInt(5, 15);
+    var energy = 0.5 * mass * vel * vel;
+    var keSet = buildNumericOptions(energy, [mass * vel, energy / 2, energy * 1.3], "J", 0);
+    return {
+      prompt: "Kinetic energy for m = " + mass + " kg and v = " + vel + " m/s (E = 0.5 m v^2):",
+      options: keSet.options,
+      correctAnswer: keSet.correctAnswer
+    };
+  }
+
+  function renderMathQuestion(question) {
+    if (!question) {
+      els.mathQuestion.textContent = "Press Start Sprint.";
+      els.mathOptions.innerHTML = "";
+      return;
+    }
+
+    els.mathQuestion.textContent = question.prompt;
+    els.mathOptions.innerHTML = "";
+    question.options.forEach(function (option) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "math-option";
+      btn.textContent = option;
+      btn.addEventListener("click", function () {
+        submitMathAnswer(option);
+      });
+      els.mathOptions.appendChild(btn);
+    });
+  }
+
+  function updateMathTimer() {
+    if (!appState.math.active) {
+      return;
+    }
+    var remainingMs = Math.max(0, appState.math.endAt - performance.now());
+    els.mathTimer.textContent = (remainingMs / 1000).toFixed(1) + "s";
+    if (remainingMs <= 0) {
+      finishMathSprint("time");
+    }
+  }
+
+  function queueNextMathQuestion() {
+    if (!appState.math.active) {
+      return;
+    }
+    appState.math.question = makeMathQuestion(clamp(appState.cognitive.mathLevel, 1, 8));
+    renderMathQuestion(appState.math.question);
+  }
+
+  function finishMathSprint(reason) {
+    if (!appState.math.active) {
+      return;
+    }
+
+    appState.math.active = false;
+    if (appState.math.timer) {
+      clearInterval(appState.math.timer);
+      appState.math.timer = null;
+    }
+    if (appState.math.nextTimer) {
+      clearTimeout(appState.math.nextTimer);
+      appState.math.nextTimer = null;
+    }
+
+    els.mathStart.disabled = false;
+    els.mathStop.disabled = true;
+    els.mathTimer.textContent = "0.0s";
+    disableContainerButtons(els.mathOptions, true);
+
+    if (appState.math.total < 1) {
+      els.mathStatus.textContent = reason === "manual"
+        ? "Sprint stopped. Start again when ready."
+        : "No answers captured. Start another sprint.";
+      els.mathStatus.className = "astro-status";
+      els.mathQuestion.textContent = "Press Start Sprint.";
+      return;
+    }
+
+    var accuracy = Math.round((appState.math.correct / appState.math.total) * 100);
+    var paceBonus = Math.min(appState.math.total * 2, 18);
+    var score = clamp(Math.round(accuracy * 0.82 + paceBonus), 10, 100);
+
+    if (accuracy >= 78 && appState.math.total >= 8) {
+      appState.cognitive.mathLevel = clamp(appState.cognitive.mathLevel + 1, 1, 8);
+      appState.cognitive.mathBest = Math.max(appState.cognitive.mathBest, appState.cognitive.mathLevel);
+    } else if (accuracy < 50 && appState.math.total >= 6) {
+      appState.cognitive.mathLevel = clamp(appState.cognitive.mathLevel - 1, 1, 8);
+    }
+
+    var detail = appState.math.correct + "/" + appState.math.total + " answered";
+    var logEntry = logCognitiveActivity("math-physics-sprint", score, detail);
+    els.mathStatus.textContent =
+      "Sprint complete: " + detail + " (" + accuracy + "%) | Level " + appState.cognitive.mathLevel + " | +" + logEntry.xpEarned + " XP";
+    els.mathStatus.className = accuracy >= 70 ? "astro-status success" : "astro-status error";
+    els.mathQuestion.textContent = "Sprint complete. Press Start Sprint for a new set.";
+  }
+
+  function startMathSprint() {
+    if (appState.math.active) {
+      return;
+    }
+
+    if (appState.math.timer) {
+      clearInterval(appState.math.timer);
+      appState.math.timer = null;
+    }
+    if (appState.math.nextTimer) {
+      clearTimeout(appState.math.nextTimer);
+      appState.math.nextTimer = null;
+    }
+
+    appState.math.active = true;
+    appState.math.endAt = performance.now() + 60000;
+    appState.math.total = 0;
+    appState.math.correct = 0;
+    appState.math.question = null;
+
+    els.mathStart.disabled = true;
+    els.mathStop.disabled = false;
+    els.mathStatus.textContent = "Sprint running. Tap answer directly; no submit required.";
+    els.mathStatus.className = "astro-status";
+    queueNextMathQuestion();
+    updateMathTimer();
+
+    appState.math.timer = setInterval(updateMathTimer, 90);
+  }
+
+  function submitMathAnswer(selectedOption) {
+    if (!appState.math.active || !appState.math.question) {
+      return;
+    }
+
+    if (appState.math.nextTimer) {
+      clearTimeout(appState.math.nextTimer);
+      appState.math.nextTimer = null;
+    }
+
+    var correct = selectedOption === appState.math.question.correctAnswer;
+    appState.math.total += 1;
+    if (correct) {
+      appState.math.correct += 1;
+    }
+
+    Array.from(els.mathOptions.querySelectorAll("button")).forEach(function (btn) {
+      btn.disabled = true;
+      if (btn.textContent === appState.math.question.correctAnswer) {
+        btn.classList.add("correct");
+      }
+      if (btn.textContent === selectedOption && !correct) {
+        btn.classList.add("wrong");
+      }
+    });
+
+    var runningAcc = Math.round((appState.math.correct / appState.math.total) * 100);
+    els.mathStatus.textContent = (correct ? "Correct. " : "Incorrect. ") +
+      "Running: " + appState.math.correct + "/" + appState.math.total + " (" + runningAcc + "%)";
+    els.mathStatus.className = correct ? "astro-status success" : "astro-status error";
+
+    if (performance.now() >= appState.math.endAt) {
+      finishMathSprint("time");
+      return;
+    }
+
+    appState.math.nextTimer = setTimeout(function () {
+      queueNextMathQuestion();
+    }, correct ? 130 : 210);
+  }
+
   function initCognitive() {
     els.digitStart.addEventListener("click", startDigitRound);
     els.digitCheck.addEventListener("click", checkDigitRound);
+    els.digitInput.addEventListener("keydown", function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        checkDigitRound();
+      }
+    });
 
     createMemoryGrid();
     els.memoryShow.addEventListener("click", showMemoryPattern);
@@ -1257,14 +2108,37 @@
     els.reactionReset.addEventListener("click", resetReaction);
     els.reactionTarget.addEventListener("pointerdown", function (event) {
       event.preventDefault();
-      handleReactionClick();
+      handleReactionClick(event);
     });
     els.reactionTarget.addEventListener("keydown", function (event) {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
-        handleReactionClick();
+        handleReactionClick(event);
       }
     });
+
+    renderRmsMeta();
+    els.rmsStart.addEventListener("click", startRmsRound);
+    els.rmsCheck.addEventListener("click", checkRmsRound);
+    els.rmsInput.addEventListener("keydown", function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        checkRmsRound();
+      }
+    });
+
+    els.speedStart.addEventListener("click", startSpeedRound);
+    els.speedSubmit.addEventListener("click", submitSpeedRound);
+    els.speedSubmit.disabled = true;
+    renderSpeedTimer();
+
+    els.rotStart.addEventListener("click", startRotationScenario);
+
+    els.mathStart.addEventListener("click", startMathSprint);
+    els.mathStop.addEventListener("click", function () {
+      finishMathSprint("manual");
+    });
+    els.mathStop.disabled = true;
 
     renderReactionStatus();
   }
@@ -1504,6 +2378,15 @@
         return;
       }
 
+      clearRmsTimer();
+      clearSpeedTimer();
+      if (appState.math.timer) {
+        clearInterval(appState.math.timer);
+      }
+      if (appState.math.nextTimer) {
+        clearTimeout(appState.math.nextTimer);
+      }
+
       appState.profile = {
         xp: 0,
         streak: 0,
@@ -1517,16 +2400,85 @@
         digitBest: 4,
         visualLevel: 3,
         visualBest: 3,
+        rmsLevel: 3,
+        rmsBest: 3,
+        speedLevel: 1,
+        speedBest: 1,
+        rotationLevel: 2,
+        rotationBest: 2,
+        mathLevel: 1,
+        mathBest: 1,
         reactionRuns: [],
         drillLogs: []
       };
+      appState.rms = {
+        sequence: [],
+        target: "",
+        index: 0,
+        timer: null,
+        running: false,
+        readyForInput: false
+      };
+      appState.speed = {
+        timer: null,
+        target: "",
+        options: [],
+        correctIndices: [],
+        selected: new Set(),
+        deadline: 0,
+        durationMs: 0,
+        running: false
+      };
+      appState.rotation = {
+        scenario: null,
+        answered: false
+      };
+      appState.math = {
+        timer: null,
+        nextTimer: null,
+        active: false,
+        endAt: 0,
+        total: 0,
+        correct: 0,
+        question: null
+      };
+
+      resetReaction();
+      clearMemoryPicks();
+      els.memoryStatus.textContent = "Progress reset.";
+      els.memoryStatus.className = "astro-status";
 
       persistState();
       renderProfile();
       renderProgress();
       renderReactionStatus();
       els.digitStatus.textContent = "Progress reset.";
-      els.memoryStatus.textContent = "Progress reset.";
+      els.rmsStream.textContent = "-";
+      els.rmsInput.value = "";
+      els.rmsInput.disabled = false;
+      els.rmsStatus.textContent = "Progress reset.";
+      els.rmsStatus.className = "astro-status";
+      renderRmsMeta();
+
+      els.speedTarget.textContent = "-";
+      els.speedTimer.textContent = "-";
+      els.speedGrid.innerHTML = "";
+      els.speedStatus.textContent = "Progress reset.";
+      els.speedStatus.className = "astro-status";
+      els.speedSubmit.disabled = true;
+
+      els.rotPrompt.textContent = "Press New Scenario to begin.";
+      els.rotOptions.innerHTML = "";
+      els.rotStatus.textContent = "Progress reset.";
+      els.rotStatus.className = "astro-status";
+
+      els.mathTimer.textContent = "60.0s";
+      els.mathQuestion.textContent = "Press Start Sprint.";
+      els.mathOptions.innerHTML = "";
+      els.mathStart.disabled = false;
+      els.mathStop.disabled = true;
+      els.mathStatus.textContent = "Progress reset.";
+      els.mathStatus.className = "astro-status";
     });
   }
 

@@ -495,6 +495,12 @@
   align-items: center;
 }
 
+.cog-meta {
+  margin: 0.2rem 0 0.45rem;
+  font-size: 0.86rem;
+  opacity: 0.84;
+}
+
 .cog-sequence {
   font-size: 1.38rem;
   letter-spacing: 0.22em;
@@ -566,6 +572,100 @@
 .reaction-target.too-soon {
   background: rgba(208, 66, 66, 0.2);
   border-color: #be4a4a;
+}
+
+.speed-grid {
+  margin: 0.45rem 0 0.65rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(72px, 1fr));
+  gap: 0.35rem;
+}
+
+.speed-option {
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
+  color: var(--text-color);
+  cursor: pointer;
+  padding: 0.44rem 0.42rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 0.86rem;
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.speed-option:hover {
+  transform: translateY(-1px);
+}
+
+.speed-option.selected {
+  border-color: var(--accent-color);
+  background: rgba(0, 112, 243, 0.15);
+}
+
+.speed-option.correct {
+  border-color: #2d9f67;
+  background: rgba(45, 159, 103, 0.18);
+}
+
+.speed-option.wrong {
+  border-color: #c45151;
+  background: rgba(196, 81, 81, 0.18);
+}
+
+.rot-prompt,
+.math-question {
+  margin: 0.45rem 0 0.65rem;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: rgba(70, 115, 177, 0.08);
+  padding: 0.58rem 0.62rem;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.rot-options,
+.math-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.35rem;
+  margin-bottom: 0.55rem;
+}
+
+.rot-option,
+.math-option {
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
+  color: var(--text-color);
+  cursor: pointer;
+  padding: 0.45rem 0.5rem;
+  text-align: left;
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.rot-option:hover,
+.math-option:hover {
+  transform: translateY(-1px);
+}
+
+.rot-option.correct,
+.math-option.correct {
+  border-color: #2d9f67;
+  background: rgba(45, 159, 103, 0.18);
+}
+
+.rot-option.wrong,
+.math-option.wrong {
+  border-color: #c45151;
+  background: rgba(196, 81, 81, 0.18);
+}
+
+.speed-option:disabled,
+.rot-option:disabled,
+.math-option:disabled {
+  cursor: default;
+  transform: none;
+  opacity: 0.9;
 }
 
 .progress-grid {
@@ -699,5 +799,14 @@
 
   .quiz-option {
     padding: 0.62rem 0.62rem;
+  }
+
+  .speed-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .rot-options,
+  .math-options {
+    grid-template-columns: 1fr;
   }
 }
