@@ -537,6 +537,247 @@
       height: auto;
     }
 
+    .home-mission {
+      margin-top: 1.55rem;
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      background: var(--card-bg);
+      padding: 1rem;
+    }
+
+    .home-mission-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.86rem;
+      margin-top: 0.78rem;
+    }
+
+    .mission-card {
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      background:
+        radial-gradient(circle at 90% -10%, rgba(68, 124, 196, 0.22), transparent 36%),
+        linear-gradient(155deg, color-mix(in oklab, var(--card-bg) 84%, #13284b 16%), var(--card-bg));
+      padding: 0.9rem;
+      box-shadow: 0 10px 22px rgba(0, 0, 0, 0.08);
+    }
+
+    .mission-card h3 {
+      margin: 0 0 0.38rem;
+      font-size: 1.04rem;
+      line-height: 1.34;
+    }
+
+    .mission-card > p {
+      margin: 0;
+      font-size: 0.91rem;
+      line-height: 1.55;
+      opacity: 0.9;
+    }
+
+    .iss-visual {
+      margin-top: 0.7rem;
+      border: 1px solid color-mix(in oklab, var(--border-color) 75%, #6ca4ff 25%);
+      border-radius: 10px;
+      background: linear-gradient(180deg, #041225 0%, #091b33 100%);
+      overflow: hidden;
+    }
+
+    #iss-map {
+      width: 100%;
+      height: 210px;
+      display: block;
+    }
+
+    .iss-stats {
+      margin-top: 0.68rem;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.45rem;
+    }
+
+    .iss-stats p {
+      margin: 0;
+      padding: 0.46rem 0.52rem;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background: color-mix(in oklab, var(--bg-color) 88%, transparent);
+      display: flex;
+      justify-content: space-between;
+      gap: 0.42rem;
+      font-size: 0.83rem;
+      line-height: 1.35;
+    }
+
+    .iss-stats span {
+      opacity: 0.82;
+    }
+
+    .iss-stats strong {
+      font-weight: 650;
+    }
+
+    .iss-pass-row {
+      margin-top: 0.58rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.55rem;
+      font-size: 0.82rem;
+    }
+
+    .iss-pass-status {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid var(--border-color);
+      border-radius: 999px;
+      padding: 0.22rem 0.55rem;
+      background: color-mix(in oklab, var(--bg-color) 90%, #081934 10%);
+    }
+
+    .iss-pass-link {
+      text-decoration: none;
+      border-bottom: 1px dashed color-mix(in oklab, var(--accent-color) 70%, transparent);
+      color: var(--accent-color);
+      font-weight: 600;
+    }
+
+    .iss-pass-link:hover {
+      text-decoration: none;
+      border-bottom-style: solid;
+    }
+
+    .roadmap-wrap {
+      margin-top: 0.68rem;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.68rem;
+    }
+
+    .astronaut-step-list {
+      display: grid;
+      gap: 0.45rem;
+    }
+
+    .astronaut-step {
+      width: 100%;
+      text-align: left;
+      border: 1px solid var(--border-color);
+      background: color-mix(in oklab, var(--bg-color) 92%, #102343 8%);
+      border-radius: 10px;
+      padding: 0.48rem 0.56rem;
+      cursor: pointer;
+      transition: border-color 0.24s ease, transform 0.24s ease, box-shadow 0.24s ease;
+    }
+
+    .astronaut-step:hover {
+      transform: translateY(-1px);
+      border-color: color-mix(in oklab, var(--accent-color) 40%, var(--border-color));
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    .astronaut-step.is-active {
+      border-color: color-mix(in oklab, var(--accent-color) 55%, var(--border-color));
+      box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent-color) 15%, transparent);
+    }
+
+    .astronaut-step small {
+      display: block;
+      font-size: 0.72rem;
+      opacity: 0.8;
+      margin-bottom: 0.14rem;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    .astronaut-step strong {
+      display: block;
+      font-size: 0.9rem;
+      line-height: 1.4;
+      color: var(--text-color);
+    }
+
+    .astronaut-detail {
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 0.66rem 0.7rem;
+      background: color-mix(in oklab, var(--bg-color) 90%, #102447 10%);
+      min-height: 110px;
+    }
+
+    .astronaut-detail h4 {
+      margin: 0 0 0.28rem;
+      font-size: 0.97rem;
+      line-height: 1.35;
+    }
+
+    .astronaut-detail p {
+      margin: 0;
+      font-size: 0.9rem;
+      line-height: 1.56;
+      opacity: 0.92;
+    }
+
+    .astronaut-detail a {
+      color: var(--accent-color);
+      text-decoration: none;
+      border-bottom: 1px dashed color-mix(in oklab, var(--accent-color) 70%, transparent);
+    }
+
+    .astronaut-detail a:hover {
+      text-decoration: none;
+      border-bottom-style: solid;
+    }
+
+    .apod-frame {
+      margin-top: 0.68rem;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      overflow: hidden;
+      background: #06162d;
+    }
+
+    .apod-frame img {
+      width: 100%;
+      height: 210px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .apod-caption {
+      padding: 0.45rem 0.55rem;
+      font-size: 0.78rem;
+      line-height: 1.35;
+      opacity: 0.85;
+      border-top: 1px solid color-mix(in oklab, var(--border-color) 78%, #4f6f96 22%);
+      background: color-mix(in oklab, var(--bg-color) 84%, #0a1e3a 16%);
+    }
+
+    .apod-meta {
+      margin: 0.62rem 0 0;
+      font-size: 0.91rem;
+      line-height: 1.5;
+    }
+
+    .apod-link {
+      margin-top: 0.58rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.28rem;
+      border: 1px solid var(--border-color);
+      border-radius: 999px;
+      padding: 0.28rem 0.62rem;
+      text-decoration: none;
+      color: var(--text-color);
+      font-size: 0.83rem;
+      background: color-mix(in oklab, var(--bg-color) 88%, #10294d 12%);
+    }
+
+    .apod-link:hover {
+      text-decoration: none;
+      border-color: color-mix(in oklab, var(--accent-color) 45%, var(--border-color));
+    }
+
     @media (min-width: 960px) {
       .home-hero {
         grid-template-columns: 1.4fr 1fr;
@@ -545,6 +786,10 @@
 
       .home-project-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .home-mission-grid {
+        grid-template-columns: 1.3fr 1fr 1fr;
       }
     }
 
@@ -555,6 +800,10 @@
 
       .timeline-year {
         left: -2.72rem;
+      }
+
+      .iss-stats {
+        grid-template-columns: 1fr;
       }
     }
   </style>
@@ -831,6 +1080,73 @@
           </details>
         </div>
       </section>
+
+      <section class="home-mission" aria-labelledby="mission-title">
+        <div class="home-section-head">
+          <h2 id="mission-title">Mission Control and Astronaut Journey</h2>
+          <p class="home-section-note">Live orbital context, long-term astronaut pathway, and a weekly space image feed.</p>
+        </div>
+
+        <div class="home-mission-grid">
+          <article class="mission-card" aria-labelledby="iss-live-title">
+            <h3 id="iss-live-title">ISS Live Mission Control</h3>
+            <p>Real-time ISS telemetry with current orbit state and Boulder pass forecasting from public APIs.</p>
+            <div class="iss-visual">
+              <canvas id="iss-map" width="960" height="420" role="img" aria-label="Map showing current ISS and Boulder positions"></canvas>
+            </div>
+            <div class="iss-stats" aria-live="polite">
+              <p><span>Latitude</span><strong id="iss-lat">--</strong></p>
+              <p><span>Longitude</span><strong id="iss-lon">--</strong></p>
+              <p><span>Altitude</span><strong id="iss-alt">--</strong></p>
+              <p><span>Velocity</span><strong id="iss-vel">--</strong></p>
+            </div>
+            <div class="iss-pass-row">
+              <span class="iss-pass-status" id="iss-pass-status">Next Boulder pass: loading...</span>
+              <a class="iss-pass-link" href="https://spotthestation.nasa.gov/signup.cfm" target="_blank" rel="noopener">Official alerts</a>
+            </div>
+          </article>
+
+          <article class="mission-card" aria-labelledby="pathway-title">
+            <h3 id="pathway-title">Astronaut Pathway</h3>
+            <p>An interactive roadmap from autonomous-space research to future human spaceflight mission operations.</p>
+            <div class="roadmap-wrap">
+              <div class="astronaut-step-list" role="tablist" aria-label="Astronaut pathway steps">
+                <button class="astronaut-step is-active" type="button" data-step="0" aria-selected="true">
+                  <small>Current</small>
+                  <strong>Autonomous Space Ops and RL at AVS Lab</strong>
+                </button>
+                <button class="astronaut-step" type="button" data-step="1" aria-selected="false">
+                  <small>Near Term</small>
+                  <strong>Proximity Ops, GNC Safety, and Flight Dynamics</strong>
+                </button>
+                <button class="astronaut-step" type="button" data-step="2" aria-selected="false">
+                  <small>Mid Term</small>
+                  <strong>Mission Operations and Human-Rated System Work</strong>
+                </button>
+                <button class="astronaut-step" type="button" data-step="3" aria-selected="false">
+                  <small>Long Term</small>
+                  <strong>Astronaut Candidate Readiness and Mission Leadership</strong>
+                </button>
+              </div>
+              <div class="astronaut-detail" id="astronaut-detail" aria-live="polite"></div>
+            </div>
+          </article>
+
+          <article class="mission-card" aria-labelledby="apod-title-heading">
+            <h3 id="apod-title-heading">Space Image of the Week</h3>
+            <p>Automatically refreshed from NASA APOD, with a local fallback visual when APIs are unavailable.</p>
+            <figure class="apod-frame">
+              <img id="apod-image" src="images/research-hero-space.jpg" alt="Space image of the week"/>
+              <figcaption class="apod-caption" id="apod-credit">Loading NASA APOD...</figcaption>
+            </figure>
+            <p class="apod-meta" id="apod-meta"><strong>Loading title...</strong></p>
+            <a class="apod-link" id="apod-link" href="https://apod.nasa.gov/apod/astropix.html" target="_blank" rel="noopener">
+              <iconify-icon icon="mdi:open-in-new"></iconify-icon>
+              View on NASA APOD
+            </a>
+          </article>
+        </div>
+      </section>
     </main>
 
     <footer>
@@ -873,6 +1189,273 @@
       items.forEach(function (item) {
         observer.observe(item);
       });
+    })();
+
+    (function () {
+      var canvas = document.getElementById("iss-map");
+      if (!canvas) {
+        return;
+      }
+
+      var ctx = canvas.getContext("2d");
+      var boulder = { lat: 40.015, lon: -105.2705 };
+      var statusEl = document.getElementById("iss-pass-status");
+      var latEl = document.getElementById("iss-lat");
+      var lonEl = document.getElementById("iss-lon");
+      var altEl = document.getElementById("iss-alt");
+      var velEl = document.getElementById("iss-vel");
+
+      function wrapLon(lon) {
+        var wrapped = lon;
+        while (wrapped > 180) wrapped -= 360;
+        while (wrapped < -180) wrapped += 360;
+        return wrapped;
+      }
+
+      function toXY(lat, lon, width, height) {
+        return {
+          x: ((wrapLon(lon) + 180) / 360) * width,
+          y: ((90 - lat) / 180) * height
+        };
+      }
+
+      function resizeCanvas() {
+        var dpr = window.devicePixelRatio || 1;
+        var cssWidth = canvas.clientWidth;
+        var cssHeight = canvas.clientHeight;
+        canvas.width = Math.max(1, Math.floor(cssWidth * dpr));
+        canvas.height = Math.max(1, Math.floor(cssHeight * dpr));
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      function drawBackground() {
+        var w = canvas.clientWidth;
+        var h = canvas.clientHeight;
+
+        var g = ctx.createLinearGradient(0, 0, 0, h);
+        g.addColorStop(0, "#031020");
+        g.addColorStop(1, "#0a1f37");
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, w, h);
+
+        ctx.strokeStyle = "rgba(170, 210, 255, 0.16)";
+        ctx.lineWidth = 1;
+        for (var lat = -60; lat <= 60; lat += 30) {
+          var y = toXY(lat, 0, w, h).y;
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(w, y);
+          ctx.stroke();
+        }
+        for (var lon = -150; lon <= 150; lon += 30) {
+          var x = toXY(0, lon, w, h).x;
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, h);
+          ctx.stroke();
+        }
+      }
+
+      function drawMarker(lat, lon, color, radius) {
+        var w = canvas.clientWidth;
+        var h = canvas.clientHeight;
+        var point = toXY(lat, lon, w, h);
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, radius + 3, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+        return point;
+      }
+
+      function drawScene(iss) {
+        drawBackground();
+        var boulderPoint = drawMarker(boulder.lat, boulder.lon, "#ffd35d", 4);
+        var issPoint = drawMarker(iss.latitude, iss.longitude, "#63d8ff", 5);
+
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.28)";
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(boulderPoint.x, boulderPoint.y);
+        ctx.lineTo(issPoint.x, issPoint.y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.font = "12px system-ui, sans-serif";
+        ctx.fillStyle = "rgba(255,255,255,0.86)";
+        ctx.fillText("Boulder", boulderPoint.x + 8, boulderPoint.y - 6);
+        ctx.fillText("ISS", issPoint.x + 8, issPoint.y - 6);
+      }
+
+      async function fetchIss() {
+        var res = await fetch("https://api.wheretheiss.at/v1/satellites/25544", { cache: "no-store" });
+        if (!res.ok) {
+          throw new Error("ISS API unavailable");
+        }
+        return res.json();
+      }
+
+      async function fetchBoulderPass() {
+        var rawUrl = "http://api.open-notify.org/iss-pass.json?lat=40.015&lon=-105.2705&n=1";
+        var proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(rawUrl);
+        var res = await fetch(proxyUrl, { cache: "no-store" });
+        if (!res.ok) {
+          throw new Error("pass API unavailable");
+        }
+        var data = await res.json();
+        if (!data.response || !data.response.length) {
+          throw new Error("no pass data");
+        }
+        return data.response[0];
+      }
+
+      function formatUtcTimestamp(epochSeconds) {
+        var date = new Date(epochSeconds * 1000);
+        return date.toLocaleString([], {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+          timeZoneName: "short"
+        });
+      }
+
+      async function updateIss() {
+        try {
+          var iss = await fetchIss();
+          latEl.textContent = iss.latitude.toFixed(2) + " deg";
+          lonEl.textContent = iss.longitude.toFixed(2) + " deg";
+          altEl.textContent = iss.altitude.toFixed(1) + " km";
+          velEl.textContent = iss.velocity.toFixed(0) + " km/h";
+          drawScene(iss);
+        } catch (error) {
+          latEl.textContent = "Unavailable";
+          lonEl.textContent = "Unavailable";
+          altEl.textContent = "Unavailable";
+          velEl.textContent = "Unavailable";
+          drawBackground();
+        }
+      }
+
+      async function updatePassStatus() {
+        try {
+          var pass = await fetchBoulderPass();
+          var passTime = formatUtcTimestamp(pass.risetime);
+          var durationMin = Math.round(pass.duration / 60);
+          statusEl.textContent = "Next Boulder pass: " + passTime + " (~" + durationMin + " min)";
+        } catch (error) {
+          statusEl.textContent = "Next Boulder pass: use official alerts link.";
+        }
+      }
+
+      resizeCanvas();
+      drawBackground();
+      updateIss();
+      updatePassStatus();
+      window.addEventListener("resize", function () {
+        resizeCanvas();
+        updateIss();
+      });
+      setInterval(updateIss, 12000);
+      setInterval(updatePassStatus, 15 * 60 * 1000);
+    })();
+
+    (function () {
+      var stepButtons = Array.prototype.slice.call(document.querySelectorAll(".astronaut-step"));
+      var detail = document.getElementById("astronaut-detail");
+      if (!stepButtons.length || !detail) {
+        return;
+      }
+
+      var steps = [
+        {
+          title: "Current Focus: AVS Lab PhD Research",
+          body: "Building autonomous scheduling and inspection policies for space-to-space surveillance missions with strict power, illumination, pointing, and onboard resource constraints."
+        },
+        {
+          title: "Near-Term Buildout: Proximity Operations and GNC Safety",
+          body: "Expanding into flight-ready safety methods, relative navigation, and docking/inspection envelopes informed by prior Infinite Orbits and LASP mission analysis experience."
+        },
+        {
+          title: "Mid-Term Goal: Human Spaceflight Operations",
+          body: "Targeting mission-operations roles that connect autonomy, astrodynamics, and human-rated spacecraft procedures in LEO and cis-lunar contexts."
+        },
+        {
+          title: "Long-Term Goal: Astronaut Candidate Readiness",
+          body: "Aligning technical depth, mission execution, and systems leadership toward astronaut selection pathways. See NASA baseline criteria: <a href=\"https://www.nasa.gov/humans-in-space/astronauts/become-an-astronaut/\" target=\"_blank\" rel=\"noopener\">Become an Astronaut</a>."
+        }
+      ];
+
+      function selectStep(index) {
+        stepButtons.forEach(function (btn, idx) {
+          var active = idx === index;
+          btn.classList.toggle("is-active", active);
+          btn.setAttribute("aria-selected", active ? "true" : "false");
+        });
+        detail.innerHTML = "<h4>" + steps[index].title + "</h4><p>" + steps[index].body + "</p>";
+      }
+
+      stepButtons.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var idx = Number(btn.getAttribute("data-step") || 0);
+          selectStep(Math.min(Math.max(idx, 0), steps.length - 1));
+        });
+      });
+
+      selectStep(0);
+    })();
+
+    (function () {
+      var apodImage = document.getElementById("apod-image");
+      var apodCredit = document.getElementById("apod-credit");
+      var apodMeta = document.getElementById("apod-meta");
+      var apodLink = document.getElementById("apod-link");
+      if (!apodImage || !apodCredit || !apodMeta || !apodLink) {
+        return;
+      }
+
+      function mondayDateISO() {
+        var now = new Date();
+        var day = now.getUTCDay();
+        var offset = day === 0 ? 6 : day - 1;
+        var monday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - offset));
+        return monday.toISOString().slice(0, 10);
+      }
+
+      async function loadApod() {
+        var url = "https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY&thumbs=true&date=" + mondayDateISO();
+        try {
+          var res = await fetch(url, { cache: "no-store" });
+          if (!res.ok) {
+            throw new Error("APOD API unavailable");
+          }
+          var data = await res.json();
+
+          var mediaUrl = data.media_type === "video" ? data.thumbnail_url : data.url;
+          if (!mediaUrl) {
+            throw new Error("APOD media unavailable");
+          }
+
+          apodImage.src = mediaUrl;
+          apodImage.alt = data.title ? data.title : "NASA Astronomy Picture of the Day";
+          apodMeta.textContent = (data.title || "NASA APOD") + " - " +
+            (data.explanation ? data.explanation.slice(0, 165) + "..." : "Astronomy Picture of the Day from NASA.");
+          apodCredit.textContent = "NASA APOD - " + (data.date || "current week") + (data.copyright ? " - " + data.copyright : "");
+          apodLink.href = data.hdurl || data.url || "https://apod.nasa.gov/apod/astropix.html";
+        } catch (error) {
+          apodImage.src = "images/research-hero-space.jpg";
+          apodImage.alt = "Space-themed fallback image";
+          apodMeta.textContent = "NASA APOD feed unavailable right now. Open the APOD archive to browse current and recent astronomy images.";
+          apodCredit.textContent = "Fallback visual from this website.";
+          apodLink.href = "https://apod.nasa.gov/apod/astropix.html";
+        }
+      }
+
+      loadApod();
     })();
   </script>
 </body>
