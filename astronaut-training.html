@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Astronaut Training | Daniel Huterer Prats</title>
+  <meta name="description" content="Private astronaut training databank with flashcards, quiz modes, cognitive drills, and progress tracking."/>
+  <meta name="robots" content="noindex,nofollow"/>
+  <meta property="og:type" content="website"/>
+  <meta property="og:site_name" content="Daniel Huterer Prats"/>
+  <meta property="og:title" content="Astronaut Training | Daniel Huterer Prats"/>
+  <meta property="og:description" content="Flashcards and daily drills for astronaut-relevant technical and cognitive preparation."/>
+  <meta property="og:url" content="https://dhutererprats.github.io/astronaut-training.html"/>
+  <meta property="og:image" content="https://dhutererprats.github.io/images/research-hero-space.jpg"/>
+  <meta name="twitter:card" content="summary_large_image"/>
+  <meta name="twitter:title" content="Astronaut Training | Daniel Huterer Prats"/>
+  <meta name="twitter:description" content="Flashcards, quizzes, and cognitive drills for astronaut prep."/>
+  <meta name="twitter:image" content="https://dhutererprats.github.io/images/research-hero-space.jpg"/>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="astronaut-training.css" />
+  <script src="theme-toggle.js" defer></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <script src="astronaut-training-data.js" defer></script>
+  <script src="astronaut-training.js" defer></script>
+  <link rel="icon" href="icons/astronaut.ico" type="image/x-icon"/>
+  <link rel="canonical" href="https://dhutererprats.github.io/astronaut-training.html"/>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Astronaut Training | Daniel Huterer Prats",
+    "url": "https://dhutererprats.github.io/astronaut-training.html",
+    "description": "Astronaut-focused training flashcards, quizzes, and cognitive drills.",
+    "isPartOf": {
+      "@type": "WebSite",
+      "name": "Daniel Huterer Prats",
+      "url": "https://dhutererprats.github.io/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <nav class="site-nav" aria-label="Primary">
+    <a href="index.html">Home</a>
+    <a href="research.html">Research</a>
+    <a href="about.html">About Me</a>
+    <a href="publications.html">Publications</a>
+    <a href="astronaut-training.html" class="active" aria-current="page">Astronaut Training</a>
+    <button class="theme-toggle" aria-label="Toggle theme">
+      <span class="theme-toggle-icon" aria-hidden="true">◑</span>
+      <span class="theme-toggle-text">Dark mode</span>
+    </button>
+  </nav>
+
+  <div class="homepage-container">
+    <main class="astro-main">
+      <header class="astro-hero">
+        <h1>Astronaut Training Databank</h1>
+        <p>
+          Daily micro-training for astronaut-relevant technical and cognitive skills: flashcards, multi-mode quizzes, and memory-focused drills.
+          This version keeps all progress locally on your device for private personal tracking.
+        </p>
+        <div class="astro-pill-row" aria-label="Training focus">
+          <span class="astro-pill"><iconify-icon icon="mdi:orbit"></iconify-icon>Astrodynamics</span>
+          <span class="astro-pill"><iconify-icon icon="mdi:brain"></iconify-icon>Cognitive performance</span>
+          <span class="astro-pill"><iconify-icon icon="mdi:heart-pulse"></iconify-icon>Space medicine</span>
+          <span class="astro-pill"><iconify-icon icon="mdi:calculator-variant"></iconify-icon>Engineering fundamentals</span>
+          <span class="astro-pill"><iconify-icon icon="mdi:clipboard-check-outline"></iconify-icon>Mission ops</span>
+        </div>
+      </header>
+
+      <section id="training-gate" class="astro-gate" aria-labelledby="gate-title">
+        <h2 id="gate-title">Access Lock</h2>
+        <p>
+          Enter your passcode to access this training tab. This is a client-side gate for privacy convenience, not strong security.
+        </p>
+        <form class="astro-gate-form" id="gate-form" autocomplete="off">
+          <label for="gate-password">Passcode</label>
+          <input id="gate-password" name="password" type="password" placeholder="Enter passcode" required />
+          <div class="cog-row">
+            <button type="submit" class="astro-btn primary">Unlock</button>
+            <button type="button" class="astro-btn" id="gate-clear">Clear</button>
+          </div>
+          <div id="gate-status" class="astro-status" role="status" aria-live="polite"></div>
+        </form>
+      </section>
+
+      <section id="training-app" hidden aria-label="Astronaut training application">
+        <div class="astro-topbar" aria-label="Training profile stats">
+          <div class="astro-metric">
+            <span class="astro-metric-label">Level</span>
+            <span id="profile-level" class="astro-metric-value">Lv. 1</span>
+          </div>
+          <div class="astro-metric">
+            <span class="astro-metric-label">XP</span>
+            <span id="profile-xp" class="astro-metric-value">0</span>
+          </div>
+          <div class="astro-metric">
+            <span class="astro-metric-label">Current Streak</span>
+            <span id="profile-streak" class="astro-metric-value">0 days</span>
+          </div>
+          <div class="astro-metric">
+            <span class="astro-metric-label">Quizzes Completed</span>
+            <span id="profile-quiz-count" class="astro-metric-value">0</span>
+          </div>
+        </div>
+
+        <div class="astro-tabs" role="tablist" aria-label="Training panels">
+          <button class="astro-tab" role="tab" aria-selected="true" aria-controls="panel-flashcards" id="tab-flashcards">Flashcards</button>
+          <button class="astro-tab" role="tab" aria-selected="false" aria-controls="panel-quiz" id="tab-quiz">Quiz Mode</button>
+          <button class="astro-tab" role="tab" aria-selected="false" aria-controls="panel-cognitive" id="tab-cognitive">Cognitive Drills</button>
+          <button class="astro-tab" role="tab" aria-selected="false" aria-controls="panel-progress" id="tab-progress">Progress</button>
+          <button class="astro-tab" role="tab" aria-selected="false" aria-controls="panel-sources" id="tab-sources">Sources</button>
+        </div>
+
+        <section class="astro-panel" id="panel-flashcards" role="tabpanel" aria-labelledby="tab-flashcards">
+          <div class="panel-head">
+            <h2>Topic Folders & Flashcards</h2>
+            <p>Tap a folder, then flip through cards. Click the card to reveal the answer.</p>
+          </div>
+
+          <div id="topic-folders" class="astro-folder-grid" aria-label="Topic folders"></div>
+
+          <div class="flash-layout">
+            <div class="flash-main">
+              <div class="flash-card-wrap">
+                <article id="flash-card" class="flash-card" tabindex="0" aria-live="polite">
+                  <div class="flash-face front">
+                    <h3>Prompt</h3>
+                    <p id="flash-q">Select a topic to begin.</p>
+                  </div>
+                  <div class="flash-face back">
+                    <h3>Answer</h3>
+                    <p id="flash-a">Answer will appear here.</p>
+                  </div>
+                </article>
+              </div>
+              <div class="flash-actions" style="margin-top:0.65rem;">
+                <button id="flash-prev" class="astro-btn" type="button">Previous</button>
+                <button id="flash-flip" class="astro-btn" type="button">Flip Card</button>
+                <button id="flash-next" class="astro-btn primary" type="button">Next</button>
+                <button id="flash-random" class="astro-btn" type="button">Random Card</button>
+              </div>
+              <p id="flash-meta" class="flash-meta">No cards loaded yet.</p>
+            </div>
+
+            <aside class="flash-side">
+              <div class="flash-controls">
+                <label for="flash-topic-select">
+                  Topic
+                  <select id="flash-topic-select"></select>
+                </label>
+                <label for="flash-order-select">
+                  Card order
+                  <select id="flash-order-select">
+                    <option value="series">In order</option>
+                    <option value="random">Randomized</option>
+                  </select>
+                </label>
+              </div>
+              <p class="panel-note">
+                Default deck uses concept cards. Quiz mode automatically builds multiple-choice options from the full databank.
+              </p>
+            </aside>
+          </div>
+        </section>
+
+        <section class="astro-panel" id="panel-quiz" role="tabpanel" aria-labelledby="tab-quiz" hidden>
+          <div class="panel-head">
+            <h2>Quiz Mode</h2>
+            <p>Default is 20 questions. Results are stored locally and fed into your progress chart.</p>
+          </div>
+
+          <form id="quiz-setup" class="quiz-setup">
+            <label for="quiz-mode">
+              Question mode
+              <select id="quiz-mode" name="mode">
+                <option value="random-all">Random from all topics</option>
+                <option value="random-topic">Random within one topic</option>
+                <option value="series-topic">Series within one topic</option>
+              </select>
+            </label>
+            <label for="quiz-topic">
+              Topic
+              <select id="quiz-topic" name="topic"></select>
+            </label>
+            <label for="quiz-count">
+              Number of questions
+              <input id="quiz-count" type="number" min="5" max="100" step="1" value="20" />
+            </label>
+            <div class="cog-row" style="align-self:end;">
+              <button id="quiz-start" class="astro-btn primary" type="button">Start Quiz</button>
+            </div>
+          </form>
+
+          <div id="quiz-live" hidden>
+            <div class="quiz-question">
+              <h3 id="quiz-question-title">Question</h3>
+              <p id="quiz-question-text"></p>
+              <div id="quiz-options" class="quiz-options"></div>
+            </div>
+            <div class="quiz-footer">
+              <span id="quiz-progress" class="quiz-progress">Question 1 / 20</span>
+              <div class="cog-row">
+                <button id="quiz-submit" class="astro-btn" type="button">Submit</button>
+                <button id="quiz-next" class="astro-btn primary" type="button" disabled>Next</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="quiz-result" class="quiz-result" hidden>
+            <h3 id="quiz-score-title">Score</h3>
+            <p id="quiz-score-text"></p>
+            <div class="cog-row" style="margin-bottom:0.5rem;">
+              <button id="quiz-restart" class="astro-btn primary" type="button">Start Another Quiz</button>
+            </div>
+            <ol id="quiz-review" class="quiz-review"></ol>
+          </div>
+        </section>
+
+        <section class="astro-panel" id="panel-cognitive" role="tabpanel" aria-labelledby="tab-cognitive" hidden>
+          <div class="panel-head">
+            <h2>Cognitive Drills</h2>
+            <p>Quick daily drills inspired by common selection-style memory and reaction tasks.</p>
+          </div>
+
+          <div class="cognitive-grid">
+            <article class="cog-card" id="digit-card">
+              <h3>Digit Span (Short-Term Memory)</h3>
+              <p>Memorize the sequence, then type it from memory.</p>
+              <div id="digit-sequence" class="cog-sequence" aria-live="polite">-</div>
+              <div class="cog-row">
+                <input id="digit-input" class="cog-input" type="text" inputmode="numeric" placeholder="Type sequence" />
+                <button id="digit-start" class="astro-btn" type="button">New Sequence</button>
+                <button id="digit-check" class="astro-btn primary" type="button">Check</button>
+              </div>
+              <p id="digit-status" class="astro-status"></p>
+            </article>
+
+            <article class="cog-card" id="visual-card">
+              <h3>Visual Pattern Memory</h3>
+              <p>Memorize highlighted tiles, then reproduce the pattern.</p>
+              <div id="memory-grid" class="memory-grid" role="group" aria-label="Memory pattern grid"></div>
+              <div class="cog-row">
+                <button id="memory-show" class="astro-btn" type="button">Show Pattern</button>
+                <button id="memory-submit" class="astro-btn primary" type="button">Submit Pattern</button>
+                <button id="memory-reset" class="astro-btn" type="button">Reset Picks</button>
+              </div>
+              <p id="memory-status" class="astro-status"></p>
+            </article>
+
+            <article class="cog-card" id="reaction-card">
+              <h3>Reaction Time</h3>
+              <p>Click only when the panel turns green. Early clicks count as false starts.</p>
+              <div class="reaction-zone">
+                <button id="reaction-target" class="reaction-target" type="button">Press Start</button>
+              </div>
+              <div class="cog-row" style="margin-top:0.5rem;">
+                <button id="reaction-start" class="astro-btn" type="button">Start Trial</button>
+                <button id="reaction-reset" class="astro-btn" type="button">Reset</button>
+              </div>
+              <p id="reaction-status" class="astro-status"></p>
+            </article>
+          </div>
+        </section>
+
+        <section class="astro-panel" id="panel-progress" role="tabpanel" aria-labelledby="tab-progress" hidden>
+          <div class="panel-head">
+            <h2>Progress Dashboard</h2>
+            <p>Tracks quiz performance and consistency over time from local storage.</p>
+          </div>
+
+          <div class="progress-grid">
+            <div class="progress-card">
+              <span class="progress-label">Average Score</span>
+              <span id="progress-average" class="progress-value">0%</span>
+            </div>
+            <div class="progress-card">
+              <span class="progress-label">Best Score</span>
+              <span id="progress-best" class="progress-value">0%</span>
+            </div>
+            <div class="progress-card">
+              <span class="progress-label">Total Questions Answered</span>
+              <span id="progress-questions" class="progress-value">0</span>
+            </div>
+            <div class="progress-card">
+              <span class="progress-label">Last Practice</span>
+              <span id="progress-last" class="progress-value">Never</span>
+            </div>
+            <div class="progress-card">
+              <span class="progress-label">Cognitive Sessions</span>
+              <span id="progress-cognitive-count" class="progress-value">0</span>
+            </div>
+            <div class="progress-card">
+              <span class="progress-label">Avg Cognitive Score</span>
+              <span id="progress-cognitive-average" class="progress-value">0%</span>
+            </div>
+          </div>
+
+          <div class="progress-chart-wrap">
+            <canvas id="progress-chart" width="860" height="280" aria-label="Score trend chart"></canvas>
+          </div>
+          <p class="panel-note">Chart tracks quiz scores (blue) and cognitive drill scores (purple).</p>
+
+          <div style="margin-top:0.65rem;">
+            <h3 style="margin:0 0 0.35rem;">Badges</h3>
+            <div id="badge-row" class="badge-row"></div>
+          </div>
+
+          <div class="history-table-wrap" style="margin-top:0.6rem;">
+            <table class="history-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Mode</th>
+                  <th>Topic</th>
+                  <th>Score</th>
+                  <th>Result</th>
+                </tr>
+              </thead>
+              <tbody id="history-body"></tbody>
+            </table>
+          </div>
+
+          <div class="cog-row" style="margin-top:0.7rem;">
+            <button id="export-history" class="astro-btn" type="button">Export Progress JSON</button>
+            <button id="clear-history" class="astro-btn danger" type="button">Clear Local Progress</button>
+          </div>
+        </section>
+
+        <section class="astro-panel" id="panel-sources" role="tabpanel" aria-labelledby="tab-sources" hidden>
+          <div class="panel-head">
+            <h2>Source References</h2>
+            <p>Core requirements/training references used to shape this databank.</p>
+          </div>
+          <ul id="sources-list" class="sources-list"></ul>
+          <p class="panel-note">
+            Email report integration is intentionally turned off in this static-site version.
+            Progress is stored locally in your browser and can be exported via JSON from the Progress tab.
+          </p>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <footer>
+    <p>&copy; <span id="year"></span> Daniel Huterer Prats</p>
+  </footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

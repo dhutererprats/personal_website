@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
+Disallow: /astronaut-training.html
 
 Sitemap: https://dhutererprats.github.io/sitemap.xml
