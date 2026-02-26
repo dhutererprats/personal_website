@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="520" viewBox="0 0 900 520" role="img" aria-labelledby="title desc">
+  <title id="title">Orbital elements geometry</title>
+  <desc id="desc">Ellipse on inclined plane with labels for RAAN, inclination and argument of periapsis.</desc>
+  <rect width="900" height="520" fill="#0f1d33"/>
+
+  <g transform="translate(450 285)">
+    <ellipse cx="0" cy="0" rx="310" ry="70" fill="none" stroke="#496d96" stroke-width="2" stroke-dasharray="8 8"/>
+    <ellipse cx="0" cy="-20" rx="250" ry="95" fill="none" stroke="#8ad3ff" stroke-width="3"/>
+
+    <circle cx="-90" cy="-20" r="10" fill="#f7d154"/>
+    <text x="-122" y="-34" font-family="Arial, sans-serif" font-size="18" fill="#f7d154">Primary</text>
+
+    <circle cx="160" cy="-20" r="7" fill="#ff6b6b"/>
+    <text x="172" y="-24" font-family="Arial, sans-serif" font-size="16" fill="#ff6b6b">Periapsis</text>
+
+    <line x1="-90" y1="-20" x2="160" y2="-20" stroke="#ff9f5a" stroke-width="2.5"/>
+    <text x="15" y="-30" font-family="Arial, sans-serif" font-size="16" fill="#ff9f5a">Line of apsides</text>
+
+    <line x1="-320" y1="0" x2="320" y2="0" stroke="#6cf3c2" stroke-width="2"/>
+    <text x="220" y="-8" font-family="Arial, sans-serif" font-size="16" fill="#6cf3c2">Node line</text>
+
+    <path d="M90 5 A55 55 0 0 0 145 -40" fill="none" stroke="#ffd166" stroke-width="3"/>
+    <text x="148" y="-45" font-family="Arial, sans-serif" font-size="16" fill="#ffd166">omega</text>
+
+    <path d="M-20 5 A72 72 0 0 0 25 -55" fill="none" stroke="#ff8ad8" stroke-width="3"/>
+    <text x="32" y="-64" font-family="Arial, sans-serif" font-size="16" fill="#ff8ad8">RAAN</text>
+
+    <path d="M-250 0 A58 58 0 0 1 -250 -58" fill="none" stroke="#b8f25b" stroke-width="3"/>
+    <text x="-276" y="-66" font-family="Arial, sans-serif" font-size="16" fill="#b8f25b">i</text>
+  </g>
+
+  <text x="450" y="48" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" fill="#dfeeff">Orbital geometry: inclination, RAAN, and argument of periapsis</text>
+</svg>

@@ -301,7 +301,7 @@
 
 .flash-card {
   width: 100%;
-  min-height: 210px;
+  min-height: 250px;
   position: relative;
   border-radius: 14px;
   border: 1px solid var(--border-color);
@@ -339,6 +339,22 @@
   margin: 0;
   line-height: 1.57;
   font-size: 1.05rem;
+}
+
+.flash-image-wrap {
+  margin: 0.35rem 0 0;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(44, 78, 122, 0.08);
+}
+
+.flash-image-wrap img {
+  display: block;
+  width: 100%;
+  max-height: 130px;
+  object-fit: contain;
+  background: rgba(14, 28, 49, 0.08);
 }
 
 .flash-face.back {
@@ -393,6 +409,23 @@
   margin: 0;
   line-height: 1.62;
   font-size: 1.02rem;
+}
+
+.quiz-image-wrap {
+  margin: 0.62rem 0 0;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  overflow: hidden;
+  max-width: 380px;
+  background: rgba(44, 78, 122, 0.08);
+}
+
+.quiz-image-wrap img {
+  display: block;
+  width: 100%;
+  max-height: 180px;
+  object-fit: contain;
+  background: rgba(14, 28, 49, 0.08);
 }
 
 .quiz-options {
@@ -499,6 +532,26 @@
   margin: 0.2rem 0 0.45rem;
   font-size: 0.86rem;
   opacity: 0.84;
+}
+
+.rms-speed-controls {
+  margin-bottom: 0.4rem;
+}
+
+.rms-speed-label {
+  display: grid;
+  gap: 0.22rem;
+  font-size: 0.84rem;
+  min-width: 145px;
+}
+
+.rms-speed-select {
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
+  color: var(--text-color);
+  padding: 0.34rem 0.42rem;
+  font: inherit;
 }
 
 .cog-sequence {
@@ -797,7 +850,7 @@
   }
 
   .flash-card {
-    min-height: 230px;
+    min-height: 260px;
   }
 
   .quiz-option {
@@ -811,6 +864,11 @@
 
   .cog-row .astro-btn,
   .cog-row .cog-input {
+    width: 100%;
+  }
+
+  .rms-speed-label,
+  .rms-speed-select {
     width: 100%;
   }
 

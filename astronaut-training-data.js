@@ -1,5 +1,5 @@
 window.ASTRO_TRAINING_DATA = {
-  version: "2026-02-25",
+  version: "2026-02-26",
   title: "Astronaut Training Databank",
   description: "Concept bank for astronaut-relevant technical, operational, and cognitive preparation.",
   sources: [
@@ -102,7 +102,9 @@ window.ASTRO_TRAINING_DATA = {
         { id: "elec-019", q: "What is ADC resolution?", a: "Smallest input step distinguishable; LSB size depends on full scale and bit depth." },
         { id: "elec-020", q: "What is a BJT transistor used for?", a: "As a current-controlled switch or amplifier." },
         { id: "elec-021", q: "What is a MOSFET commonly used for in power systems?", a: "Voltage-controlled switching with high efficiency." },
-        { id: "elec-022", q: "Why is grounding strategy important in avionics?", a: "It prevents noise coupling, ground loops, and measurement errors." }
+        { id: "elec-022", q: "Why is grounding strategy important in avionics?", a: "It prevents noise coupling, ground loops, and measurement errors." },
+        { id: "elec-023", q: "From the diagram, identify the field pattern shown around opposite charges.", a: "Electric dipole field lines: they originate at the positive charge and terminate at the negative charge.", image: "images/training/electric-dipole-field.svg", imageAlt: "Electric field lines between positive and negative charges" },
+        { id: "elec-024", q: "Using the right-hand-rule diagram, what is the magnetic-force direction for a positive charge with v to the right and B upward?", a: "Out of the page (+z direction), since F = q*(v x B).", image: "images/training/right-hand-rule-vxb.svg", imageAlt: "Right hand rule with velocity to right and magnetic field upward" }
       ]
     },
     {
@@ -200,7 +202,27 @@ window.ASTRO_TRAINING_DATA = {
         { id: "orb-027", q: "What is eclipse in orbital ops context?", a: "Spacecraft in planet shadow with no direct solar power input." },
         { id: "orb-028", q: "Why schedule downlink windows explicitly?", a: "Ground contact is intermittent and data latency affects mission utility." },
         { id: "orb-029", q: "What is conjunction assessment?", a: "Evaluation of collision risk with other tracked objects." },
-        { id: "orb-030", q: "What is covariance in orbit determination?", a: "Uncertainty matrix describing state estimation errors and correlations." }
+        { id: "orb-030", q: "What is covariance in orbit determination?", a: "Uncertainty matrix describing state estimation errors and correlations." },
+        { id: "orb-031", q: "Write the HCW radial equation.", a: "x_ddot - 2*n*y_dot - 3*n^2*x = 0 for relative motion in LVLH near-circular reference orbit." },
+        { id: "orb-032", q: "Write the HCW along-track equation.", a: "y_ddot + 2*n*x_dot = 0." },
+        { id: "orb-033", q: "Write the HCW cross-track equation.", a: "z_ddot + n^2*z = 0." },
+        { id: "orb-034", q: "When are HCW equations valid?", a: "Small relative distances and near-circular chief orbit with linearized two-body dynamics." },
+        { id: "orb-035", q: "In circular orbits, what is v2/v1 if r2 = 2*r1?", a: "v2/v1 = 1/sqrt(2), because v_c = sqrt(mu/r)." },
+        { id: "orb-036", q: "If semi-major axis doubles, what is T2/T1?", a: "T2/T1 = (2)^(3/2) about 2.828 from Kepler's third law." },
+        { id: "orb-037", q: "Transfer-orbit semi-major axis between circular radii r1 and r2?", a: "a_transfer = (r1 + r2)/2 for a Hohmann transfer ellipse." },
+        { id: "orb-038", q: "Hohmann transfer time-of-flight expression.", a: "t_transfer = pi*sqrt(a_transfer^3/mu)." },
+        { id: "orb-039", q: "Approximate plane-change cost formula at speed v and angle Delta i.", a: "Delta-v approx 2*v*sin(Delta i / 2)." },
+        { id: "orb-040", q: "Why do plane changes at apogee save propellant?", a: "Lower local speed at apogee reduces required Delta-v for same inclination change." },
+        { id: "orb-041", q: "What does Tsiolkovsky mass ratio m0/mf equal?", a: "m0/mf = exp(Delta-v / (Isp*g0))." },
+        { id: "orb-042", q: "What is Lambert's problem?", a: "Find transfer orbit connecting two position vectors in a specified time-of-flight." },
+        { id: "orb-043", q: "Define LVLH/Hill frame axes.", a: "x radial outward, z along orbit angular momentum, y completes right-handed frame roughly along-track." },
+        { id: "orb-044", q: "What is an equinoctial-element advantage?", a: "Reduces singularities at near-zero eccentricity or inclination compared with classical elements." },
+        { id: "orb-045", q: "Difference between impulsive and finite burns.", a: "Impulsive assumes instantaneous Delta-v; finite burns occur over time with gravity losses and steering effects." },
+        { id: "orb-046", q: "What is relative eccentricity vector used for?", a: "Characterizes shape/orientation differences in relative orbital geometry for formation flight." },
+        { id: "orb-047", q: "What is drift in unforced relative motion?", a: "Secular growth in along-track separation caused by small semi-major-axis mismatch." },
+        { id: "orb-048", q: "What is a state transition matrix (STM) in orbit dynamics?", a: "Linear mapping that propagates state perturbations from one time to another." },
+        { id: "orb-049", q: "What is the core trade in low-thrust trajectory design?", a: "Lower propellant usage but longer transfer time and stronger operational constraints." },
+        { id: "orb-050", q: "Identify the geometry in the diagram: which orbital angles are shown?", a: "Classical-element geometry highlighting inclination, RAAN, and argument of periapsis on an ellipse.", image: "images/training/orbit-elements-geometry.svg", imageAlt: "Diagram of orbital plane, equatorial plane, and angular elements" }
       ]
     },
     {

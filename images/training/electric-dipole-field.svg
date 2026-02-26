@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="520" viewBox="0 0 900 520" role="img" aria-labelledby="title desc">
+  <title id="title">Electric dipole field</title>
+  <desc id="desc">Field lines starting at positive charge and ending at negative charge.</desc>
+  <defs>
+    <marker id="arr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#2d5f9c"/>
+    </marker>
+  </defs>
+  <rect width="900" height="520" fill="#0f1f36"/>
+  <circle cx="260" cy="260" r="36" fill="#f25f5c"/>
+  <text x="260" y="272" text-anchor="middle" font-family="Arial, sans-serif" font-size="42" fill="#ffffff">+</text>
+  <circle cx="640" cy="260" r="36" fill="#4a90e2"/>
+  <text x="640" y="272" text-anchor="middle" font-family="Arial, sans-serif" font-size="42" fill="#ffffff">-</text>
+
+  <path d="M290 260 C360 220, 540 220, 610 260" fill="none" stroke="#7fc8ff" stroke-width="3" marker-end="url(#arr)"/>
+  <path d="M290 220 C380 150, 520 150, 610 220" fill="none" stroke="#7fc8ff" stroke-width="3" marker-end="url(#arr)"/>
+  <path d="M290 300 C380 370, 520 370, 610 300" fill="none" stroke="#7fc8ff" stroke-width="3" marker-end="url(#arr)"/>
+  <path d="M280 190 C360 80, 540 80, 620 190" fill="none" stroke="#7fc8ff" stroke-width="3" marker-end="url(#arr)"/>
+  <path d="M280 330 C360 440, 540 440, 620 330" fill="none" stroke="#7fc8ff" stroke-width="3" marker-end="url(#arr)"/>
+  <path d="M260 224 C210 210, 175 185, 150 150" fill="none" stroke="#7fc8ff" stroke-width="3" marker-end="url(#arr)"/>
+  <path d="M260 296 C210 310, 175 335, 150 370" fill="none" stroke="#7fc8ff" stroke-width="3" marker-end="url(#arr)"/>
+  <path d="M640 224 C690 210, 725 185, 750 150" fill="none" stroke="#7fc8ff" stroke-width="3" marker-end="url(#arr)"/>
+  <path d="M640 296 C690 310, 725 335, 750 370" fill="none" stroke="#7fc8ff" stroke-width="3" marker-end="url(#arr)"/>
+
+  <text x="450" y="58" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" fill="#d9ecff">Electric dipole field lines</text>
+</svg>

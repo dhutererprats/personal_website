@@ -129,6 +129,9 @@
                   <div class="flash-face front">
                     <h3>Prompt</h3>
                     <p id="flash-q">Select a topic to begin.</p>
+                    <figure id="flash-q-figure" class="flash-image-wrap" hidden>
+                      <img id="flash-q-image" alt="" loading="lazy" decoding="async" />
+                    </figure>
                   </div>
                   <div class="flash-face back">
                     <h3>Answer</h3>
@@ -205,6 +208,9 @@
             <div class="quiz-question">
               <h3 id="quiz-question-title">Question</h3>
               <p id="quiz-question-text"></p>
+              <figure id="quiz-question-figure" class="quiz-image-wrap" hidden>
+                <img id="quiz-question-image" alt="" loading="lazy" decoding="async" />
+              </figure>
               <div id="quiz-options" class="quiz-options"></div>
             </div>
             <div class="quiz-footer">
@@ -274,6 +280,18 @@
               <h3>Running Memory Span (RMS)</h3>
               <p>Watch the digit stream and recall only the last N digits.</p>
               <div class="cog-meta" id="rms-meta">Recall length: 3</div>
+              <div class="cog-row rms-speed-controls">
+                <label class="rms-speed-label" for="rms-speed-select">
+                  Stream speed
+                  <select id="rms-speed-select" class="rms-speed-select">
+                    <option value="1.35">Slower</option>
+                    <option value="1.2" selected>Default</option>
+                    <option value="1.0">Faster</option>
+                    <option value="0.85">Very fast</option>
+                  </select>
+                </label>
+                <button id="rms-speed-reset" class="astro-btn" type="button">Reset speed</button>
+              </div>
               <div id="rms-stream" class="cog-sequence" aria-live="polite">-</div>
               <div class="cog-row">
                 <input id="rms-input" class="cog-input" type="text" inputmode="numeric" placeholder="Type last digits" />

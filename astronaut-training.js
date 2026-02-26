@@ -53,6 +53,8 @@
     }
   ];
 
+  var RMS_SPEED_OPTIONS = [0.85, 1.0, 1.2, 1.35];
+
   var els = {};
   var appState = {
     topics: [],
@@ -88,6 +90,7 @@
       visualBest: 3,
       rmsLevel: 3,
       rmsBest: 3,
+      rmsSpeedFactor: 1.2,
       speedLevel: 1,
       speedBest: 1,
       rotationLevel: 2,
@@ -141,7 +144,8 @@
       endAt: 0,
       total: 0,
       correct: 0,
-      question: null
+      question: null,
+      recentTypes: []
     }
   };
 
@@ -300,6 +304,8 @@
     els.flashCard = byId("flash-card");
     els.flashQ = byId("flash-q");
     els.flashA = byId("flash-a");
+    els.flashQFigure = byId("flash-q-figure");
+    els.flashQImage = byId("flash-q-image");
     els.flashMeta = byId("flash-meta");
     els.flashTopicSelect = byId("flash-topic-select");
     els.flashOrderSelect = byId("flash-order-select");
@@ -316,6 +322,8 @@
     els.quizLive = byId("quiz-live");
     els.quizQuestionTitle = byId("quiz-question-title");
     els.quizQuestionText = byId("quiz-question-text");
+    els.quizQuestionFigure = byId("quiz-question-figure");
+    els.quizQuestionImage = byId("quiz-question-image");
     els.quizOptions = byId("quiz-options");
     els.quizProgress = byId("quiz-progress");
     els.quizSubmit = byId("quiz-submit");
@@ -345,6 +353,8 @@
 
     els.rmsMeta = byId("rms-meta");
     els.rmsStream = byId("rms-stream");
+    els.rmsSpeedSelect = byId("rms-speed-select");
+    els.rmsSpeedReset = byId("rms-speed-reset");
     els.rmsInput = byId("rms-input");
     els.rmsStart = byId("rms-start");
     els.rmsCheck = byId("rms-check");
@@ -405,6 +415,8 @@
               id: card.id || topic.id + "-" + String(index + 1),
               q: String(card.q || "").trim(),
               a: String(card.a || "").trim(),
+              image: typeof card.image === "string" ? card.image.trim() : "",
+              imageAlt: typeof card.imageAlt === "string" ? card.imageAlt.trim() : "",
               topicId: topic.id,
               topicName: topic.name
             };
@@ -459,6 +471,7 @@
       appState.cognitive.visualBest = Number(cogRaw.visualBest) || appState.cognitive.visualLevel;
       appState.cognitive.rmsLevel = Number(cogRaw.rmsLevel) || 3;
       appState.cognitive.rmsBest = Number(cogRaw.rmsBest) || appState.cognitive.rmsLevel;
+      appState.cognitive.rmsSpeedFactor = normalizeRmsSpeedFactor(cogRaw.rmsSpeedFactor);
       appState.cognitive.speedLevel = Number(cogRaw.speedLevel) || 1;
       appState.cognitive.speedBest = Number(cogRaw.speedBest) || appState.cognitive.speedLevel;
       appState.cognitive.rotationLevel = Number(cogRaw.rotationLevel) || 2;
@@ -613,6 +626,9 @@
       els.flashQ.textContent = "No cards available.";
       els.flashA.textContent = "";
       els.flashMeta.textContent = "";
+      if (els.flashQFigure) {
+        els.flashQFigure.hidden = true;
+      }
       return;
     }
 
@@ -622,6 +638,17 @@
     els.flashA.textContent = card.a;
     els.flashMeta.textContent =
       topic.name + " | Card " + (appState.flashIndex + 1) + " of " + appState.flashDeck.length;
+    if (els.flashQFigure && els.flashQImage) {
+      if (card.image) {
+        els.flashQImage.src = card.image;
+        els.flashQImage.alt = card.imageAlt || "Training reference image";
+        els.flashQFigure.hidden = false;
+      } else {
+        els.flashQImage.removeAttribute("src");
+        els.flashQImage.alt = "";
+        els.flashQFigure.hidden = true;
+      }
+    }
     els.flashCard.classList.remove("is-flipped");
   }
 
@@ -728,6 +755,8 @@
     return {
       id: card.id,
       prompt: card.q,
+      image: card.image || "",
+      imageAlt: card.imageAlt || "",
       correctAnswer: card.a,
       options: options,
       topicId: card.topicId,
@@ -785,6 +814,17 @@
 
     els.quizQuestionTitle.textContent = "Question " + (quiz.index + 1);
     els.quizQuestionText.textContent = question.prompt;
+    if (els.quizQuestionFigure && els.quizQuestionImage) {
+      if (question.image) {
+        els.quizQuestionImage.src = question.image;
+        els.quizQuestionImage.alt = question.imageAlt || "Question reference image";
+        els.quizQuestionFigure.hidden = false;
+      } else {
+        els.quizQuestionImage.removeAttribute("src");
+        els.quizQuestionImage.alt = "";
+        els.quizQuestionFigure.hidden = true;
+      }
+    }
     els.quizProgress.textContent = "Question " + (quiz.index + 1) + " / " + quiz.questions.length;
     els.quizOptions.innerHTML = "";
 
@@ -1407,9 +1447,54 @@
     });
   }
 
+  function rmsSpeedLabel(factor) {
+    var value = Number(factor) || 1.2;
+    if (value >= 1.3) {
+      return "slower";
+    }
+    if (value >= 1.1) {
+      return "default";
+    }
+    if (value >= 0.95) {
+      return "faster";
+    }
+    return "very fast";
+  }
+
+  function normalizeRmsSpeedFactor(value) {
+    var numeric = Number(value);
+    if (!Number.isFinite(numeric)) {
+      return 1.2;
+    }
+    return RMS_SPEED_OPTIONS.reduce(function (closest, candidate) {
+      if (Math.abs(candidate - numeric) < Math.abs(closest - numeric)) {
+        return candidate;
+      }
+      return closest;
+    }, RMS_SPEED_OPTIONS[0]);
+  }
+
+  function rmsSpeedOptionValue(factor) {
+    if (factor === 1.35) {
+      return "1.35";
+    }
+    if (factor === 1.2) {
+      return "1.2";
+    }
+    if (factor === 1.0) {
+      return "1.0";
+    }
+    return "0.85";
+  }
+
   function renderRmsMeta() {
     var level = clamp(appState.cognitive.rmsLevel, 3, 10);
-    els.rmsMeta.textContent = "Recall length: " + level + " | Best: " + appState.cognitive.rmsBest;
+    var factor = normalizeRmsSpeedFactor(appState.cognitive.rmsSpeedFactor);
+    appState.cognitive.rmsSpeedFactor = factor;
+    els.rmsMeta.textContent = "Recall length: " + level + " | Best: " + appState.cognitive.rmsBest + " | Speed: " + rmsSpeedLabel(factor);
+    if (els.rmsSpeedSelect) {
+      els.rmsSpeedSelect.value = rmsSpeedOptionValue(factor);
+    }
   }
 
   function clearRmsTimer() {
@@ -1438,7 +1523,8 @@
     els.rmsStatus.className = "astro-status";
     renderRmsMeta();
 
-    var stepMs = clamp(680 - level * 42, 260, 560);
+    var factor = normalizeRmsSpeedFactor(appState.cognitive.rmsSpeedFactor);
+    var stepMs = clamp((680 - level * 42) * factor, 260, 900);
     function tick() {
       if (appState.rms.index >= appState.rms.sequence.length) {
         appState.rms.running = false;
@@ -1824,21 +1910,38 @@
     };
   }
 
-  function makeMathQuestion(level) {
-    var easyPool = ["force", "ohm", "power", "convert"];
-    var mediumPool = easyPool.concat(["relative", "orbit"]);
-    var hardPool = mediumPool.concat(["mdot", "kinetic"]);
+  function pickMathType(level) {
+    var easyPool = ["force", "ohm", "power", "convert", "capacitor-energy", "kinetic"];
+    var mediumPool = easyPool.concat(["relative", "orbit", "visviva", "kepler-ratio", "circular-ratio", "escape-ratio"]);
+    var hardPool = mediumPool.concat(["mdot", "magnetic-force", "plane-change", "rocket-mass-ratio", "hohmann-dv1", "hohmann-tof", "orbital-energy"]);
 
-    var bucket = level <= 2 ? easyPool : (level <= 4 ? mediumPool : hardPool);
-    var type = bucket[randomInt(0, bucket.length - 1)];
+    var pool = level <= 2 ? easyPool : (level <= 4 ? mediumPool : hardPool);
+    var recent = Array.isArray(appState.math.recentTypes) ? appState.math.recentTypes.slice(-3) : [];
+    var candidates = pool.filter(function (typeId) {
+      return recent.indexOf(typeId) === -1;
+    });
+    if (!candidates.length) {
+      candidates = pool.slice();
+    }
+
+    var picked = candidates[randomInt(0, candidates.length - 1)];
+    appState.math.recentTypes = recent.concat([picked]).slice(-3);
+    return picked;
+  }
+
+  function makeMathQuestion(level) {
+    var g0 = 9.81;
+    var muEarth = 398600;
+    var type = pickMathType(level);
 
     if (type === "force") {
-      var m = randomInt(150, 950);
-      var a = randomInt(2, 8);
-      var force = m * a;
-      var forceSet = buildNumericOptions(force, [m * (a - 1), m * (a + 1), m + a], "N", 0);
+      var mForce = randomInt(150, 950);
+      var aForce = randomInt(2, 8);
+      var force = mForce * aForce;
+      var forceSet = buildNumericOptions(force, [mForce * (aForce - 1), mForce * (aForce + 1), mForce + aForce], "N", 0);
       return {
-        prompt: "A " + m + " kg spacecraft accelerates at " + a + " m/s^2. Required force?",
+        type: type,
+        prompt: "A " + mForce + " kg spacecraft accelerates at " + aForce + " m/s^2. Required force?",
         options: forceSet.options,
         correctAnswer: forceSet.correctAnswer
       };
@@ -1850,6 +1953,7 @@
       var voltage = resistance * current;
       var ohmSet = buildNumericOptions(voltage, [resistance + current, voltage / 2, voltage + resistance], "V", 0);
       return {
+        type: type,
         prompt: "A circuit has I = " + current + " A and R = " + resistance + " ohm. Voltage V = ?",
         options: ohmSet.options,
         correctAnswer: ohmSet.correctAnswer
@@ -1857,12 +1961,13 @@
     }
 
     if (type === "power") {
-      var v = randomInt(24, 120);
-      var i = randomInt(3, 14);
-      var power = v * i;
-      var powerSet = buildNumericOptions(power, [v + i, power / 2, v * (i + 2)], "W", 0);
+      var vPower = randomInt(24, 120);
+      var iPower = randomInt(3, 14);
+      var power = vPower * iPower;
+      var powerSet = buildNumericOptions(power, [vPower + iPower, power / 2, vPower * (iPower + 2)], "W", 0);
       return {
-        prompt: "Electrical power with V = " + v + " V and I = " + i + " A is:",
+        type: type,
+        prompt: "Electrical power with V = " + vPower + " V and I = " + iPower + " A is:",
         options: powerSet.options,
         correctAnswer: powerSet.correctAnswer
       };
@@ -1873,9 +1978,36 @@
       var mVal = km * 1000;
       var convSet = buildNumericOptions(mVal, [km * 100, km * 10000, mVal + 500], "m", 0);
       return {
+        type: type,
         prompt: "Convert " + km + " km to meters.",
         options: convSet.options,
         correctAnswer: convSet.correctAnswer
+      };
+    }
+
+    if (type === "capacitor-energy") {
+      var cMilliFarad = randomInt(10, 90);
+      var cVolt = randomInt(12, 60);
+      var capEnergy = 0.5 * (cMilliFarad / 1000) * cVolt * cVolt;
+      var capSet = buildNumericOptions(capEnergy, [capEnergy * 2, capEnergy / 2, capEnergy * 1.3], "J", 2);
+      return {
+        type: type,
+        prompt: "Stored capacitor energy E = 0.5*C*V^2. For C = " + cMilliFarad + " mF and V = " + cVolt + " V:",
+        options: capSet.options,
+        correctAnswer: capSet.correctAnswer
+      };
+    }
+
+    if (type === "kinetic") {
+      var mass = randomInt(150, 800);
+      var vel = randomInt(5, 15);
+      var kinetic = 0.5 * mass * vel * vel;
+      var keSet = buildNumericOptions(kinetic, [mass * vel, kinetic / 2, kinetic * 1.3], "J", 0);
+      return {
+        type: type,
+        prompt: "Kinetic energy for m = " + mass + " kg and v = " + vel + " m/s (E = 0.5*m*v^2):",
+        options: keSet.options,
+        correctAnswer: keSet.correctAnswer
       };
     }
 
@@ -1883,8 +2015,9 @@
       var v1 = randomInt(2, 9) / 10;
       var v2 = randomInt(2, 9) / 10;
       var rel = v1 + v2;
-      var relSet = buildNumericOptions(rel, [Math.abs(v1 - v2), rel + 0.4, rel - 0.2], "km/s", 2);
+      var relSet = buildNumericOptions(rel, [Math.abs(v1 - v2), rel + 0.4, Math.max(0.1, rel - 0.2)], "km/s", 2);
       return {
+        type: type,
         prompt: "Two satellites approach head-on at " + formatValue(v1, 2) + " km/s and " + formatValue(v2, 2) + " km/s. Relative speed?",
         options: relSet.options,
         correctAnswer: relSet.correctAnswer
@@ -1897,32 +2030,163 @@
       var period = (2 * Math.PI * radius) / speed / 60;
       var orbitSet = buildNumericOptions(period, [period * 0.5, period * 1.2, period + 18], "min", 1);
       return {
+        type: type,
         prompt: "For circular orbit radius " + radius + " km and speed " + formatValue(speed, 1) + " km/s, period is about:",
         options: orbitSet.options,
         correctAnswer: orbitSet.correctAnswer
       };
     }
 
+    if (type === "visviva") {
+      var aVis = randomInt(7600, 16000);
+      var rVis = randomInt(6800, Math.floor(1.9 * aVis));
+      var vVis = Math.sqrt(muEarth * (2 / rVis - 1 / aVis));
+      var vVisSet = buildNumericOptions(vVis, [Math.sqrt(muEarth / rVis), vVis * 0.85, vVis * 1.12], "km/s", 2);
+      return {
+        type: type,
+        prompt: "Vis-viva speed at r = " + rVis + " km for orbit with a = " + aVis + " km around Earth (mu = 398600 km^3/s^2):",
+        options: vVisSet.options,
+        correctAnswer: vVisSet.correctAnswer
+      };
+    }
+
+    if (type === "kepler-ratio") {
+      var aRatio = randomInt(12, 35) / 10;
+      var tRatio = Math.pow(aRatio, 1.5);
+      var tRatioSet = buildNumericOptions(tRatio, [Math.sqrt(aRatio), aRatio, Math.pow(aRatio, 2)], "", 3);
+      return {
+        type: type,
+        prompt: "If semi-major axis scales by " + formatValue(aRatio, 1) + "x, what is T2/T1 from Kepler's 3rd law?",
+        options: tRatioSet.options,
+        correctAnswer: tRatioSet.correctAnswer
+      };
+    }
+
+    if (type === "circular-ratio") {
+      var rScale = [1.5, 2, 2.5, 3][randomInt(0, 3)];
+      var vRatio = 1 / Math.sqrt(rScale);
+      var vRatioSet = buildNumericOptions(vRatio, [1 / rScale, Math.sqrt(rScale), rScale], "", 3);
+      return {
+        type: type,
+        prompt: "Circular speed scales as v ~ 1/sqrt(r). If r2 = " + formatValue(rScale, 1) + " * r1, what is v2/v1?",
+        options: vRatioSet.options,
+        correctAnswer: vRatioSet.correctAnswer
+      };
+    }
+
+    if (type === "escape-ratio") {
+      var escRatio = Math.sqrt(2);
+      var escSet = buildNumericOptions(escRatio, [1.0, 2.0, 1.2], "", 3);
+      return {
+        type: type,
+        prompt: "At the same radius, what is v_escape / v_circular?",
+        options: escSet.options,
+        correctAnswer: escSet.correctAnswer
+      };
+    }
+
     if (type === "mdot") {
       var thrust = randomInt(25, 120);
       var isp = randomInt(210, 320);
-      var mdot = thrust / (isp * 9.81);
-      var mdotSet = buildNumericOptions(mdot, [thrust / isp, thrust / 9.81, mdot * 2], "kg/s", 3);
+      var mdot = thrust / (isp * g0);
+      var mdotSet = buildNumericOptions(mdot, [thrust / isp, thrust / g0, mdot * 2], "kg/s", 3);
       return {
-        prompt: "Using mdot = F / (Isp * g0), what is mdot for F = " + thrust + " N and Isp = " + isp + " s?",
+        type: type,
+        prompt: "Using mdot = F / (Isp*g0), what is mdot for F = " + thrust + " N and Isp = " + isp + " s?",
         options: mdotSet.options,
         correctAnswer: mdotSet.correctAnswer
       };
     }
 
-    var mass = randomInt(150, 800);
-    var vel = randomInt(5, 15);
-    var energy = 0.5 * mass * vel * vel;
-    var keSet = buildNumericOptions(energy, [mass * vel, energy / 2, energy * 1.3], "J", 0);
+    if (type === "magnetic-force") {
+      var qMicro = randomInt(20, 120);
+      var vMag = randomInt(100, 450);
+      var bMilli = randomInt(5, 40);
+      var fMilliN = qMicro * 1e-6 * vMag * bMilli * 1e-3 * 1000;
+      var magSet = buildNumericOptions(fMilliN, [fMilliN * 2, fMilliN / 2, fMilliN * 1.25], "mN", 3);
+      return {
+        type: type,
+        prompt: "For perpendicular vectors, F = q*v*B. If q = " + qMicro + " microC, v = " + vMag + " m/s, B = " + bMilli + " mT, force is:",
+        options: magSet.options,
+        correctAnswer: magSet.correctAnswer
+      };
+    }
+
+    if (type === "plane-change") {
+      var vPlane = randomInt(70, 82) / 10;
+      var deltaI = randomInt(5, 35);
+      var deltaVPlane = 2 * vPlane * Math.sin((deltaI * Math.PI / 180) / 2);
+      var planeSet = buildNumericOptions(deltaVPlane, [vPlane * Math.sin(deltaI * Math.PI / 180), deltaVPlane * 0.7, deltaVPlane * 1.3], "km/s", 3);
+      return {
+        type: type,
+        prompt: "Pure plane change at v = " + formatValue(vPlane, 1) + " km/s with Delta i = " + deltaI + " deg needs Delta-v:",
+        options: planeSet.options,
+        correctAnswer: planeSet.correctAnswer
+      };
+    }
+
+    if (type === "rocket-mass-ratio") {
+      var dvMs = randomInt(900, 3600);
+      var ispRocket = randomInt(250, 380);
+      var massRatio = Math.exp(dvMs / (ispRocket * g0));
+      var ratioSet = buildNumericOptions(massRatio, [massRatio * 0.75, massRatio * 1.25, Math.max(1.05, Math.sqrt(massRatio))], "", 3);
+      return {
+        type: type,
+        prompt: "Tsiolkovsky mass ratio m0/mf for Delta-v = " + dvMs + " m/s and Isp = " + ispRocket + " s:",
+        options: ratioSet.options,
+        correctAnswer: ratioSet.correctAnswer
+      };
+    }
+
+    if (type === "hohmann-dv1") {
+      var r1 = randomInt(6800, 7300);
+      var r2 = randomInt(14000, 36000);
+      var dv1 = Math.sqrt(muEarth / r1) * (Math.sqrt((2 * r2) / (r1 + r2)) - 1);
+      var hohmannSet = buildNumericOptions(dv1, [dv1 * 0.8, dv1 * 1.2, Math.sqrt(muEarth / r1) - Math.sqrt(muEarth / r2)], "km/s", 3);
+      return {
+        type: type,
+        prompt: "Hohmann transfer first burn from r1 = " + r1 + " km to r2 = " + r2 + " km (Earth mu = 398600):",
+        options: hohmannSet.options,
+        correctAnswer: hohmannSet.correctAnswer
+      };
+    }
+
+    if (type === "hohmann-tof") {
+      var rStart = randomInt(6800, 7300);
+      var rEnd = randomInt(14000, 42000);
+      var aTrans = (rStart + rEnd) / 2;
+      var tofMinutes = Math.PI * Math.sqrt(Math.pow(aTrans, 3) / muEarth) / 60;
+      var tofSet = buildNumericOptions(tofMinutes, [tofMinutes * 0.5, tofMinutes * 1.25, tofMinutes + 45], "min", 1);
+      return {
+        type: type,
+        prompt: "Approximate Hohmann transfer time from r1 = " + rStart + " km to r2 = " + rEnd + " km:",
+        options: tofSet.options,
+        correctAnswer: tofSet.correctAnswer
+      };
+    }
+
+    if (type === "orbital-energy") {
+      var aEnergy = randomInt(7000, 42000);
+      var energyMagnitude = muEarth / (2 * aEnergy);
+      var energySet = buildNumericOptions(energyMagnitude, [energyMagnitude * 0.5, energyMagnitude * 1.5, Math.sqrt(energyMagnitude)], "MJ/kg", 3);
+      return {
+        type: type,
+        prompt: "Magnitude of specific orbital energy |epsilon| = mu/(2a) for a = " + aEnergy + " km around Earth:",
+        options: energySet.options,
+        correctAnswer: energySet.correctAnswer
+      };
+    }
+
+    // Fallback
+    var fallbackMass = randomInt(150, 800);
+    var fallbackVel = randomInt(5, 15);
+    var fallbackEnergy = 0.5 * fallbackMass * fallbackVel * fallbackVel;
+    var fallbackSet = buildNumericOptions(fallbackEnergy, [fallbackMass * fallbackVel, fallbackEnergy / 2, fallbackEnergy * 1.3], "J", 0);
     return {
-      prompt: "Kinetic energy for m = " + mass + " kg and v = " + vel + " m/s (E = 0.5 m v^2):",
-      options: keSet.options,
-      correctAnswer: keSet.correctAnswer
+      type: "kinetic",
+      prompt: "Kinetic energy for m = " + fallbackMass + " kg and v = " + fallbackVel + " m/s (E = 0.5*m*v^2):",
+      options: fallbackSet.options,
+      correctAnswer: fallbackSet.correctAnswer
     };
   }
 
@@ -2033,6 +2297,7 @@
     appState.math.total = 0;
     appState.math.correct = 0;
     appState.math.question = null;
+    appState.math.recentTypes = [];
 
     els.mathStart.disabled = true;
     els.mathStop.disabled = false;
@@ -2118,6 +2383,20 @@
     });
 
     renderRmsMeta();
+    if (els.rmsSpeedSelect) {
+      els.rmsSpeedSelect.addEventListener("change", function () {
+        appState.cognitive.rmsSpeedFactor = normalizeRmsSpeedFactor(els.rmsSpeedSelect.value);
+        renderRmsMeta();
+        persistState();
+      });
+    }
+    if (els.rmsSpeedReset) {
+      els.rmsSpeedReset.addEventListener("click", function () {
+        appState.cognitive.rmsSpeedFactor = 1.2;
+        renderRmsMeta();
+        persistState();
+      });
+    }
     els.rmsStart.addEventListener("click", startRmsRound);
     els.rmsCheck.addEventListener("click", checkRmsRound);
     els.rmsInput.addEventListener("keydown", function (event) {
@@ -2402,6 +2681,7 @@
         visualBest: 3,
         rmsLevel: 3,
         rmsBest: 3,
+        rmsSpeedFactor: 1.2,
         speedLevel: 1,
         speedBest: 1,
         rotationLevel: 2,
@@ -2440,7 +2720,8 @@
         endAt: 0,
         total: 0,
         correct: 0,
-        question: null
+        question: null,
+        recentTypes: []
       };
 
       resetReaction();
