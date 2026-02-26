@@ -1,5 +1,5 @@
 window.PILOT_TRAINING_DATA = {
-  version: "2026-02-25",
+  version: "2026-02-26",
   title: "Pilot Training - PHAK Core",
   sources: [
     {
@@ -77,7 +77,7 @@ window.PILOT_TRAINING_DATA = {
         { id: "phak-031", q: "Why does high density altitude increase takeoff distance?", a: "Lower air density reduces thrust, lift, and propeller efficiency." },
         { id: "phak-032", q: "What is accelerate-stop distance conceptually?", a: "Distance to accelerate and then safely stop if takeoff is aborted." },
         { id: "phak-033", q: "How should performance charts be used?", a: "With current conditions and conservatism for safety margins." },
-        { id: "phak-034", q: "What is service ceiling?", a: "Altitude where maximum climb rate falls to a minimal specified value." },
+        { id: "phak-034", q: "What is service ceiling?", a: "Altitude where maximum steady climb rate falls to a specified small value (commonly 100 fpm for piston aircraft)." },
         { id: "phak-035", q: "Why calculate landing distance before departure?", a: "To ensure destination runway and conditions remain within limits." }
       ]
     },
@@ -143,7 +143,7 @@ window.PILOT_TRAINING_DATA = {
         { id: "phak-067", q: "What is Class G airspace?", a: "Uncontrolled airspace where ATC separation is not normally provided." },
         { id: "phak-068", q: "Why are TFRs important?", a: "Temporary Flight Restrictions can prohibit or limit operations in specific areas." },
         { id: "phak-069", q: "What is special use airspace conceptually?", a: "Airspace with specific activity constraints, such as military or hazardous operations." },
-        { id: "phak-070", q: "What is required before entering controlled airspace?", a: "Meet communication/equipment and clearance requirements for that class." }
+        { id: "phak-070", q: "What is required before entering controlled airspace?", a: "Meet the communication, equipment, and clearance requirements applicable to that specific airspace class." }
       ]
     },
     {
@@ -163,7 +163,7 @@ window.PILOT_TRAINING_DATA = {
       id: "phak-aeromedical",
       name: "Chapter 12 - Aeromedical Factors",
       cards: [
-        { id: "phak-078", q: "What does IMSAFE stand for?", a: "Illness, Medication, Stress, Alcohol, Fatigue, Emotion/Eating." },
+        { id: "phak-078", q: "What does IMSAFE stand for?", a: "Illness, Medication, Stress, Alcohol, Fatigue, Emotion." },
         { id: "phak-079", q: "What is hypoxia?", a: "Inadequate oxygen supply to body tissues." },
         { id: "phak-080", q: "What is hyperventilation in flight context?", a: "Breathing rate/depth too high, lowering CO2 and causing symptoms." },
         { id: "phak-081", q: "What causes middle-ear barotrauma risk during descent?", a: "Pressure cannot equalize across eardrum quickly enough." },
