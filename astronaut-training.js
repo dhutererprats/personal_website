@@ -58,6 +58,16 @@
   var CONCENTRATION_ORIENTATIONS = ["up", "down", "left", "right"];
   var CONCENTRATION_COLORS = ["red", "green", "blue", "yellow"];
   var CONCENTRATION_DOTS = [0, 1, 2, 3, 4];
+  var SPEED2_RULES = [
+    { id: "black-color", label: "BLACK COLOR" },
+    { id: "white-color", label: "WHITE COLOR" },
+    { id: "round-shape", label: "ROUND SHAPE" },
+    { id: "square-shape", label: "SQUARE SHAPE" }
+  ];
+  var SPEED2_PRESENTATION_BASE_MS = 5000; // [ms]
+  var SPEED2_PRESENTATION_STEP_MS = 500; // [ms]
+  var SPEED2_PRESENTATION_MIN_MS = 1500; // [ms]
+  var SPEED2_RULE_PREVIEW_MS = 900; // [ms]
 
   var els = {};
   var appState = {
@@ -98,6 +108,8 @@
       rmsSpeedFactor: 1.2,
       speedLevel: 1,
       speedBest: 1,
+      speed2Level: 1,
+      speed2Best: 1,
       rotationLevel: 2,
       rotationBest: 2,
       mathLevel: 1,
@@ -109,7 +121,8 @@
     },
     digit: {
       current: "",
-      revealTimer: null
+      revealTimer: null,
+      feedbackTimer: null
     },
     memory: {
       activePattern: [],
@@ -141,6 +154,16 @@
       deadline: 0,
       durationMs: 0,
       running: false
+    },
+    speed2: {
+      timer: null,
+      previewTimer: null,
+      challenge: null,
+      previewing: false,
+      presenting: false,
+      paused: false,
+      deadline: 0,
+      remainingMs: 0
     },
     rotation: {
       scenario: null,
@@ -369,6 +392,7 @@
     els.quizReview = byId("quiz-review");
 
     els.digitSequence = byId("digit-sequence");
+    els.digitFeedback = byId("digit-feedback");
     els.digitInput = byId("digit-input");
     els.digitStart = byId("digit-start");
     els.digitCheck = byId("digit-check");
@@ -416,6 +440,17 @@
     els.speedStart = byId("speed-start");
     els.speedSubmit = byId("speed-submit");
     els.speedStatus = byId("speed-status");
+    els.speed2Rule = byId("speed2-rule");
+    els.speed2Time = byId("speed2-time");
+    els.speed2Level = byId("speed2-level");
+    els.speed2Best = byId("speed2-best");
+    els.speed2Grid = byId("speed2-grid");
+    els.speed2Input = byId("speed2-input");
+    els.speed2Start = byId("speed2-start");
+    els.speed2Pause = byId("speed2-pause");
+    els.speed2Reset = byId("speed2-reset");
+    els.speed2Check = byId("speed2-check");
+    els.speed2Status = byId("speed2-status");
 
     els.rotPrompt = byId("rot-prompt");
     els.rotOptions = byId("rot-options");
@@ -530,6 +565,8 @@
       appState.cognitive.rmsSpeedFactor = normalizeRmsSpeedFactor(cogRaw.rmsSpeedFactor);
       appState.cognitive.speedLevel = Number(cogRaw.speedLevel) || 1;
       appState.cognitive.speedBest = Number(cogRaw.speedBest) || appState.cognitive.speedLevel;
+      appState.cognitive.speed2Level = Number(cogRaw.speed2Level) || 1;
+      appState.cognitive.speed2Best = Number(cogRaw.speed2Best) || appState.cognitive.speed2Level;
       appState.cognitive.rotationLevel = Number(cogRaw.rotationLevel) || 2;
       appState.cognitive.rotationBest = Number(cogRaw.rotationBest) || appState.cognitive.rotationLevel;
       appState.cognitive.mathLevel = Number(cogRaw.mathLevel) || 1;
@@ -1214,11 +1251,54 @@
     return out;
   }
 
+  function clearDigitFeedback() {
+    if (appState.digit.feedbackTimer) {
+      clearTimeout(appState.digit.feedbackTimer);
+      appState.digit.feedbackTimer = null;
+    }
+    els.digitFeedback.innerHTML = "";
+  }
+
+  function renderDigitCorrectFlash(sequence) {
+    var markup = String(sequence).split("").map(function (ch) {
+      return '<span class="digit-char ok">' + ch + "</span>";
+    }).join("");
+    els.digitFeedback.innerHTML = '<span class="digit-line">' + markup + "</span>";
+  }
+
+  function renderDigitErrorFlash(correctSequence, guess) {
+    var target = String(correctSequence || "");
+    var typed = String(guess || "");
+    var maxLen = Math.max(target.length, typed.length);
+    var firstWrong = -1;
+    for (var i = 0; i < maxLen; i += 1) {
+      if ((typed[i] || "") !== (target[i] || "")) {
+        firstWrong = i;
+        break;
+      }
+    }
+    if (firstWrong < 0) {
+      firstWrong = target.length;
+    }
+
+    var prefix = typed.slice(0, firstWrong);
+    var wrongChar = typed[firstWrong] || "∅";
+
+    var prefixMarkup = prefix.split("").map(function (ch) {
+      return '<span class="digit-char ok">' + ch + "</span>";
+    }).join("");
+    var wrongMarkup = '<span class="digit-char bad">' + wrongChar + "</span>";
+    els.digitFeedback.innerHTML =
+      '<span class="digit-line digit-correct-label">Correct: ' + target + "</span>" +
+      '<span class="digit-line">' + prefixMarkup + wrongMarkup + "</span>";
+  }
+
   function startDigitRound() {
     if (appState.digit.revealTimer) {
       clearTimeout(appState.digit.revealTimer);
       appState.digit.revealTimer = null;
     }
+    clearDigitFeedback();
 
     var level = clamp(appState.cognitive.digitLevel, 3, 14);
     var seq = generateDigits(level);
@@ -1240,7 +1320,7 @@
   }
 
   function checkDigitRound() {
-    var guess = String(els.digitInput.value || "").replace(/\s+/g, "");
+    var guess = String(els.digitInput.value || "").replace(/\D+/g, "");
     var priorLevel = clamp(appState.cognitive.digitLevel, 3, 14);
     if (!appState.digit.current) {
       els.digitStatus.textContent = "Start a sequence first.";
@@ -1254,6 +1334,7 @@
       return;
     }
 
+    clearDigitFeedback();
     var score;
     var logEntry;
     if (guess === appState.digit.current) {
@@ -1261,13 +1342,15 @@
       appState.cognitive.digitBest = Math.max(appState.cognitive.digitBest, appState.cognitive.digitLevel);
       score = clamp(58 + priorLevel * 4, 40, 100);
       logEntry = logCognitiveActivity("digit-span", score, "correct");
+      renderDigitCorrectFlash(guess);
       els.digitStatus.textContent = "Correct. Next level: " + appState.cognitive.digitLevel + " | +" + logEntry.xpEarned + " XP";
       els.digitStatus.className = "astro-status success";
     } else {
       appState.cognitive.digitLevel = clamp(appState.cognitive.digitLevel - 1, 3, 14);
       score = clamp(34 + priorLevel * 3, 20, 90);
       logEntry = logCognitiveActivity("digit-span", score, "incorrect");
-      els.digitStatus.textContent = "Not quite. Correct sequence: " + appState.digit.current + " | +" + logEntry.xpEarned + " XP";
+      renderDigitErrorFlash(appState.digit.current, guess);
+      els.digitStatus.textContent = "Not quite. Full correct sequence is shown above. | +" + logEntry.xpEarned + " XP";
       els.digitStatus.className = "astro-status error";
     }
   }
@@ -2385,6 +2468,421 @@
     finalizeSpeedRound(false);
   }
 
+  function speed2RuleMatches(ruleId, instrument) {
+    if (ruleId === "black-color") {
+      return instrument.color === "black";
+    }
+    if (ruleId === "white-color") {
+      return instrument.color === "white";
+    }
+    if (ruleId === "round-shape") {
+      return instrument.shape === "round";
+    }
+    return instrument.shape === "square";
+  }
+
+  function speed2PresentationMsForLevel(level) {
+    return clamp(
+      Math.round(SPEED2_PRESENTATION_BASE_MS - (level - 1) * SPEED2_PRESENTATION_STEP_MS),
+      SPEED2_PRESENTATION_MIN_MS,
+      SPEED2_PRESENTATION_BASE_MS
+    );
+  }
+
+  function speed2ValueAngle(value, orientationOffset) {
+    var index = (value - 1 - orientationOffset + 80) % 8;
+    var deg = -90 + index * 45;
+    return (deg * Math.PI) / 180;
+  }
+
+  function speed2FormatMs(ms) {
+    return (Math.max(0, ms) / 1000).toFixed(1) + "s";
+  }
+
+  function speed2CriticalIndices() {
+    return sample([0, 1, 2, 3, 4, 5, 6, 7, 8], 4).sort(function (a, b) { return a - b; });
+  }
+
+  function makeSpeed2Challenge(level) {
+    var lv = clamp(level, 1, 9);
+    var rule = sample(SPEED2_RULES, 1)[0];
+    var critical = speed2CriticalIndices();
+    var criticalSet = new Set(critical);
+    var orientationOffset = randomInt(0, 7);
+    var visibleCount = lv >= 5 ? 2 : 3;
+    var instruments = [];
+
+    for (var i = 0; i < 9; i += 1) {
+      var isCritical = criticalSet.has(i);
+      var color = sample(["black", "white"], 1)[0];
+      var shape = sample(["round", "square"], 1)[0];
+      if (rule.id === "black-color") {
+        color = isCritical ? "black" : "white";
+      } else if (rule.id === "white-color") {
+        color = isCritical ? "white" : "black";
+      } else if (rule.id === "round-shape") {
+        shape = isCritical ? "round" : "square";
+      } else {
+        shape = isCritical ? "square" : "round";
+      }
+
+      instruments.push({
+        row: Math.floor(i / 3),
+        col: i % 3,
+        color: color,
+        shape: shape,
+        value: randomInt(1, 8),
+        visibleValues: sample([1, 2, 3, 4, 5, 6, 7, 8], visibleCount).sort(function (a, b) { return a - b; })
+      });
+    }
+
+    var orderedCriticalValues = critical.map(function (idx) {
+      return String(instruments[idx].value);
+    });
+    return {
+      level: lv,
+      ruleId: rule.id,
+      ruleLabel: rule.label,
+      orientationOffset: orientationOffset,
+      criticalIndices: critical,
+      instruments: instruments,
+      sequence: orderedCriticalValues.join(""),
+      sequenceSpaced: orderedCriticalValues.join(" "),
+      presentationMs: speed2PresentationMsForLevel(lv)
+    };
+  }
+
+  function renderSpeed2InstrumentSvg(instrument, orientationOffset) {
+    var isBlack = instrument.color === "black";
+    var bg = isBlack ? "#07090f" : "#f5f7ff";
+    var fg = isBlack ? "#f8fbff" : "#0e1421";
+    var outline = isBlack ? "#f2f7ff" : "#101828";
+    var outer = instrument.shape === "round"
+      ? '<circle cx="50" cy="50" r="44" fill="' + bg + '" stroke="' + outline + '" stroke-width="2"></circle>'
+      : '<rect x="7" y="7" width="86" height="86" rx="2" fill="' + bg + '" stroke="' + outline + '" stroke-width="2"></rect>';
+
+    var marks = "";
+    for (var value = 1; value <= 8; value += 1) {
+      var ang = speed2ValueAngle(value, orientationOffset);
+      var cos = Math.cos(ang);
+      var sin = Math.sin(ang);
+      var textX = 50 + cos * 34;
+      var textY = 50 + sin * 34 + 4;
+      var tickInX = 50 + cos * 30;
+      var tickInY = 50 + sin * 30;
+      var tickOutX = 50 + cos * 39;
+      var tickOutY = 50 + sin * 39;
+      if (instrument.visibleValues.includes(value)) {
+        marks += '<text x="' + textX.toFixed(1) + '" y="' + textY.toFixed(1) +
+          '" font-size="14" text-anchor="middle" fill="' + fg + '" font-weight="650">' + value + "</text>";
+      } else {
+        marks += '<line x1="' + tickInX.toFixed(1) + '" y1="' + tickInY.toFixed(1) +
+          '" x2="' + tickOutX.toFixed(1) + '" y2="' + tickOutY.toFixed(1) +
+          '" stroke="' + fg + '" stroke-width="2.2" stroke-linecap="round"></line>';
+      }
+    }
+
+    var pointerAngle = speed2ValueAngle(instrument.value, orientationOffset);
+    var pointerX = 50 + Math.cos(pointerAngle) * 22;
+    var pointerY = 50 + Math.sin(pointerAngle) * 22;
+    var pointer = '<line x1="50" y1="50" x2="' + pointerX.toFixed(1) + '" y2="' + pointerY.toFixed(1) +
+      '" stroke="' + fg + '" stroke-width="5" stroke-linecap="round"></line>' +
+      '<circle cx="50" cy="50" r="4.2" fill="' + fg + '"></circle>';
+
+    return '<svg viewBox="0 0 100 100" role="img" aria-label="Instrument">' + outer + marks + pointer + "</svg>";
+  }
+
+  function renderSpeed2Grid(challenge, masked) {
+    els.speed2Grid.innerHTML = "";
+    if (!challenge || masked) {
+      for (var i = 0; i < 9; i += 1) {
+        var empty = document.createElement("div");
+        empty.className = "speed2-cell masked";
+        els.speed2Grid.appendChild(empty);
+      }
+      return;
+    }
+
+    challenge.instruments.forEach(function (instrument) {
+      var cell = document.createElement("div");
+      cell.className = "speed2-cell";
+      cell.innerHTML = renderSpeed2InstrumentSvg(instrument, challenge.orientationOffset);
+      els.speed2Grid.appendChild(cell);
+    });
+  }
+
+  function clearSpeed2Timer() {
+    if (appState.speed2.timer) {
+      clearInterval(appState.speed2.timer);
+      appState.speed2.timer = null;
+    }
+  }
+
+  function clearSpeed2PreviewTimer() {
+    if (appState.speed2.previewTimer) {
+      clearTimeout(appState.speed2.previewTimer);
+      appState.speed2.previewTimer = null;
+    }
+  }
+
+  function renderSpeed2Meta(challenge, remainingMs) {
+    var active = challenge || appState.speed2.challenge;
+    if (!active) {
+      els.speed2Rule.textContent = "-";
+      els.speed2Time.textContent = "-";
+    } else {
+      els.speed2Rule.textContent = active.ruleLabel;
+      if (appState.speed2.presenting) {
+        els.speed2Time.textContent = speed2FormatMs(remainingMs != null ? remainingMs : appState.speed2.remainingMs);
+      } else {
+        els.speed2Time.textContent = speed2FormatMs(active.presentationMs);
+      }
+    }
+    els.speed2Level.textContent = String(clamp(appState.cognitive.speed2Level, 1, 9));
+    els.speed2Best.textContent = String(Math.max(appState.cognitive.speed2Best, appState.cognitive.speed2Level));
+  }
+
+  function finishSpeed2Presentation() {
+    clearSpeed2Timer();
+    clearSpeed2PreviewTimer();
+    if (!appState.speed2.challenge) {
+      return;
+    }
+
+    appState.speed2.previewing = false;
+    appState.speed2.presenting = false;
+    appState.speed2.paused = false;
+    appState.speed2.remainingMs = 0;
+    appState.speed2.deadline = 0;
+
+    renderSpeed2Grid(appState.speed2.challenge, true);
+    renderSpeed2Meta(appState.speed2.challenge, appState.speed2.challenge.presentationMs);
+
+    els.speed2Start.disabled = false;
+    els.speed2Pause.disabled = true;
+    els.speed2Pause.textContent = "Pause";
+    els.speed2Input.disabled = false;
+    els.speed2Input.focus();
+    els.speed2Check.disabled = false;
+    els.speed2Status.textContent =
+      "Enter the 4 memorized values in row order. Rule was " + appState.speed2.challenge.ruleLabel + ".";
+    els.speed2Status.className = "astro-status";
+  }
+
+  function startSpeed2Ticker() {
+    clearSpeed2Timer();
+    appState.speed2.timer = setInterval(function () {
+      if (!appState.speed2.presenting || appState.speed2.paused) {
+        return;
+      }
+      var remaining = Math.max(0, appState.speed2.deadline - performance.now());
+      appState.speed2.remainingMs = remaining;
+      renderSpeed2Meta(appState.speed2.challenge, remaining);
+      if (remaining <= 0) {
+        finishSpeed2Presentation();
+      }
+    }, 70);
+  }
+
+  function beginSpeed2Presentation() {
+    var challenge = appState.speed2.challenge;
+    if (!challenge) {
+      return;
+    }
+
+    appState.speed2.previewing = false;
+    appState.speed2.presenting = true;
+    appState.speed2.paused = false;
+    appState.speed2.remainingMs = challenge.presentationMs;
+    appState.speed2.deadline = performance.now() + challenge.presentationMs;
+
+    renderSpeed2Grid(challenge, false);
+    renderSpeed2Meta(challenge, challenge.presentationMs);
+
+    els.speed2Pause.disabled = false;
+    els.speed2Pause.textContent = "Pause";
+    els.speed2Status.textContent =
+      "Memorize values of " + challenge.ruleLabel + " instruments (exactly 4) in row order.";
+    els.speed2Status.className = "astro-status";
+
+    startSpeed2Ticker();
+  }
+
+  function startSpeed2Round() {
+    clearSpeed2Timer();
+    clearSpeed2PreviewTimer();
+    var level = clamp(appState.cognitive.speed2Level, 1, 9);
+    var challenge = makeSpeed2Challenge(level);
+    appState.speed2.challenge = challenge;
+    appState.speed2.previewing = true;
+    appState.speed2.presenting = false;
+    appState.speed2.paused = false;
+    appState.speed2.remainingMs = challenge.presentationMs;
+    appState.speed2.deadline = 0;
+
+    renderSpeed2Grid(null, true);
+    renderSpeed2Meta(challenge, challenge.presentationMs);
+
+    els.speed2Input.value = "";
+    els.speed2Input.disabled = true;
+    els.speed2Check.disabled = true;
+    els.speed2Start.disabled = true;
+    els.speed2Pause.disabled = true;
+    els.speed2Pause.textContent = "Pause";
+    els.speed2Status.textContent =
+      "Critical rule: " + challenge.ruleLabel + ". Panel starts in " +
+      (SPEED2_RULE_PREVIEW_MS / 1000).toFixed(1) + "s.";
+    els.speed2Status.className = "astro-status";
+
+    appState.speed2.previewTimer = setTimeout(function () {
+      appState.speed2.previewTimer = null;
+      beginSpeed2Presentation();
+    }, SPEED2_RULE_PREVIEW_MS);
+  }
+
+  function toggleSpeed2Pause() {
+    if (appState.speed2.previewing) {
+      els.speed2Status.textContent = "Rule preview in progress. Pause becomes available when panel appears.";
+      els.speed2Status.className = "astro-status";
+      return;
+    }
+    if (!appState.speed2.presenting || !appState.speed2.challenge) {
+      return;
+    }
+    if (appState.speed2.paused) {
+      appState.speed2.paused = false;
+      appState.speed2.deadline = performance.now() + appState.speed2.remainingMs;
+      els.speed2Pause.textContent = "Pause";
+      els.speed2Status.textContent = "Resumed. Keep memorizing critical instruments.";
+      els.speed2Status.className = "astro-status";
+      startSpeed2Ticker();
+      return;
+    }
+
+    appState.speed2.paused = true;
+    appState.speed2.remainingMs = Math.max(0, appState.speed2.deadline - performance.now());
+    clearSpeed2Timer();
+    els.speed2Pause.textContent = "Resume";
+    els.speed2Time.textContent = "Paused (" + speed2FormatMs(appState.speed2.remainingMs) + ")";
+    els.speed2Status.textContent = "Paused.";
+    els.speed2Status.className = "astro-status";
+  }
+
+  function resetSpeed2Round(manual) {
+    clearSpeed2Timer();
+    clearSpeed2PreviewTimer();
+    appState.speed2.challenge = null;
+    appState.speed2.previewing = false;
+    appState.speed2.presenting = false;
+    appState.speed2.paused = false;
+    appState.speed2.deadline = 0;
+    appState.speed2.remainingMs = 0;
+
+    renderSpeed2Grid(null, true);
+    renderSpeed2Meta(null, null);
+
+    els.speed2Input.value = "";
+    els.speed2Input.disabled = true;
+    els.speed2Check.disabled = true;
+    els.speed2Start.disabled = false;
+    els.speed2Pause.disabled = true;
+    els.speed2Pause.textContent = "Pause";
+    if (manual) {
+      els.speed2Status.textContent = "Panel reset.";
+      els.speed2Status.className = "astro-status";
+    } else {
+      els.speed2Status.textContent = "";
+      els.speed2Status.className = "astro-status";
+    }
+  }
+
+  function checkSpeed2Round() {
+    if (appState.speed2.previewing) {
+      els.speed2Status.textContent = "Wait for panel presentation to begin.";
+      els.speed2Status.className = "astro-status error";
+      return;
+    }
+    if (appState.speed2.presenting) {
+      els.speed2Status.textContent = "Wait until panel presentation ends.";
+      els.speed2Status.className = "astro-status error";
+      return;
+    }
+    if (!appState.speed2.challenge) {
+      els.speed2Status.textContent = "Start a panel first.";
+      els.speed2Status.className = "astro-status error";
+      return;
+    }
+
+    var guess = String(els.speed2Input.value || "").replace(/\D+/g, "");
+    if (!guess) {
+      els.speed2Status.textContent = "Type your 4-digit sequence first.";
+      els.speed2Status.className = "astro-status error";
+      return;
+    }
+    if (guess.length !== 4) {
+      els.speed2Status.textContent = "Enter exactly 4 digits in row order.";
+      els.speed2Status.className = "astro-status error";
+      return;
+    }
+
+    var challenge = appState.speed2.challenge;
+    var target = challenge.sequence;
+    var exact = guess === target;
+    var priorLevel = clamp(appState.cognitive.speed2Level, 1, 9);
+
+    var firstWrong = -1;
+    var maxLen = Math.max(guess.length, target.length);
+    for (var i = 0; i < maxLen; i += 1) {
+      if ((guess[i] || "") !== (target[i] || "")) {
+        firstWrong = i;
+        break;
+      }
+    }
+    if (firstWrong < 0) {
+      firstWrong = target.length;
+    }
+    var prefixHits = firstWrong;
+    var hitRatio = target.length ? prefixHits / target.length : 0;
+
+    var score;
+    if (exact) {
+      appState.cognitive.speed2Level = clamp(appState.cognitive.speed2Level + 1, 1, 9);
+      appState.cognitive.speed2Best = Math.max(appState.cognitive.speed2Best, appState.cognitive.speed2Level);
+      score = clamp(
+        Math.round(58 + priorLevel * 4 + (SPEED2_PRESENTATION_BASE_MS - challenge.presentationMs) / 200),
+        40,
+        100
+      );
+    } else {
+      appState.cognitive.speed2Level = clamp(appState.cognitive.speed2Level - 1, 1, 9);
+      score = clamp(Math.round(22 + hitRatio * 55 + priorLevel * 3), 18, 92);
+    }
+
+    var detail = challenge.ruleLabel + " | target " + target + " | guess " + guess;
+    var logEntry = logCognitiveActivity("perceptual-speed-panel", score, detail);
+    renderSpeed2Grid(null, true);
+    renderSpeed2Meta(null, null);
+    els.speed2Input.disabled = true;
+    els.speed2Check.disabled = true;
+    els.speed2Start.disabled = false;
+    els.speed2Pause.disabled = true;
+    els.speed2Pause.textContent = "Pause";
+    appState.speed2.challenge = null;
+
+    if (exact) {
+      els.speed2Status.textContent =
+        "Correct (" + target + "). Level " + appState.cognitive.speed2Level + " | +" + logEntry.xpEarned + " XP";
+      els.speed2Status.className = "astro-status success";
+    } else {
+      var wrongChar = guess[firstWrong] || "∅";
+      els.speed2Status.textContent =
+        "Not exact. Correct sequence: " + target + " | First wrong: " + wrongChar +
+        " at position " + String(firstWrong + 1) + " | Level " + appState.cognitive.speed2Level +
+        " | +" + logEntry.xpEarned + " XP";
+      els.speed2Status.className = "astro-status error";
+    }
+  }
+
   function vecKey(vec) {
     return vec[0] + "," + vec[1] + "," + vec[2];
   }
@@ -3072,6 +3570,19 @@
     els.speedSubmit.addEventListener("click", submitSpeedRound);
     els.speedSubmit.disabled = true;
     renderSpeedTimer();
+    els.speed2Start.addEventListener("click", startSpeed2Round);
+    els.speed2Pause.addEventListener("click", toggleSpeed2Pause);
+    els.speed2Reset.addEventListener("click", function () {
+      resetSpeed2Round("manual");
+    });
+    els.speed2Check.addEventListener("click", checkSpeed2Round);
+    els.speed2Input.addEventListener("keydown", function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        checkSpeed2Round();
+      }
+    });
+    resetSpeed2Round();
 
     els.rotStart.addEventListener("click", startRotationScenario);
 
@@ -3321,6 +3832,9 @@
 
       clearRmsTimer();
       clearSpeedTimer();
+      clearSpeed2Timer();
+      clearSpeed2PreviewTimer();
+      clearDigitFeedback();
       if (appState.math.timer) {
         clearInterval(appState.math.timer);
       }
@@ -3353,6 +3867,8 @@
         rmsSpeedFactor: 1.2,
         speedLevel: 1,
         speedBest: 1,
+        speed2Level: 1,
+        speed2Best: 1,
         rotationLevel: 2,
         rotationBest: 2,
         mathLevel: 1,
@@ -3386,6 +3902,16 @@
         deadline: 0,
         durationMs: 0,
         running: false
+      };
+      appState.speed2 = {
+        timer: null,
+        previewTimer: null,
+        challenge: null,
+        previewing: false,
+        presenting: false,
+        paused: false,
+        deadline: 0,
+        remainingMs: 0
       };
       appState.rotation = {
         scenario: null,
@@ -3441,6 +3967,10 @@
       renderProgress();
       renderReactionStatus();
       els.digitStatus.textContent = "Progress reset.";
+      els.digitStatus.className = "astro-status";
+      els.digitSequence.textContent = "";
+      els.digitInput.value = "";
+      els.digitInput.disabled = false;
       els.rmsStream.textContent = "-";
       els.rmsInput.value = "";
       els.rmsInput.disabled = false;
@@ -3454,6 +3984,9 @@
       els.speedStatus.textContent = "Progress reset.";
       els.speedStatus.className = "astro-status";
       els.speedSubmit.disabled = true;
+      resetSpeed2Round();
+      els.speed2Status.textContent = "Progress reset.";
+      els.speed2Status.className = "astro-status";
 
       els.rotPrompt.textContent = "Press New Scenario to begin.";
       els.rotOptions.innerHTML = "";

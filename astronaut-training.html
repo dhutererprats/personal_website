@@ -16,6 +16,11 @@
   <meta name="twitter:title" content="Astronaut Training | Daniel Huterer Prats"/>
   <meta name="twitter:description" content="Flashcards, quizzes, and cognitive drills for astronaut prep."/>
   <meta name="twitter:image" content="https://dhutererprats.github.io/images/research-hero-space.jpg"/>
+  <meta name="theme-color" content="#0b1c3c"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <link rel="manifest" href="pwa-manifest.json"/>
+  <link rel="apple-touch-icon" href="icons/pwa-192.png"/>
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="astronaut-training.css" />
   <script src="theme-toggle.js" defer></script>
@@ -243,6 +248,7 @@
               <h3>Digit Span (Short-Term Memory)</h3>
               <p>Memorize the sequence, then type it from memory.</p>
               <div id="digit-sequence" class="cog-sequence" aria-live="polite">-</div>
+              <div id="digit-feedback" class="digit-feedback" aria-live="polite"></div>
               <div class="cog-row">
                 <input id="digit-input" class="cog-input" type="text" inputmode="numeric" placeholder="Type sequence" />
                 <button id="digit-start" class="astro-btn" type="button">New Sequence</button>
@@ -352,6 +358,23 @@
                 <button id="speed-submit" class="astro-btn primary" type="button">Submit Selection</button>
               </div>
               <p id="speed-status" class="astro-status"></p>
+            </article>
+
+            <article class="cog-card" id="speed2-card">
+              <h3>Perceptual Speed v2 (Instrument Panel)</h3>
+              <p>Memorize values of critical instruments in top-to-bottom, left-to-right order.</p>
+              <div class="cog-meta">Critical rule: <span id="speed2-rule">-</span></div>
+              <div class="cog-meta">Presentation time: <span id="speed2-time">-</span></div>
+              <div class="cog-meta">Level <span id="speed2-level">1</span> | Best <span id="speed2-best">1</span></div>
+              <div id="speed2-grid" class="speed2-grid" role="group" aria-label="Instrument panel"></div>
+              <div class="cog-row">
+                <input id="speed2-input" class="cog-input" type="text" inputmode="numeric" placeholder="Enter sequence (4 digits)" disabled />
+                <button id="speed2-start" class="astro-btn" type="button">Start Panel</button>
+                <button id="speed2-pause" class="astro-btn" type="button" disabled>Pause</button>
+                <button id="speed2-reset" class="astro-btn" type="button">Reset</button>
+                <button id="speed2-check" class="astro-btn primary" type="button" disabled>Check</button>
+              </div>
+              <p id="speed2-status" class="astro-status"></p>
             </article>
 
             <article class="cog-card" id="rotation-card">
