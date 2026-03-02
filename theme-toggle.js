@@ -140,7 +140,23 @@
     syncMobileToggleVisibility();
   }
 
+  function registerServiceWorker() {
+    if (!("serviceWorker" in navigator)) {
+      return;
+    }
+    if (window.location.protocol !== "https:" && window.location.hostname !== "localhost") {
+      return;
+    }
+
+    var swUrl = new URL("sw.js", window.location.href).toString();
+    var swScope = new URL("./", window.location.href).toString();
+    navigator.serviceWorker.register(swUrl, { scope: swScope }).catch(function (error) {
+      console.warn("Service worker registration failed:", error);
+    });
+  }
+
   initializeTheme();
+  registerServiceWorker();
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", initializeButtons);
   } else {

@@ -1,0 +1,26 @@
+{
+  "id": "./astronaut-training.html",
+  "name": "Daniel Huterer Prats",
+  "short_name": "DHP Space",
+  "description": "Personal website with astronaut and pilot training that can be installed for offline use.",
+  "start_url": "./astronaut-training.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0b1c3c",
+  "theme_color": "#0b1c3c",
+  "icons": [
+    {
+      "src": "icons/pwa-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/pwa-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
