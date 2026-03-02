@@ -1087,31 +1087,28 @@
   }
 
   .conc-arena {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto auto auto auto;
-  }
-
-  .conc-action.top,
-  .conc-triangle-wrap,
-  .conc-action.bottom,
-  .conc-action.side {
-    grid-column: 1;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
   }
 
   .conc-action.top {
+    grid-column: 1 / span 2;
     grid-row: 1;
   }
 
   .conc-triangle-wrap {
+    grid-column: 1 / span 2;
     grid-row: 2;
   }
 
   .conc-action.bottom {
+    grid-column: 1;
     grid-row: 3;
   }
 
   .conc-action.side {
-    grid-row: 4;
+    grid-column: 2;
+    grid-row: 3;
     min-height: 48px;
   }
 
