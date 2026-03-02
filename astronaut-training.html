@@ -263,6 +263,46 @@
               <p id="memory-status" class="astro-status"></p>
             </article>
 
+            <article class="cog-card" id="concentration-card">
+              <h3>Concentration Drill (Triangles)</h3>
+              <p>Compare each triangle to the previous one and respond with the matching rule.</p>
+              <div id="conc-round-info" class="cog-meta">Round: 30 triangles | Level 1</div>
+              <div class="conc-rule-grid">
+                <div class="conc-rule-box">
+                  <span class="label">Top button rule</span>
+                  <strong id="conc-rule-top">Match color</strong>
+                  <button id="conc-reveal-top" class="conc-reveal-btn" type="button">Reveal</button>
+                </div>
+                <div class="conc-rule-box">
+                  <span class="label">Bottom button rule</span>
+                  <strong id="conc-rule-bottom">Match orientation</strong>
+                  <button id="conc-reveal-bottom" class="conc-reveal-btn" type="button">Reveal</button>
+                </div>
+              </div>
+              <div class="cog-row" style="margin-bottom:0.3rem;">
+                <button id="conc-generate-rules" class="astro-btn" type="button">Generate Rules</button>
+              </div>
+              <div class="conc-arena">
+                <button id="conc-top-btn" class="conc-action top" type="button">Top Rule</button>
+                <div id="conc-triangle-wrap" class="conc-triangle-wrap" aria-live="polite">
+                  <div id="conc-triangle" class="conc-triangle">Press Start Round</div>
+                </div>
+                <button id="conc-bottom-btn" class="conc-action bottom" type="button">Bottom Rule</button>
+                <button id="conc-none-btn" class="conc-action side" type="button">Neither / Next</button>
+              </div>
+              <div class="cog-meta">
+                <span id="conc-progress">Progress: 0 / 30</span>
+                <span style="margin-left:0.5rem;">|</span>
+                <span id="conc-time">Time left: -</span>
+              </div>
+              <div class="cog-row">
+                <button id="conc-start-btn" class="astro-btn primary" type="button">Start Round</button>
+                <button id="conc-pause-btn" class="astro-btn" type="button" disabled>Pause</button>
+                <button id="conc-reset-btn" class="astro-btn" type="button">Reset Round</button>
+              </div>
+              <p id="conc-status" class="astro-status"></p>
+            </article>
+
             <article class="cog-card" id="reaction-card">
               <h3>Reaction Time</h3>
               <p>Click only when the panel turns green. Early clicks count as false starts.</p>

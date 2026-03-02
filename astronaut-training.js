@@ -54,6 +54,10 @@
   ];
 
   var RMS_SPEED_OPTIONS = [0.85, 1.0, 1.2, 1.35];
+  var CONCENTRATION_TRAITS = ["orientation", "color", "dots"];
+  var CONCENTRATION_ORIENTATIONS = ["up", "down", "left", "right"];
+  var CONCENTRATION_COLORS = ["red", "green", "blue", "yellow"];
+  var CONCENTRATION_DOTS = [0, 1, 2, 3, 4];
 
   var els = {};
   var appState = {
@@ -86,8 +90,9 @@
     cognitive: {
       digitLevel: 4,
       digitBest: 4,
-      visualLevel: 3,
-      visualBest: 3,
+      visualLevel: 5,
+      visualBest: 5,
+      visualMistakes: 0,
       rmsLevel: 3,
       rmsBest: 3,
       rmsSpeedFactor: 1.2,
@@ -97,6 +102,8 @@
       rotationBest: 2,
       mathLevel: 1,
       mathBest: 1,
+      concentrationLevel: 1,
+      concentrationBest: 1,
       reactionRuns: [],
       drillLogs: []
     },
@@ -107,7 +114,9 @@
     memory: {
       activePattern: [],
       picks: new Set(),
-      revealLock: false
+      revealLock: false,
+      revealTimer: null,
+      gridSize: 4
     },
     reaction: {
       timer: null,
@@ -146,6 +155,31 @@
       correct: 0,
       question: null,
       recentTypes: []
+    },
+    concentration: {
+      running: false,
+      timer: null,
+      level: 1,
+      roundSize: 30,
+      timeoutMs: 4500,
+      topRule: "color",
+      bottomRule: "orientation",
+      rulesConfigured: false,
+      sequence: [],
+      index: 0,
+      correct: 0,
+      wrong: 0,
+      timeouts: 0,
+      locked: false,
+      paused: false,
+      deadlineAt: 0,
+      timeRemainingMs: 0,
+      rulesMasked: false,
+      ruleHideTimer: null,
+      revealTop: false,
+      revealBottom: false,
+      revealTopTimer: null,
+      revealBottomTimer: null
     }
   };
 
@@ -345,6 +379,22 @@
     els.memorySubmit = byId("memory-submit");
     els.memoryReset = byId("memory-reset");
     els.memoryStatus = byId("memory-status");
+    els.concRoundInfo = byId("conc-round-info");
+    els.concRuleTop = byId("conc-rule-top");
+    els.concRuleBottom = byId("conc-rule-bottom");
+    els.concRevealTop = byId("conc-reveal-top");
+    els.concRevealBottom = byId("conc-reveal-bottom");
+    els.concGenerateRules = byId("conc-generate-rules");
+    els.concTriangle = byId("conc-triangle");
+    els.concTopBtn = byId("conc-top-btn");
+    els.concBottomBtn = byId("conc-bottom-btn");
+    els.concNoneBtn = byId("conc-none-btn");
+    els.concProgress = byId("conc-progress");
+    els.concTime = byId("conc-time");
+    els.concStartBtn = byId("conc-start-btn");
+    els.concPauseBtn = byId("conc-pause-btn");
+    els.concResetBtn = byId("conc-reset-btn");
+    els.concStatus = byId("conc-status");
 
     els.reactionTarget = byId("reaction-target");
     els.reactionStart = byId("reaction-start");
@@ -467,8 +517,14 @@
     if (cogRaw && typeof cogRaw === "object") {
       appState.cognitive.digitLevel = Number(cogRaw.digitLevel) || 4;
       appState.cognitive.digitBest = Number(cogRaw.digitBest) || appState.cognitive.digitLevel;
-      appState.cognitive.visualLevel = Number(cogRaw.visualLevel) || 3;
-      appState.cognitive.visualBest = Number(cogRaw.visualBest) || appState.cognitive.visualLevel;
+      var visualLevel = Number(cogRaw.visualLevel);
+      if (!Number.isFinite(visualLevel)) {
+        visualLevel = Number(cogRaw.visualTiles);
+      }
+      visualLevel = clamp(Math.round(Number(visualLevel) || 5), 5, 18);
+      appState.cognitive.visualLevel = visualLevel;
+      appState.cognitive.visualBest = clamp(Math.round(Number(cogRaw.visualBest) || visualLevel), 5, 18);
+      appState.cognitive.visualMistakes = clamp(Math.round(Number(cogRaw.visualMistakes) || 0), 0, 2);
       appState.cognitive.rmsLevel = Number(cogRaw.rmsLevel) || 3;
       appState.cognitive.rmsBest = Number(cogRaw.rmsBest) || appState.cognitive.rmsLevel;
       appState.cognitive.rmsSpeedFactor = normalizeRmsSpeedFactor(cogRaw.rmsSpeedFactor);
@@ -478,6 +534,11 @@
       appState.cognitive.rotationBest = Number(cogRaw.rotationBest) || appState.cognitive.rotationLevel;
       appState.cognitive.mathLevel = Number(cogRaw.mathLevel) || 1;
       appState.cognitive.mathBest = Number(cogRaw.mathBest) || appState.cognitive.mathLevel;
+      appState.cognitive.concentrationLevel = clamp(Number(cogRaw.concentrationLevel) || 1, 1, 8);
+      appState.cognitive.concentrationBest = Math.max(
+        appState.cognitive.concentrationLevel,
+        clamp(Number(cogRaw.concentrationBest) || appState.cognitive.concentrationLevel, 1, 8)
+      );
       appState.cognitive.reactionRuns = Array.isArray(cogRaw.reactionRuns) ? cogRaw.reactionRuns.slice(-20) : [];
       appState.cognitive.drillLogs = Array.isArray(cogRaw.drillLogs) ? cogRaw.drillLogs.slice(-400) : [];
     }
@@ -1211,9 +1272,35 @@
     }
   }
 
-  function createMemoryGrid() {
+  function visualGridSizeForTiles(tileCount) {
+    if (tileCount >= 14) {
+      return 7;
+    }
+    if (tileCount >= 9) {
+      return 6;
+    }
+    if (tileCount >= 6) {
+      return 5;
+    }
+    return 4;
+  }
+
+  function getVisualLevelInfo() {
+    var tileCount = clamp(Math.round(Number(appState.cognitive.visualLevel) || 5), 5, 18);
+    var gridSize = visualGridSizeForTiles(tileCount);
+    return {
+      tileCount: tileCount,
+      gridSize: gridSize
+    };
+  }
+
+  function createMemoryGrid(gridSize) {
+    var size = clamp(Number(gridSize) || 4, 4, 7);
+    appState.memory.gridSize = size;
+    els.memoryGrid.style.setProperty("--memory-cols", String(size));
     els.memoryGrid.innerHTML = "";
-    for (var i = 0; i < 16; i += 1) {
+    var total = size * size;
+    for (var i = 0; i < total; i += 1) {
       var cell = document.createElement("button");
       cell.type = "button";
       cell.className = "memory-cell";
@@ -1243,12 +1330,22 @@
   }
 
   function showMemoryPattern() {
+    if (appState.memory.revealTimer) {
+      clearTimeout(appState.memory.revealTimer);
+      appState.memory.revealTimer = null;
+    }
+
     clearMemoryPicks();
     appState.memory.revealLock = true;
 
-    var level = clamp(appState.cognitive.visualLevel, 3, 10);
-    var allIndices = Array.from({ length: 16 }, function (_, idx) { return idx; });
-    appState.memory.activePattern = sample(allIndices, level).sort(function (a, b) { return a - b; });
+    var info = getVisualLevelInfo();
+    if (appState.memory.gridSize !== info.gridSize) {
+      createMemoryGrid(info.gridSize);
+    }
+
+    var totalCells = info.gridSize * info.gridSize;
+    var allIndices = Array.from({ length: totalCells }, function (_, idx) { return idx; });
+    appState.memory.activePattern = sample(allIndices, info.tileCount).sort(function (a, b) { return a - b; });
 
     Array.from(els.memoryGrid.children).forEach(function (cell) {
       var idx = Number(cell.dataset.index);
@@ -1257,16 +1354,20 @@
       }
     });
 
-    els.memoryStatus.textContent = "Memorize highlighted tiles.";
+    els.memoryStatus.textContent =
+      "Memorize " + info.tileCount + " tiles on a " + info.gridSize + "x" + info.gridSize + " grid.";
     els.memoryStatus.className = "astro-status";
 
-    setTimeout(function () {
+    var revealMs = clamp(1050 + info.tileCount * 90 + info.gridSize * 70, 1300, 3600);
+    appState.memory.revealTimer = setTimeout(function () {
       Array.from(els.memoryGrid.children).forEach(function (cell) {
         cell.classList.remove("active");
       });
       appState.memory.revealLock = false;
-      els.memoryStatus.textContent = "Now reproduce the pattern and press Submit Pattern.";
-    }, 1300 + level * 110);
+      appState.memory.revealTimer = null;
+      els.memoryStatus.textContent =
+        "Reproduce the pattern and press Submit Pattern. Two misses at this tile level will drop you down.";
+    }, revealMs);
   }
 
   function submitMemoryPattern() {
@@ -1282,29 +1383,562 @@
       return;
     }
 
-    var priorLevel = clamp(appState.cognitive.visualLevel, 3, 10);
+    var priorLevel = clamp(Math.round(Number(appState.cognitive.visualLevel) || 5), 5, 18);
+    var priorGrid = visualGridSizeForTiles(priorLevel);
     var picked = Array.from(appState.memory.picks).sort(function (a, b) { return a - b; });
     var target = appState.memory.activePattern;
     var ok = picked.length === target.length && picked.every(function (val, idx) {
       return val === target[idx];
     });
+    var targetSet = new Set(target);
+    var hits = picked.filter(function (idx) { return targetSet.has(idx); }).length;
+    var precision = target.length ? hits / target.length : 0;
 
     var score;
     var logEntry;
     if (ok) {
-      appState.cognitive.visualLevel = clamp(appState.cognitive.visualLevel + 1, 3, 10);
+      appState.cognitive.visualLevel = clamp(priorLevel + 1, 5, 18);
       appState.cognitive.visualBest = Math.max(appState.cognitive.visualBest, appState.cognitive.visualLevel);
-      score = clamp(60 + priorLevel * 5, 40, 100);
+      appState.cognitive.visualMistakes = 0;
+      score = clamp(52 + priorLevel * 2 + priorGrid * 5, 40, 100);
       logEntry = logCognitiveActivity("visual-pattern", score, "correct");
-      els.memoryStatus.textContent = "Correct. Next level: " + appState.cognitive.visualLevel + " | +" + logEntry.xpEarned + " XP";
+      var nextGrid = visualGridSizeForTiles(appState.cognitive.visualLevel);
+      els.memoryStatus.textContent =
+        "Correct. Next: " + appState.cognitive.visualLevel + " tiles on " + nextGrid + "x" + nextGrid +
+        " | +" + logEntry.xpEarned + " XP";
       els.memoryStatus.className = "astro-status success";
     } else {
-      appState.cognitive.visualLevel = clamp(appState.cognitive.visualLevel - 1, 3, 10);
-      score = clamp(30 + priorLevel * 4, 20, 90);
+      appState.cognitive.visualMistakes = clamp((Number(appState.cognitive.visualMistakes) || 0) + 1, 0, 2);
+      var demoted = false;
+      if (appState.cognitive.visualMistakes >= 2) {
+        appState.cognitive.visualLevel = clamp(priorLevel - 1, 5, 18);
+        appState.cognitive.visualMistakes = 0;
+        demoted = true;
+      } else {
+        appState.cognitive.visualLevel = priorLevel;
+      }
+      score = clamp(Math.round(22 + precision * 58 + priorGrid * 3), 15, 92);
       logEntry = logCognitiveActivity("visual-pattern", score, "incorrect");
-      els.memoryStatus.textContent = "Not exact. Target was " + target.length + " tiles. | +" + logEntry.xpEarned + " XP";
+      var strikeText = demoted
+        ? "Second miss: dropped to " + appState.cognitive.visualLevel + " tiles."
+        : "One miss recorded (" + appState.cognitive.visualMistakes + "/2).";
+      els.memoryStatus.textContent =
+        "Not exact (" + hits + "/" + target.length + " hits). " + strikeText + " | +" + logEntry.xpEarned + " XP";
       els.memoryStatus.className = "astro-status error";
     }
+    clearMemoryPicks();
+    appState.memory.activePattern = [];
+  }
+
+  function concentrationRuleLabel(rule) {
+    if (rule === "orientation") {
+      return "Match orientation";
+    }
+    if (rule === "dots") {
+      return "Match dot count";
+    }
+    return "Match color";
+  }
+
+  function concentrationRuleDomain(rule) {
+    if (rule === "orientation") {
+      return CONCENTRATION_ORIENTATIONS;
+    }
+    if (rule === "dots") {
+      return CONCENTRATION_DOTS;
+    }
+    return CONCENTRATION_COLORS;
+  }
+
+  function concentrationPolygonPoints(orientation) {
+    if (orientation === "down") {
+      return "12,24 108,24 60,106";
+    }
+    if (orientation === "left") {
+      return "16,60 102,14 102,106";
+    }
+    if (orientation === "right") {
+      return "18,14 104,60 18,106";
+    }
+    return "60,14 108,102 12,102";
+  }
+
+  function concentrationDotPattern(count, orientation) {
+    var layouts = {
+      up: {
+        1: [[60, 70]],
+        2: [[54, 74], [66, 62]],
+        3: [[52, 74], [68, 74], [60, 62]],
+        4: [[52, 78], [68, 78], [54, 64], [66, 64]]
+      },
+      down: {
+        1: [[60, 50]],
+        2: [[54, 46], [66, 58]],
+        3: [[52, 46], [68, 46], [60, 58]],
+        4: [[52, 42], [68, 42], [54, 56], [66, 56]]
+      },
+      left: {
+        1: [[52, 60]],
+        2: [[56, 52], [56, 68]],
+        3: [[58, 50], [58, 70], [72, 60]],
+        4: [[60, 48], [60, 72], [74, 54], [74, 66]]
+      },
+      right: {
+        1: [[68, 60]],
+        2: [[64, 52], [64, 68]],
+        3: [[62, 50], [62, 70], [48, 60]],
+        4: [[60, 48], [60, 72], [46, 54], [46, 66]]
+      }
+    };
+    var byOrientation = layouts[orientation] || layouts.up;
+    return byOrientation[count] ? byOrientation[count].slice() : [];
+  }
+
+  function concentrationColor(colorName) {
+    var palette = {
+      red: "#e74545",
+      green: "#2fb268",
+      blue: "#3c6fe8",
+      yellow: "#f0c629"
+    };
+    return palette[colorName] || "#3c6fe8";
+  }
+
+  function renderConcentrationTriangle(stimulus) {
+    if (!stimulus) {
+      els.concTriangle.textContent = "Press Start Round";
+      return;
+    }
+    var points = concentrationPolygonPoints(stimulus.orientation);
+    var fill = concentrationColor(stimulus.color);
+    var dots = concentrationDotPattern(stimulus.dots, stimulus.orientation);
+    var circles = dots.map(function (pair) {
+      return '<circle cx="' + pair[0] + '" cy="' + pair[1] + '" r="4.4" fill="#0f1218"></circle>';
+    }).join("");
+    els.concTriangle.innerHTML =
+      '<svg viewBox="0 0 120 120" role="img" aria-label="Triangle stimulus">' +
+      '<polygon points="' + points + '" fill="' + fill + '" stroke="#11161f" stroke-width="2"></polygon>' +
+      circles +
+      "</svg>";
+  }
+
+  function randomConcentrationStimulus() {
+    return {
+      orientation: sample(CONCENTRATION_ORIENTATIONS, 1)[0],
+      color: sample(CONCENTRATION_COLORS, 1)[0],
+      dots: sample(CONCENTRATION_DOTS, 1)[0]
+    };
+  }
+
+  function randomDifferent(domain, currentValue) {
+    var candidates = domain.filter(function (value) {
+      return value !== currentValue;
+    });
+    return sample(candidates, 1)[0];
+  }
+
+  function makeConcentrationStimulus(prevStimulus, topRule, bottomRule, expectedAction) {
+    var next = randomConcentrationStimulus();
+    if (expectedAction === "top") {
+      next[topRule] = prevStimulus[topRule];
+      next[bottomRule] = randomDifferent(concentrationRuleDomain(bottomRule), prevStimulus[bottomRule]);
+    } else if (expectedAction === "bottom") {
+      next[topRule] = randomDifferent(concentrationRuleDomain(topRule), prevStimulus[topRule]);
+      next[bottomRule] = prevStimulus[bottomRule];
+    } else {
+      next[topRule] = randomDifferent(concentrationRuleDomain(topRule), prevStimulus[topRule]);
+      next[bottomRule] = randomDifferent(concentrationRuleDomain(bottomRule), prevStimulus[bottomRule]);
+    }
+    return next;
+  }
+
+  function makeConcentrationSequence(roundSize, topRule, bottomRule) {
+    var size = Math.max(2, Number(roundSize) || 30);
+    var outcomes = ["top", "bottom", "none"];
+    var seq = [];
+    var first = randomConcentrationStimulus();
+    seq.push({
+      stimulus: first,
+      expectedAction: "none"
+    });
+    for (var i = 1; i < size; i += 1) {
+      var expectedAction = sample(outcomes, 1)[0];
+      var next = makeConcentrationStimulus(seq[i - 1].stimulus, topRule, bottomRule, expectedAction);
+      seq.push({
+        stimulus: next,
+        expectedAction: expectedAction
+      });
+    }
+    return seq;
+  }
+
+  function concentrationTimeoutForLevel(level) {
+    return clamp(4700 - (level - 1) * 240, 2900, 4700);
+  }
+
+  function clearConcentrationTimer() {
+    if (appState.concentration.timer) {
+      clearTimeout(appState.concentration.timer);
+      appState.concentration.timer = null;
+    }
+  }
+
+  function clearConcentrationRuleHideTimer() {
+    if (appState.concentration.ruleHideTimer) {
+      clearTimeout(appState.concentration.ruleHideTimer);
+      appState.concentration.ruleHideTimer = null;
+    }
+  }
+
+  function clearConcentrationRevealTimer(which) {
+    var timerKey = which === "top" ? "revealTopTimer" : "revealBottomTimer";
+    if (appState.concentration[timerKey]) {
+      clearTimeout(appState.concentration[timerKey]);
+      appState.concentration[timerKey] = null;
+    }
+  }
+
+  function clearConcentrationRevealState() {
+    clearConcentrationRevealTimer("top");
+    clearConcentrationRevealTimer("bottom");
+    appState.concentration.revealTop = false;
+    appState.concentration.revealBottom = false;
+  }
+
+  function renderConcentrationRuleUI() {
+    var topLabel = concentrationRuleLabel(appState.concentration.topRule);
+    var bottomLabel = concentrationRuleLabel(appState.concentration.bottomRule);
+    var topVisible = !appState.concentration.rulesMasked || appState.concentration.revealTop;
+    var bottomVisible = !appState.concentration.rulesMasked || appState.concentration.revealBottom;
+
+    els.concRuleTop.textContent = topVisible ? topLabel : "Hidden";
+    els.concRuleBottom.textContent = bottomVisible ? bottomLabel : "Hidden";
+    els.concRevealTop.textContent = topVisible && appState.concentration.rulesMasked ? "Hide" : "Reveal";
+    els.concRevealBottom.textContent = bottomVisible && appState.concentration.rulesMasked ? "Hide" : "Reveal";
+    els.concRevealTop.disabled = !appState.concentration.rulesMasked;
+    els.concRevealBottom.disabled = !appState.concentration.rulesMasked;
+
+    if (appState.concentration.rulesMasked) {
+      els.concTopBtn.textContent = "Top button";
+      els.concBottomBtn.textContent = "Bottom button";
+    } else {
+      els.concTopBtn.textContent = "Top: " + topLabel;
+      els.concBottomBtn.textContent = "Bottom: " + bottomLabel;
+    }
+    els.concNoneBtn.textContent = "Neither / Next";
+  }
+
+  function maskConcentrationRules() {
+    clearConcentrationRuleHideTimer();
+    clearConcentrationRevealState();
+    appState.concentration.rulesMasked = true;
+    renderConcentrationRuleUI();
+  }
+
+  function showConcentrationRulesForMs(ms) {
+    clearConcentrationRuleHideTimer();
+    clearConcentrationRevealState();
+    appState.concentration.rulesMasked = false;
+    renderConcentrationRuleUI();
+    var previewMs = clamp(Number(ms) || 10000, 1000, 20000);
+    appState.concentration.ruleHideTimer = setTimeout(function () {
+      maskConcentrationRules();
+    }, previewMs);
+  }
+
+  function revealConcentrationRule(which) {
+    if (!appState.concentration.rulesMasked) {
+      return;
+    }
+    var key = which === "top" ? "revealTop" : "revealBottom";
+    var currentlyVisible = appState.concentration[key];
+    if (currentlyVisible) {
+      appState.concentration[key] = false;
+      clearConcentrationRevealTimer(which);
+      renderConcentrationRuleUI();
+      return;
+    }
+    appState.concentration[key] = true;
+    clearConcentrationRevealTimer(which);
+    renderConcentrationRuleUI();
+    var timerKey = which === "top" ? "revealTopTimer" : "revealBottomTimer";
+    appState.concentration[timerKey] = setTimeout(function () {
+      appState.concentration[key] = false;
+      appState.concentration[timerKey] = null;
+      renderConcentrationRuleUI();
+    }, 4000);
+  }
+
+  function generateConcentrationRules() {
+    if (appState.concentration.running) {
+      return;
+    }
+    var shuffled = shuffle(CONCENTRATION_TRAITS);
+    appState.concentration.topRule = shuffled[0];
+    appState.concentration.bottomRule = shuffled[1];
+    appState.concentration.rulesConfigured = true;
+    showConcentrationRulesForMs(10000);
+    els.concStatus.textContent = "New rules generated. They will hide after 10 seconds.";
+    els.concStatus.className = "astro-status";
+  }
+
+  function setConcentrationButtonsEnabled(enabled) {
+    var canRespond = Boolean(enabled) && appState.concentration.running && !appState.concentration.paused;
+    var disabled = !canRespond;
+    els.concTopBtn.disabled = disabled;
+    els.concBottomBtn.disabled = disabled;
+    els.concNoneBtn.disabled = disabled;
+  }
+
+  function renderConcentrationMeta() {
+    var level = clamp(appState.cognitive.concentrationLevel, 1, 8);
+    appState.concentration.level = level;
+    if (!appState.concentration.running) {
+      els.concStartBtn.disabled = false;
+      els.concPauseBtn.disabled = true;
+      els.concPauseBtn.textContent = "Pause";
+      els.concGenerateRules.disabled = false;
+      els.concRoundInfo.textContent = "Round: 30 triangles | Level " + level;
+      els.concProgress.textContent = "Progress: 0 / 30";
+      els.concTime.textContent = "Time left: -";
+      renderConcentrationRuleUI();
+      renderConcentrationTriangle(null);
+      setConcentrationButtonsEnabled(false);
+    }
+  }
+
+  function scheduleConcentrationTimeout(ms) {
+    clearConcentrationTimer();
+    var timeoutMs = clamp(Number(ms) || appState.concentration.timeoutMs, 250, 12000);
+    appState.concentration.timeRemainingMs = timeoutMs;
+    appState.concentration.deadlineAt = performance.now() + timeoutMs;
+    els.concTime.textContent = "Time left: " + (timeoutMs / 1000).toFixed(1) + "s";
+    appState.concentration.timer = setTimeout(function () {
+      if (!appState.concentration.running || appState.concentration.locked || appState.concentration.paused) {
+        return;
+      }
+      appState.concentration.timeouts += 1;
+      els.concTime.textContent = "Time left: 0.0s";
+      handleConcentrationAction("timeout");
+    }, timeoutMs);
+  }
+
+  function renderConcentrationStimulus() {
+    if (!appState.concentration.running) {
+      return;
+    }
+    if (appState.concentration.paused) {
+      return;
+    }
+    clearConcentrationTimer();
+
+    var idx = appState.concentration.index;
+    var total = appState.concentration.sequence.length;
+    var item = appState.concentration.sequence[idx];
+    if (!item) {
+      finishConcentrationRound();
+      return;
+    }
+
+    renderConcentrationTriangle(item.stimulus);
+    els.concProgress.textContent = "Progress: " + (idx + 1) + " / " + total;
+    els.concTime.textContent = "Time left: " + (appState.concentration.timeoutMs / 1000).toFixed(1) + "s";
+    if (idx === 0) {
+      els.concStatus.textContent = "Baseline triangle. Tap Neither / Next to begin comparisons.";
+      els.concStatus.className = "astro-status";
+    }
+    appState.concentration.locked = false;
+    setConcentrationButtonsEnabled(true);
+    scheduleConcentrationTimeout(appState.concentration.timeoutMs);
+  }
+
+  function startConcentrationRound() {
+    if (appState.concentration.running) {
+      return;
+    }
+    clearConcentrationTimer();
+    if (!appState.concentration.rulesConfigured) {
+      var shuffled = shuffle(CONCENTRATION_TRAITS);
+      appState.concentration.topRule = shuffled[0];
+      appState.concentration.bottomRule = shuffled[1];
+      appState.concentration.rulesConfigured = true;
+    }
+    var level = clamp(appState.cognitive.concentrationLevel, 1, 8);
+    appState.concentration.roundSize = 30;
+    appState.concentration.timeoutMs = concentrationTimeoutForLevel(level);
+    appState.concentration.sequence = makeConcentrationSequence(
+      appState.concentration.roundSize,
+      appState.concentration.topRule,
+      appState.concentration.bottomRule
+    );
+    appState.concentration.index = 0;
+    appState.concentration.correct = 0;
+    appState.concentration.wrong = 0;
+    appState.concentration.timeouts = 0;
+    appState.concentration.running = true;
+    appState.concentration.locked = false;
+    appState.concentration.paused = false;
+    appState.concentration.deadlineAt = 0;
+    appState.concentration.timeRemainingMs = appState.concentration.timeoutMs;
+    appState.concentration.level = level;
+
+    showConcentrationRulesForMs(10000);
+    els.concRoundInfo.textContent =
+      "Round: 30 triangles | Level " + level + " | Respond in " + (appState.concentration.timeoutMs / 1000).toFixed(1) + "s";
+    els.concStatus.textContent = "Round live. Compare with the previous triangle and tap the correct rule.";
+    els.concStatus.className = "astro-status";
+    els.concStartBtn.disabled = true;
+    els.concPauseBtn.disabled = false;
+    els.concPauseBtn.textContent = "Pause";
+    els.concGenerateRules.disabled = true;
+    setConcentrationButtonsEnabled(true);
+
+    renderConcentrationStimulus();
+  }
+
+  function toggleConcentrationPause() {
+    if (!appState.concentration.running) {
+      return;
+    }
+    if (appState.concentration.paused) {
+      appState.concentration.paused = false;
+      els.concPauseBtn.textContent = "Pause";
+      els.concStatus.textContent = "Resumed.";
+      els.concStatus.className = "astro-status";
+      setConcentrationButtonsEnabled(true);
+      scheduleConcentrationTimeout(appState.concentration.timeRemainingMs || appState.concentration.timeoutMs);
+      return;
+    }
+
+    appState.concentration.paused = true;
+    clearConcentrationTimer();
+    var remaining = Math.max(120, Math.round(appState.concentration.deadlineAt - performance.now()));
+    appState.concentration.timeRemainingMs = remaining;
+    els.concPauseBtn.textContent = "Resume";
+    els.concTime.textContent = "Paused (" + (remaining / 1000).toFixed(1) + "s left)";
+    els.concStatus.textContent = "Paused. Press Resume to continue this triangle.";
+    els.concStatus.className = "astro-status";
+    setConcentrationButtonsEnabled(false);
+  }
+
+  function resetConcentrationRound(mode) {
+    clearConcentrationTimer();
+    clearConcentrationRuleHideTimer();
+    clearConcentrationRevealState();
+    appState.concentration.running = false;
+    appState.concentration.paused = false;
+    appState.concentration.locked = false;
+    appState.concentration.deadlineAt = 0;
+    appState.concentration.timeRemainingMs = 0;
+    appState.concentration.rulesMasked = false;
+    appState.concentration.sequence = [];
+    appState.concentration.index = 0;
+    appState.concentration.correct = 0;
+    appState.concentration.wrong = 0;
+    appState.concentration.timeouts = 0;
+
+    els.concStartBtn.disabled = false;
+    els.concPauseBtn.disabled = true;
+    els.concPauseBtn.textContent = "Pause";
+    els.concGenerateRules.disabled = false;
+    els.concProgress.textContent = "Progress: 0 / 30";
+    els.concTime.textContent = "Time left: -";
+    renderConcentrationTriangle(null);
+    setConcentrationButtonsEnabled(false);
+    renderConcentrationRuleUI();
+
+    if (mode === "manual") {
+      els.concRoundInfo.textContent = "Round reset | Level " + clamp(appState.cognitive.concentrationLevel, 1, 8);
+      els.concStatus.textContent = "Round reset. You can generate new rules or start again.";
+      els.concStatus.className = "astro-status";
+    }
+  }
+
+  function finishConcentrationRound() {
+    clearConcentrationTimer();
+    appState.concentration.running = false;
+    appState.concentration.paused = false;
+    appState.concentration.locked = false;
+    appState.concentration.deadlineAt = 0;
+    appState.concentration.timeRemainingMs = 0;
+    els.concStartBtn.disabled = false;
+    els.concPauseBtn.disabled = true;
+    els.concPauseBtn.textContent = "Pause";
+    els.concGenerateRules.disabled = false;
+    setConcentrationButtonsEnabled(false);
+    els.concTime.textContent = "Time left: -";
+    maskConcentrationRules();
+
+    var total = appState.concentration.sequence.length || appState.concentration.roundSize || 30;
+    var correct = appState.concentration.correct;
+    var wrong = appState.concentration.wrong;
+    var timeouts = appState.concentration.timeouts;
+    var accuracy = total ? Math.round((correct / total) * 100) : 0;
+    var level = clamp(appState.cognitive.concentrationLevel, 1, 8);
+    var score = clamp(Math.round(25 + accuracy * 0.63 + level * 4 - timeouts), 15, 100);
+    var detail = correct + "/" + total + " | timeouts " + timeouts;
+    var logEntry = logCognitiveActivity("triangle-concentration", score, detail);
+
+    if (accuracy >= 82 && wrong <= Math.floor(total * 0.28)) {
+      appState.cognitive.concentrationLevel = clamp(level + 1, 1, 8);
+    } else if (accuracy < 55) {
+      appState.cognitive.concentrationLevel = clamp(level - 1, 1, 8);
+    }
+    appState.cognitive.concentrationBest = Math.max(
+      appState.cognitive.concentrationBest,
+      appState.cognitive.concentrationLevel
+    );
+
+    els.concRoundInfo.textContent =
+      "Round complete | Level " + appState.cognitive.concentrationLevel + " | Best " + appState.cognitive.concentrationBest;
+    els.concStatus.textContent =
+      "Accuracy: " + accuracy + "% (" + correct + "/" + total + ") | Timeouts: " + timeouts +
+      " | +" + logEntry.xpEarned + " XP";
+    els.concStatus.className = accuracy >= 70 ? "astro-status success" : "astro-status error";
+  }
+
+  function handleConcentrationAction(action) {
+    if (!appState.concentration.running || appState.concentration.locked || appState.concentration.paused) {
+      return;
+    }
+    appState.concentration.locked = true;
+    clearConcentrationTimer();
+
+    var idx = appState.concentration.index;
+    var item = appState.concentration.sequence[idx];
+    if (!item) {
+      finishConcentrationRound();
+      return;
+    }
+
+    var selected = action === "timeout" ? "none" : action;
+    var correct = action !== "timeout" && selected === item.expectedAction;
+    if (correct) {
+      appState.concentration.correct += 1;
+    } else {
+      appState.concentration.wrong += 1;
+    }
+
+    if (action === "timeout") {
+      els.concStatus.textContent = "Timed out. Next triangle.";
+      els.concStatus.className = "astro-status error";
+    } else if (correct) {
+      els.concStatus.textContent = "Correct.";
+      els.concStatus.className = "astro-status success";
+    } else {
+      els.concStatus.textContent = "Incorrect.";
+      els.concStatus.className = "astro-status error";
+    }
+
+    if (idx >= appState.concentration.sequence.length - 1) {
+      finishConcentrationRound();
+      return;
+    }
+
+    appState.concentration.index += 1;
+    setTimeout(function () {
+      renderConcentrationStimulus();
+    }, correct ? 130 : 190);
   }
 
   function setReactionState(label, className) {
@@ -2360,13 +2994,41 @@
       }
     });
 
-    createMemoryGrid();
+    var visualInfo = getVisualLevelInfo();
+    createMemoryGrid(visualInfo.gridSize);
     els.memoryShow.addEventListener("click", showMemoryPattern);
     els.memorySubmit.addEventListener("click", submitMemoryPattern);
     els.memoryReset.addEventListener("click", function () {
       clearMemoryPicks();
       els.memoryStatus.textContent = "Selections reset.";
       els.memoryStatus.className = "astro-status";
+    });
+    els.memoryStatus.textContent =
+      "Level: " + visualInfo.tileCount + " tiles on " + visualInfo.gridSize + "x" + visualInfo.gridSize +
+      ". First miss is tolerated; second miss drops a level.";
+    els.memoryStatus.className = "astro-status";
+
+    renderConcentrationMeta();
+    els.concStartBtn.addEventListener("click", startConcentrationRound);
+    els.concPauseBtn.addEventListener("click", toggleConcentrationPause);
+    els.concResetBtn.addEventListener("click", function () {
+      resetConcentrationRound("manual");
+    });
+    els.concGenerateRules.addEventListener("click", generateConcentrationRules);
+    els.concRevealTop.addEventListener("click", function () {
+      revealConcentrationRule("top");
+    });
+    els.concRevealBottom.addEventListener("click", function () {
+      revealConcentrationRule("bottom");
+    });
+    els.concTopBtn.addEventListener("click", function () {
+      handleConcentrationAction("top");
+    });
+    els.concBottomBtn.addEventListener("click", function () {
+      handleConcentrationAction("bottom");
+    });
+    els.concNoneBtn.addEventListener("click", function () {
+      handleConcentrationAction("none");
     });
 
     els.reactionStart.addEventListener("click", startReactionTrial);
@@ -2665,6 +3327,12 @@
       if (appState.math.nextTimer) {
         clearTimeout(appState.math.nextTimer);
       }
+      if (appState.memory.revealTimer) {
+        clearTimeout(appState.memory.revealTimer);
+      }
+      clearConcentrationTimer();
+      clearConcentrationRuleHideTimer();
+      clearConcentrationRevealState();
 
       appState.profile = {
         xp: 0,
@@ -2677,8 +3345,9 @@
       appState.cognitive = {
         digitLevel: 4,
         digitBest: 4,
-        visualLevel: 3,
-        visualBest: 3,
+        visualLevel: 5,
+        visualBest: 5,
+        visualMistakes: 0,
         rmsLevel: 3,
         rmsBest: 3,
         rmsSpeedFactor: 1.2,
@@ -2688,8 +3357,17 @@
         rotationBest: 2,
         mathLevel: 1,
         mathBest: 1,
+        concentrationLevel: 1,
+        concentrationBest: 1,
         reactionRuns: [],
         drillLogs: []
+      };
+      appState.memory = {
+        activePattern: [],
+        picks: new Set(),
+        revealLock: false,
+        revealTimer: null,
+        gridSize: 4
       };
       appState.rms = {
         sequence: [],
@@ -2723,11 +3401,40 @@
         question: null,
         recentTypes: []
       };
+      appState.concentration = {
+        running: false,
+        timer: null,
+        level: 1,
+        roundSize: 30,
+        timeoutMs: 4500,
+        topRule: "color",
+        bottomRule: "orientation",
+        rulesConfigured: false,
+        sequence: [],
+        index: 0,
+        correct: 0,
+        wrong: 0,
+        timeouts: 0,
+        locked: false,
+        paused: false,
+        deadlineAt: 0,
+        timeRemainingMs: 0,
+        rulesMasked: false,
+        ruleHideTimer: null,
+        revealTop: false,
+        revealBottom: false,
+        revealTopTimer: null,
+        revealBottomTimer: null
+      };
 
       resetReaction();
       clearMemoryPicks();
       els.memoryStatus.textContent = "Progress reset.";
       els.memoryStatus.className = "astro-status";
+      createMemoryGrid(4);
+      renderConcentrationMeta();
+      els.concStatus.textContent = "Progress reset.";
+      els.concStatus.className = "astro-status";
 
       persistState();
       renderProfile();
