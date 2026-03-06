@@ -100,6 +100,7 @@
     },
     installationId: "",
     attempts: [],
+    questionStats: {},
     progressPrefs: {
       range: "180d",
       granularity: "auto"
@@ -237,6 +238,41 @@
       return shuffle(array);
     }
     return shuffle(array).slice(0, n);
+  }
+
+  function weightedSampleWithoutReplacement(items, n, weightFn) {
+    var pool = items.slice();
+    var targetCount = Math.min(Math.max(0, n), pool.length);
+    var chosen = [];
+
+    while (chosen.length < targetCount && pool.length) {
+      var weights = pool.map(function (item) {
+        var w = Number(weightFn(item));
+        if (!Number.isFinite(w) || w <= 0) {
+          return 0.001;
+        }
+        return w;
+      });
+
+      var totalWeight = weights.reduce(function (sum, w) { return sum + w; }, 0);
+      var selectedIdx = 0;
+      if (totalWeight > 0) {
+        var roll = Math.random() * totalWeight;
+        var cumulative = 0;
+        for (var idx = 0; idx < weights.length; idx += 1) {
+          cumulative += weights[idx];
+          if (roll <= cumulative) {
+            selectedIdx = idx;
+            break;
+          }
+        }
+      }
+
+      chosen.push(pool[selectedIdx]);
+      pool.splice(selectedIdx, 1);
+    }
+
+    return chosen;
   }
 
   function uniqueBy(array, keyFn) {
@@ -428,6 +464,21 @@
     return "dr-" + hashString(seed);
   }
 
+  function normalizeQuestionLogEntry(raw) {
+    if (!raw || typeof raw !== "object") {
+      return null;
+    }
+    var questionId = String(raw.questionId || raw.id || "").trim();
+    if (!questionId) {
+      return null;
+    }
+    return {
+      questionId: questionId,
+      topicId: String(raw.topicId || "").trim(),
+      correct: Boolean(raw.correct)
+    };
+  }
+
   function normalizeAttemptEntry(raw) {
     if (!raw || typeof raw !== "object") {
       return null;
@@ -448,6 +499,9 @@
     var mode = String(raw.mode || "quiz");
     var xpRaw = Number(raw.xpEarned);
     var xpEarned = Number.isFinite(xpRaw) ? Math.max(0, Math.round(xpRaw)) : xpFromResult(score, correct, total);
+    var questionLog = Array.isArray(raw.questionLog)
+      ? raw.questionLog.map(normalizeQuestionLogEntry).filter(Boolean)
+      : [];
     var id = typeof raw.id === "string" && raw.id.trim()
       ? raw.id.trim()
       : buildAttemptFallbackId({
@@ -469,7 +523,8 @@
       total: total,
       correct: correct,
       score: score,
-      xpEarned: xpEarned
+      xpEarned: xpEarned,
+      questionLog: questionLog
     };
   }
 
@@ -536,6 +591,137 @@
   function sanitizeProgressGranularity(value) {
     var valid = ["auto", "day", "week", "month"];
     return valid.indexOf(value) >= 0 ? value : "auto";
+  }
+
+  function refreshQuestionStatsFromAttempts() {
+    var stats = {};
+    (Array.isArray(appState.attempts) ? appState.attempts : []).forEach(function (attempt) {
+      var ts = normalizeIsoTimestamp(attempt && attempt.timestamp);
+      if (!Array.isArray(attempt.questionLog)) {
+        return;
+      }
+      attempt.questionLog.forEach(function (entry) {
+        var normalized = normalizeQuestionLogEntry(entry);
+        if (!normalized) {
+          return;
+        }
+        var existing = stats[normalized.questionId];
+        if (!existing) {
+          existing = {
+            questionId: normalized.questionId,
+            topicId: normalized.topicId || "",
+            attempts: 0,
+            correct: 0,
+            lastSeen: null,
+            lastCorrect: null
+          };
+        }
+        existing.attempts += 1;
+        if (normalized.correct) {
+          existing.correct += 1;
+        }
+        if (ts) {
+          if (!existing.lastSeen || ts > existing.lastSeen) {
+            existing.lastSeen = ts;
+          }
+          if (normalized.correct && (!existing.lastCorrect || ts > existing.lastCorrect)) {
+            existing.lastCorrect = ts;
+          }
+        }
+        stats[normalized.questionId] = existing;
+      });
+    });
+    appState.questionStats = stats;
+  }
+
+  function getQuestionStat(cardId) {
+    if (!cardId || !appState.questionStats) {
+      return null;
+    }
+    return appState.questionStats[cardId] || null;
+  }
+
+  function getCardMasteryScore(cardId) {
+    var stat = getQuestionStat(cardId);
+    if (!stat || !stat.attempts) {
+      return 0;
+    }
+    var accuracy = stat.correct / stat.attempts;
+    var confidence = Math.min(1, stat.attempts / 5);
+    return clamp(Math.round(accuracy * (0.62 + 0.38 * confidence) * 100), 0, 100);
+  }
+
+  function computeAdaptiveWeight(card) {
+    var stat = getQuestionStat(card.id);
+    if (!stat || !stat.attempts) {
+      return 4.4;
+    }
+    var accuracy = stat.correct / stat.attempts;
+    var weight = 1.1 + (1 - accuracy) * 4.2;
+    if (stat.attempts < 3) {
+      weight += 0.8;
+    }
+
+    var seenMs = parseTimestampMs(stat.lastSeen);
+    if (seenMs != null) {
+      var ageDays = (Date.now() - seenMs) / 86400000;
+      if (ageDays > 10) {
+        weight += 0.6;
+      }
+      if (ageDays > 30) {
+        weight += 0.6;
+      }
+    }
+
+    if (accuracy >= 0.92 && stat.attempts >= 5) {
+      weight *= 0.45;
+    }
+
+    return clamp(weight, 0.12, 8.5);
+  }
+
+  function computeTopicMasteryStats() {
+    return appState.topics.map(function (topic) {
+      var cards = appState.allCards.filter(function (card) {
+        return card.topicId === topic.id;
+      });
+      var totalCards = cards.length;
+      var seenCards = 0;
+      var reviewNeeded = 0;
+      var scoreSum = 0;
+      var attempts = 0;
+      var correct = 0;
+
+      cards.forEach(function (card) {
+        var stat = getQuestionStat(card.id);
+        var mastery = getCardMasteryScore(card.id);
+        scoreSum += mastery;
+        if (stat && stat.attempts > 0) {
+          seenCards += 1;
+          attempts += stat.attempts;
+          correct += stat.correct;
+        }
+        if (!stat || !stat.attempts || mastery < 65) {
+          reviewNeeded += 1;
+        }
+      });
+
+      return {
+        topicId: topic.id,
+        topicName: topic.name,
+        totalCards: totalCards,
+        seenCards: seenCards,
+        reviewNeeded: reviewNeeded,
+        mastery: totalCards ? Math.round(scoreSum / totalCards) : 0,
+        coverage: totalCards ? Math.round((seenCards / totalCards) * 100) : 0,
+        rawAccuracy: attempts ? Math.round((correct / attempts) * 100) : null
+      };
+    }).sort(function (a, b) {
+      if (a.mastery !== b.mastery) {
+        return a.mastery - b.mastery;
+      }
+      return a.coverage - b.coverage;
+    });
   }
 
   function recalculateProfileFromHistory() {
@@ -618,6 +804,7 @@
     els.quizQuestionImage = byId("quiz-question-image");
     els.quizOptions = byId("quiz-options");
     els.quizProgress = byId("quiz-progress");
+    els.quizRecommendation = byId("quiz-recommendation");
     els.quizSubmit = byId("quiz-submit");
     els.quizNext = byId("quiz-next");
     els.quizResult = byId("quiz-result");
@@ -705,10 +892,14 @@
     els.progressLast = byId("progress-last");
     els.progressCognitiveCount = byId("progress-cognitive-count");
     els.progressCognitiveAverage = byId("progress-cognitive-average");
+    els.progressMasteryCoverage = byId("progress-mastery-coverage");
+    els.progressNeedsReview = byId("progress-needs-review");
     els.progressRange = byId("progress-range");
     els.progressGranularity = byId("progress-granularity");
     els.progressSummary = byId("progress-summary");
     els.progressChart = byId("progress-chart");
+    els.topicMasteryList = byId("topic-mastery-list");
+    els.masteryFocus = byId("mastery-focus");
     els.badgeRow = byId("badge-row");
     els.historyBody = byId("history-body");
     els.exportHistory = byId("export-history");
@@ -843,6 +1034,7 @@
       );
     }
 
+    refreshQuestionStatsFromAttempts();
     recalculateProfileFromHistory();
   }
 
@@ -914,6 +1106,8 @@
 
     if (panelId === "panel-progress") {
       renderProgress();
+    } else if (panelId === "panel-quiz") {
+      renderQuizRecommendation();
     }
   }
 
@@ -1070,7 +1264,35 @@
 
   function setQuizTopicInputState() {
     var mode = els.quizMode.value;
-    els.quizTopic.disabled = mode === "random-all";
+    els.quizTopic.disabled = mode === "random-all" || mode === "adaptive-weak";
+    renderQuizRecommendation();
+  }
+
+  function renderQuizRecommendation() {
+    if (!els.quizRecommendation) {
+      return;
+    }
+    var topicStats = computeTopicMasteryStats();
+    if (!topicStats.length) {
+      els.quizRecommendation.textContent = "Adaptive mode targets weaker and less-practiced concepts as your history grows.";
+      return;
+    }
+
+    var practicedTopics = topicStats.filter(function (topic) {
+      return topic.seenCards > 0;
+    });
+
+    if (!practicedTopics.length) {
+      els.quizRecommendation.textContent =
+        "Run one full quiz first, then use Adaptive weak-area mode for targeted review.";
+      return;
+    }
+
+    var weakest = topicStats[0];
+    els.quizRecommendation.textContent =
+      "Recommended next focus: " +
+      weakest.topicName +
+      " (" + weakest.mastery + "% mastery, " + weakest.coverage + "% coverage).";
   }
 
   function buildQuestion(card, mode) {
@@ -1130,12 +1352,14 @@
   }
 
   function buildQuizSet() {
+    refreshQuestionStatsFromAttempts();
+
     var mode = els.quizMode.value;
     var count = clamp(Number(els.quizCount.value) || 20, 5, 100);
     var selectedTopicId = els.quizTopic.value || appState.currentTopicId;
 
     var pool = [];
-    if (mode === "random-all") {
+    if (mode === "random-all" || mode === "adaptive-weak") {
       pool = appState.allCards.slice();
     } else {
       pool = appState.allCards.filter(function (card) {
@@ -1150,6 +1374,21 @@
     var chosen;
     if (mode === "series-topic") {
       chosen = pool.slice(0, Math.min(count, pool.length));
+    } else if (mode === "adaptive-weak") {
+      var targetCount = Math.min(count, pool.length);
+      var ranked = pool.slice().sort(function (a, b) {
+        return getCardMasteryScore(a.id) - getCardMasteryScore(b.id);
+      });
+      var weakQuota = targetCount <= 3 ? targetCount : clamp(Math.round(targetCount * 0.45), 3, targetCount);
+      var weakAnchors = ranked.slice(0, weakQuota);
+      var weakIds = new Set(weakAnchors.map(function (card) { return card.id; }));
+      var weightedPool = pool.filter(function (card) { return !weakIds.has(card.id); });
+      var weightedPick = weightedSampleWithoutReplacement(
+        weightedPool,
+        Math.max(0, targetCount - weakAnchors.length),
+        computeAdaptiveWeight
+      );
+      chosen = shuffle(weakAnchors.concat(weightedPick));
     } else {
       chosen = sample(pool, Math.min(count, pool.length));
     }
@@ -1280,6 +1519,8 @@
     });
 
     quiz.records.push({
+      questionId: question.id,
+      topicId: question.topicId,
       question: question.prompt,
       topicName: question.topicName,
       selected: selectedAnswer,
@@ -1407,17 +1648,27 @@
       id: createHistoryEntryId("qz"),
       timestamp: new Date().toISOString(),
       mode: modeLabel,
-      topicId: quiz.mode === "random-all" ? "all" : quiz.topicId,
-      topicName: quiz.mode === "random-all"
+      topicId: (quiz.mode === "random-all" || quiz.mode === "adaptive-weak") ? "all" : quiz.topicId,
+      topicName: (quiz.mode === "random-all" || quiz.mode === "adaptive-weak")
         ? "All topics"
         : (appState.topics.find(function (topic) { return topic.id === quiz.topicId; }) || { name: "Unknown" }).name,
       total: total,
       correct: correct,
       score: score,
-      xpEarned: xpEarned
+      xpEarned: xpEarned,
+      questionLog: quiz.records.map(function (record) {
+        return {
+          questionId: record.questionId,
+          topicId: record.topicId,
+          correct: Boolean(record.correct)
+        };
+      }).filter(function (entry) {
+        return entry.questionId;
+      })
     };
 
     appState.attempts.push(attempt);
+    refreshQuestionStatsFromAttempts();
 
     appState.profile.quizCount += 1;
     appState.profile.xp += xpEarned;
@@ -4176,9 +4427,81 @@
     });
   }
 
+  function formatQuizModeLabel(mode) {
+    if (mode === "random-all") {
+      return "quiz:random-all";
+    }
+    if (mode === "adaptive-weak") {
+      return "quiz:adaptive";
+    }
+    if (mode === "random-topic") {
+      return "quiz:random-topic";
+    }
+    if (mode === "series-topic") {
+      return "quiz:series-topic";
+    }
+    return String(mode || "quiz");
+  }
+
+  function renderTopicMastery(topicStats) {
+    if (!els.topicMasteryList) {
+      return;
+    }
+    els.topicMasteryList.innerHTML = "";
+    if (!topicStats.length) {
+      var empty = document.createElement("p");
+      empty.className = "topic-mastery-empty";
+      empty.textContent = "No mastery data available yet.";
+      els.topicMasteryList.appendChild(empty);
+      return;
+    }
+
+    topicStats.forEach(function (topic) {
+      var item = document.createElement("article");
+      item.className = "topic-mastery-item";
+
+      var head = document.createElement("div");
+      head.className = "topic-mastery-head";
+
+      var title = document.createElement("span");
+      title.className = "topic-mastery-title";
+      title.textContent = topic.topicName;
+
+      var metrics = document.createElement("span");
+      metrics.className = "topic-mastery-metrics";
+      metrics.textContent = topic.mastery + "% mastery | " + topic.coverage + "% coverage";
+
+      head.appendChild(title);
+      head.appendChild(metrics);
+      item.appendChild(head);
+
+      var bar = document.createElement("div");
+      bar.className = "topic-mastery-bar";
+      var fill = document.createElement("span");
+      fill.className = "topic-mastery-fill";
+      fill.style.width = clamp(topic.mastery, 0, 100) + "%";
+      bar.appendChild(fill);
+      item.appendChild(bar);
+
+      var meta = document.createElement("div");
+      meta.className = "topic-mastery-meta";
+      var accuracyText = topic.rawAccuracy == null ? "No answer-level accuracy yet." : (topic.rawAccuracy + "% answer accuracy.");
+      meta.textContent = topic.reviewNeeded + " cards need review out of " + topic.totalCards + ". " + accuracyText;
+      item.appendChild(meta);
+
+      els.topicMasteryList.appendChild(item);
+    });
+  }
+
   function renderProgress() {
+    refreshQuestionStatsFromAttempts();
+
     var attempts = appState.attempts;
     var drillLogs = Array.isArray(appState.cognitive.drillLogs) ? appState.cognitive.drillLogs : [];
+    var topicMastery = computeTopicMasteryStats();
+    var totalCards = appState.allCards.length;
+    var seenCards = topicMastery.reduce(function (sum, topic) { return sum + topic.seenCards; }, 0);
+    var reviewCards = topicMastery.reduce(function (sum, topic) { return sum + topic.reviewNeeded; }, 0);
     var total = attempts.length;
     var avg = total
       ? Math.round(attempts.reduce(function (sum, a) { return sum + (Number(a.score) || 0); }, 0) / total)
@@ -4195,6 +4518,14 @@
     els.progressCognitiveAverage.textContent = drillLogs.length
       ? Math.round(drillLogs.reduce(function (sum, entry) { return sum + (Number(entry.score) || 0); }, 0) / drillLogs.length) + "%"
       : "0%";
+    if (els.progressMasteryCoverage) {
+      els.progressMasteryCoverage.textContent = totalCards
+        ? Math.round((seenCards / totalCards) * 100) + "%"
+        : "0%";
+    }
+    if (els.progressNeedsReview) {
+      els.progressNeedsReview.textContent = String(reviewCards);
+    }
 
     var lastQuizTs = getLatestTimestamp(attempts);
     var lastDrillTs = getLatestTimestamp(drillLogs);
@@ -4215,15 +4546,29 @@
           chartMeta.quizPoints +
           " quiz entries + " +
           chartMeta.drillPoints +
-          " cognitive entries.";
+          " cognitive entries. Mastery view is derived from answer-level quiz logs.";
       }
     }
+
+    renderTopicMastery(topicMastery);
+    if (els.masteryFocus) {
+      if (!topicMastery.length || topicMastery[0].seenCards === 0) {
+        els.masteryFocus.textContent =
+          "Take one full quiz first to unlock stronger adaptive recommendations and mastery tracking.";
+      } else {
+        var focus = topicMastery[0];
+        els.masteryFocus.textContent =
+          "Focus next on " + focus.topicName + ": " + focus.mastery + "% mastery, " +
+          focus.reviewNeeded + " cards still need review.";
+      }
+    }
+    renderQuizRecommendation();
 
     els.historyBody.innerHTML = "";
     var combined = attempts.map(function (attempt) {
       return {
         timestamp: attempt.timestamp,
-        mode: attempt.mode,
+        mode: formatQuizModeLabel(attempt.mode),
         topicName: attempt.topicName,
         scoreText: attempt.score + "%",
         resultText: attempt.correct + " / " + attempt.total
@@ -4361,6 +4706,7 @@
       appState.cognitive.concentrationLevel
     );
 
+    refreshQuestionStatsFromAttempts();
     recalculateProfileFromHistory();
     refreshBadges();
     persistState();
@@ -4474,6 +4820,7 @@
         badges: []
       };
       appState.attempts = [];
+      appState.questionStats = {};
       appState.cognitive = {
         digitLevel: 4,
         digitBest: 4,

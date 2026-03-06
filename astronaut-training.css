@@ -491,6 +491,10 @@
   margin: 0 0 0.45rem;
 }
 
+.quiz-recommendation {
+  margin-top: 0.15rem;
+}
+
 .quiz-review {
   margin: 0.65rem 0 0;
   padding-left: 1.05rem;
@@ -981,6 +985,71 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
+}
+
+.mastery-section {
+  margin-top: 0.7rem;
+}
+
+.mastery-section h3 {
+  margin: 0 0 0.45rem;
+}
+
+.topic-mastery-list {
+  display: grid;
+  gap: 0.48rem;
+}
+
+.topic-mastery-item {
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--bg-color);
+  padding: 0.48rem 0.56rem 0.52rem;
+}
+
+.topic-mastery-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.3rem 0.5rem;
+  align-items: baseline;
+}
+
+.topic-mastery-title {
+  font-size: 0.92rem;
+  font-weight: 620;
+}
+
+.topic-mastery-metrics {
+  font-size: 0.8rem;
+  opacity: 0.82;
+}
+
+.topic-mastery-bar {
+  width: 100%;
+  margin-top: 0.32rem;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(130, 150, 180, 0.24);
+  overflow: hidden;
+}
+
+.topic-mastery-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #2f8cff, #7f6dff);
+}
+
+.topic-mastery-meta {
+  margin-top: 0.28rem;
+  font-size: 0.78rem;
+  opacity: 0.82;
+}
+
+.topic-mastery-empty {
+  font-size: 0.84rem;
+  opacity: 0.75;
 }
 
 .badge-chip {

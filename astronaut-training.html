@@ -185,6 +185,7 @@
               Question mode
               <select id="quiz-mode" name="mode">
                 <option value="random-all">Random from all topics</option>
+                <option value="adaptive-weak">Adaptive weak-area focus (recommended)</option>
                 <option value="random-topic">Random within one topic</option>
                 <option value="series-topic">Series within one topic</option>
               </select>
@@ -208,6 +209,9 @@
               <button id="quiz-start" class="astro-btn primary" type="button">Start Quiz</button>
             </div>
           </form>
+          <p id="quiz-recommendation" class="panel-note quiz-recommendation">
+            Adaptive mode targets weaker and less-practiced concepts as your history grows.
+          </p>
 
           <div id="quiz-live" hidden>
             <div class="quiz-question">
@@ -434,6 +438,14 @@
               <span class="progress-label">Avg Cognitive Score</span>
               <span id="progress-cognitive-average" class="progress-value">0%</span>
             </div>
+            <div class="progress-card">
+              <span class="progress-label">Mastery Coverage</span>
+              <span id="progress-mastery-coverage" class="progress-value">0%</span>
+            </div>
+            <div class="progress-card">
+              <span class="progress-label">Cards Needing Review</span>
+              <span id="progress-needs-review" class="progress-value">0</span>
+            </div>
           </div>
 
           <div class="progress-controls">
@@ -466,6 +478,14 @@
           <div style="margin-top:0.65rem;">
             <h3 style="margin:0 0 0.35rem;">Badges</h3>
             <div id="badge-row" class="badge-row"></div>
+          </div>
+
+          <div class="mastery-section">
+            <h3>Topic Mastery</h3>
+            <div id="topic-mastery-list" class="topic-mastery-list"></div>
+            <p id="mastery-focus" class="panel-note">
+              Complete a few quizzes to unlock adaptive topic recommendations.
+            </p>
           </div>
 
           <div class="history-table-wrap" style="margin-top:0.6rem;">
