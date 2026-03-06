@@ -247,6 +247,85 @@
       line-height: 1.45;
     }
 
+    .home-latest {
+      margin: 0 0 1.35rem;
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      background: var(--card-bg);
+      padding: 0.9rem;
+    }
+
+    .home-latest-grid {
+      display: grid;
+      gap: 0.78rem;
+      grid-template-columns: minmax(0, 240px) minmax(0, 1fr);
+      align-items: center;
+    }
+
+    .home-latest-media {
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      background: #0f1930;
+    }
+
+    .home-latest-media img {
+      width: 100%;
+      display: block;
+      height: auto;
+      object-fit: cover;
+    }
+
+    .home-latest-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      border: 1px solid color-mix(in oklab, var(--accent-color) 35%, var(--border-color));
+      border-radius: 999px;
+      padding: 0.16rem 0.58rem;
+      font-size: 0.76rem;
+      margin: 0 0 0.4rem;
+      background: color-mix(in oklab, var(--card-bg) 82%, #123058 18%);
+    }
+
+    .home-latest h3 {
+      margin: 0 0 0.34rem;
+      font-size: 1.08rem;
+      line-height: 1.35;
+    }
+
+    .home-latest p {
+      margin: 0;
+      line-height: 1.56;
+      font-size: 0.93rem;
+      opacity: 0.92;
+    }
+
+    .home-latest-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.42rem;
+      margin-top: 0.6rem;
+    }
+
+    .home-latest-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.24rem;
+      border: 1px solid var(--border-color);
+      border-radius: 999px;
+      padding: 0.2rem 0.56rem;
+      font-size: 0.8rem;
+      text-decoration: none;
+      color: var(--text-color);
+      background: var(--bg-color);
+    }
+
+    .home-latest-link:hover {
+      text-decoration: none;
+      border-color: var(--accent-color);
+    }
+
     .home-social {
       display: flex;
       align-items: center;
@@ -996,6 +1075,7 @@
 
       .home-work,
       .home-projects,
+      .home-latest,
       .home-mission {
         margin-top: 1.05rem;
         padding: 0.82rem;
@@ -1072,6 +1152,10 @@
         display: grid;
         grid-template-columns: 1fr;
         gap: 0.42rem;
+      }
+
+      .home-latest-grid {
+        grid-template-columns: 1fr;
       }
 
       .home-project-link {
@@ -1206,6 +1290,30 @@
           </p>
         </aside>
       </header>
+
+      <section class="home-latest" aria-labelledby="latest-title">
+        <div class="home-section-head">
+          <h2 id="latest-title">Latest</h2>
+          <p class="home-section-note">Most recent conference activity and preview media.</p>
+        </div>
+        <div class="home-latest-grid">
+          <a class="home-latest-media" href="https://www.youtube.com/watch?v=o_yLNhcnVEM" target="_blank" rel="noopener" aria-label="Watch the AAS GN&C 2026 talk video">
+            <img src="https://img.youtube.com/vi/o_yLNhcnVEM/hqdefault.jpg" alt="YouTube thumbnail for AAS GN&C 2026 talk" loading="lazy" decoding="async" />
+          </a>
+          <div>
+            <span class="home-latest-kicker"><iconify-icon icon="mdi:rocket-launch-outline"></iconify-icon>AAS GN&amp;C 2026</span>
+            <h3>LEO-to-Any Autonomous Imaging Scheduling</h3>
+            <p>
+              Latest public update: autonomous space-based imaging with reinforcement-learning scheduling under downlink latency and onboard resource constraints, presented at the AAS Rocky Mountain GN&amp;C Conference.
+            </p>
+            <div class="home-latest-links">
+              <a class="home-latest-link" href="https://hanspeterschaub.info/Papers/HutererPrats2026.pdf" target="_blank" rel="noopener">Paper PDF</a>
+              <a class="home-latest-link" href="https://www.xcdsystem.com/aas/program/w8LRlcl/index.cfm" target="_blank" rel="noopener">Conference Program</a>
+              <a class="home-latest-link" href="https://www.youtube.com/watch?v=o_yLNhcnVEM" target="_blank" rel="noopener">Talk Video</a>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <section class="home-work" aria-labelledby="work-title">
         <div class="home-section-head">
