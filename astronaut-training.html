@@ -436,10 +436,32 @@
             </div>
           </div>
 
+          <div class="progress-controls">
+            <label for="progress-range">
+              Time window
+              <select id="progress-range">
+                <option value="30d">Last 30 days</option>
+                <option value="90d">Last 90 days</option>
+                <option value="180d" selected>Last 6 months</option>
+                <option value="365d">Last 12 months</option>
+                <option value="all">All time</option>
+              </select>
+            </label>
+            <label for="progress-granularity">
+              Resolution
+              <select id="progress-granularity">
+                <option value="auto" selected>Auto</option>
+                <option value="day">Daily</option>
+                <option value="week">Weekly</option>
+                <option value="month">Monthly</option>
+              </select>
+            </label>
+          </div>
+
           <div class="progress-chart-wrap">
             <canvas id="progress-chart" width="860" height="280" aria-label="Score trend chart"></canvas>
           </div>
-          <p class="panel-note">Chart tracks quiz scores (blue) and cognitive drill scores (purple).</p>
+          <p id="progress-summary" class="panel-note">Chart tracks quiz scores (blue) and cognitive drill scores (purple).</p>
 
           <div style="margin-top:0.65rem;">
             <h3 style="margin:0 0 0.35rem;">Badges</h3>
@@ -462,9 +484,14 @@
           </div>
 
           <div class="cog-row" style="margin-top:0.7rem;">
-            <button id="export-history" class="astro-btn" type="button">Export Progress JSON</button>
+            <button id="export-history" class="astro-btn" type="button">Export Backup JSON</button>
+            <button id="import-history" class="astro-btn" type="button">Import + Merge JSON</button>
+            <input id="import-history-file" type="file" accept="application/json,.json" hidden />
             <button id="clear-history" class="astro-btn danger" type="button">Clear Local Progress</button>
           </div>
+          <p id="progress-sync-status" class="panel-note">
+            Tip: practice data stays on this device. Export JSON on one device and Import + Merge on another to combine progress across offline phone and desktop sessions.
+          </p>
         </section>
 
         <section class="astro-panel" id="panel-sources" role="tabpanel" aria-labelledby="tab-sources" hidden>

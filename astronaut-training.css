@@ -918,6 +918,30 @@
   margin-bottom: 0.8rem;
 }
 
+.progress-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem 0.8rem;
+  align-items: center;
+  margin-bottom: 0.55rem;
+}
+
+.progress-controls label {
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.82rem;
+  opacity: 0.9;
+}
+
+.progress-controls select {
+  min-width: 140px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.3rem 0.45rem;
+  background: var(--bg-color);
+  color: var(--text-color);
+}
+
 .progress-card {
   border: 1px solid var(--border-color);
   border-radius: 12px;
@@ -1011,6 +1035,19 @@
   font-size: 0.88rem;
   opacity: 0.8;
   line-height: 1.5;
+}
+
+.panel-note.success,
+.panel-note.error {
+  opacity: 1;
+}
+
+.panel-note.success {
+  color: #2f9e63;
+}
+
+.panel-note.error {
+  color: #c45151;
 }
 
 @media (min-width: 860px) {

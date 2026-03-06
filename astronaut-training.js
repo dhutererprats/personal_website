@@ -6,7 +6,9 @@
     unlocked: "astro_training_unlocked_v1",
     profile: "astro_training_profile_v1",
     attempts: "astro_training_attempts_v1",
-    cognitive: "astro_training_cognitive_v1"
+    cognitive: "astro_training_cognitive_v1",
+    installationId: "astro_training_installation_id_v1",
+    progressPrefs: "astro_training_progress_prefs_v1"
   };
 
   var BADGE_DEFS = [
@@ -96,7 +98,12 @@
       lastPracticeDate: null,
       badges: []
     },
+    installationId: "",
     attempts: [],
+    progressPrefs: {
+      range: "180d",
+      granularity: "auto"
+    },
     cognitive: {
       digitLevel: 4,
       digitBest: 4,
@@ -341,6 +348,234 @@
     }
   }
 
+  function parseTimestampMs(value) {
+    var ms = new Date(value).getTime();
+    return Number.isNaN(ms) ? null : ms;
+  }
+
+  function normalizeIsoTimestamp(value) {
+    var ms = parseTimestampMs(value);
+    if (ms == null) {
+      return null;
+    }
+    return new Date(ms).toISOString();
+  }
+
+  function hashString(value) {
+    var str = String(value || "");
+    var hash = 2166136261;
+    for (var i = 0; i < str.length; i += 1) {
+      hash ^= str.charCodeAt(i);
+      hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
+    }
+    return (hash >>> 0).toString(36);
+  }
+
+  function createInstallationId() {
+    if (window.crypto && typeof window.crypto.getRandomValues === "function") {
+      var buffer = new Uint32Array(2);
+      window.crypto.getRandomValues(buffer);
+      return "inst-" + buffer[0].toString(36) + "-" + buffer[1].toString(36);
+    }
+    return "inst-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10);
+  }
+
+  function ensureInstallationId() {
+    var stored = safeRead(STORE_KEYS.installationId, "");
+    if (typeof stored === "string" && stored.trim().length > 0) {
+      appState.installationId = stored.trim();
+      return;
+    }
+    appState.installationId = createInstallationId();
+    safeWrite(STORE_KEYS.installationId, appState.installationId);
+  }
+
+  function createHistoryEntryId(prefix) {
+    if (!appState.installationId) {
+      ensureInstallationId();
+    }
+    return (
+      prefix +
+      "-" +
+      appState.installationId +
+      "-" +
+      Date.now().toString(36) +
+      "-" +
+      Math.random().toString(36).slice(2, 8)
+    );
+  }
+
+  function buildAttemptFallbackId(entry) {
+    var seed = [
+      entry.timestamp || "",
+      entry.mode || "",
+      entry.topicId || "",
+      entry.topicName || "",
+      String(entry.total || 0),
+      String(entry.correct || 0),
+      String(entry.score || 0)
+    ].join("|");
+    return "qz-" + hashString(seed);
+  }
+
+  function buildDrillFallbackId(entry) {
+    var seed = [
+      entry.timestamp || "",
+      entry.type || "",
+      String(entry.score || 0),
+      String(entry.detail || "")
+    ].join("|");
+    return "dr-" + hashString(seed);
+  }
+
+  function normalizeAttemptEntry(raw) {
+    if (!raw || typeof raw !== "object") {
+      return null;
+    }
+    var timestamp = normalizeIsoTimestamp(raw.timestamp);
+    if (!timestamp) {
+      return null;
+    }
+    var total = clamp(Math.round(Number(raw.total) || 0), 0, 10000);
+    var correctRaw = Math.round(Number(raw.correct) || 0);
+    var correct = total > 0 ? clamp(correctRaw, 0, total) : Math.max(0, correctRaw);
+    var scoreRaw = Number(raw.score);
+    var score = Number.isFinite(scoreRaw)
+      ? clamp(Math.round(scoreRaw), 0, 100)
+      : (total > 0 ? clamp(Math.round((correct / total) * 100), 0, 100) : 0);
+    var topicId = String(raw.topicId || "all");
+    var topicName = String(raw.topicName || (topicId === "all" ? "All topics" : "Unknown"));
+    var mode = String(raw.mode || "quiz");
+    var xpRaw = Number(raw.xpEarned);
+    var xpEarned = Number.isFinite(xpRaw) ? Math.max(0, Math.round(xpRaw)) : xpFromResult(score, correct, total);
+    var id = typeof raw.id === "string" && raw.id.trim()
+      ? raw.id.trim()
+      : buildAttemptFallbackId({
+        timestamp: timestamp,
+        mode: mode,
+        topicId: topicId,
+        topicName: topicName,
+        total: total,
+        correct: correct,
+        score: score
+      });
+
+    return {
+      id: id,
+      timestamp: timestamp,
+      mode: mode,
+      topicId: topicId,
+      topicName: topicName,
+      total: total,
+      correct: correct,
+      score: score,
+      xpEarned: xpEarned
+    };
+  }
+
+  function normalizeDrillLogEntry(raw) {
+    if (!raw || typeof raw !== "object") {
+      return null;
+    }
+    var timestamp = normalizeIsoTimestamp(raw.timestamp);
+    if (!timestamp) {
+      return null;
+    }
+    var type = String(raw.type || "drill");
+    var detail = String(raw.detail || "");
+    var score = clamp(Math.round(Number(raw.score) || 0), 0, 100);
+    var xpRaw = Number(raw.xpEarned);
+    var xpEarned = Number.isFinite(xpRaw) ? Math.max(0, Math.round(xpRaw)) : xpFromCognitiveScore(score);
+    var id = typeof raw.id === "string" && raw.id.trim()
+      ? raw.id.trim()
+      : buildDrillFallbackId({
+        timestamp: timestamp,
+        type: type,
+        score: score,
+        detail: detail
+      });
+    return {
+      id: id,
+      timestamp: timestamp,
+      type: type,
+      score: score,
+      detail: detail,
+      xpEarned: xpEarned
+    };
+  }
+
+  function dedupeHistoryById(items) {
+    var map = new Map();
+    items.forEach(function (item) {
+      if (!item || !item.id) {
+        return;
+      }
+      map.set(item.id, item);
+    });
+    return Array.from(map.values()).sort(function (a, b) {
+      return (parseTimestampMs(a.timestamp) || 0) - (parseTimestampMs(b.timestamp) || 0);
+    });
+  }
+
+  function toLocalDateKey(value) {
+    var dt = new Date(value);
+    if (Number.isNaN(dt.getTime())) {
+      return null;
+    }
+    var y = dt.getFullYear();
+    var m = String(dt.getMonth() + 1).padStart(2, "0");
+    var d = String(dt.getDate()).padStart(2, "0");
+    return y + "-" + m + "-" + d;
+  }
+
+  function sanitizeProgressRange(value) {
+    var valid = ["30d", "90d", "180d", "365d", "all"];
+    return valid.indexOf(value) >= 0 ? value : "180d";
+  }
+
+  function sanitizeProgressGranularity(value) {
+    var valid = ["auto", "day", "week", "month"];
+    return valid.indexOf(value) >= 0 ? value : "auto";
+  }
+
+  function recalculateProfileFromHistory() {
+    var attempts = Array.isArray(appState.attempts) ? appState.attempts : [];
+    var drills = Array.isArray(appState.cognitive.drillLogs) ? appState.cognitive.drillLogs : [];
+    var allDates = attempts.map(function (entry) {
+      return toLocalDateKey(entry.timestamp);
+    }).concat(drills.map(function (entry) {
+      return toLocalDateKey(entry.timestamp);
+    })).filter(Boolean);
+
+    var uniqueDays = Array.from(new Set(allDates)).sort();
+    var streak = 0;
+    if (uniqueDays.length) {
+      streak = 1;
+      var cursor = new Date(uniqueDays[uniqueDays.length - 1] + "T00:00:00");
+      for (var idx = uniqueDays.length - 2; idx >= 0; idx -= 1) {
+        var prev = new Date(uniqueDays[idx] + "T00:00:00");
+        var dayDiff = Math.round((cursor.getTime() - prev.getTime()) / 86400000);
+        if (dayDiff === 1) {
+          streak += 1;
+          cursor = prev;
+        } else {
+          break;
+        }
+      }
+    }
+
+    var totalXp = attempts.reduce(function (sum, entry) {
+      return sum + (Math.max(0, Math.round(Number(entry.xpEarned) || 0)));
+    }, 0) + drills.reduce(function (sum, entry) {
+      return sum + (Math.max(0, Math.round(Number(entry.xpEarned) || 0)));
+    }, 0);
+
+    appState.profile.quizCount = attempts.length;
+    appState.profile.lastPracticeDate = uniqueDays.length ? uniqueDays[uniqueDays.length - 1] : null;
+    appState.profile.streak = streak;
+    appState.profile.xp = totalXp;
+  }
+
   function bindElements() {
     els.gate = byId("training-gate");
     els.app = byId("training-app");
@@ -470,10 +705,16 @@
     els.progressLast = byId("progress-last");
     els.progressCognitiveCount = byId("progress-cognitive-count");
     els.progressCognitiveAverage = byId("progress-cognitive-average");
+    els.progressRange = byId("progress-range");
+    els.progressGranularity = byId("progress-granularity");
+    els.progressSummary = byId("progress-summary");
     els.progressChart = byId("progress-chart");
     els.badgeRow = byId("badge-row");
     els.historyBody = byId("history-body");
     els.exportHistory = byId("export-history");
+    els.importHistory = byId("import-history");
+    els.importHistoryFile = byId("import-history-file");
+    els.progressSyncStatus = byId("progress-sync-status");
     els.clearHistory = byId("clear-history");
 
     els.sourcesList = byId("sources-list");
@@ -536,6 +777,8 @@
   }
 
   function restoreState() {
+    ensureInstallationId();
+
     var profileRaw = safeRead(STORE_KEYS.profile, null);
     if (profileRaw && typeof profileRaw === "object") {
       appState.profile.xp = Number(profileRaw.xp) || 0;
@@ -546,7 +789,17 @@
     }
 
     var attemptsRaw = safeRead(STORE_KEYS.attempts, []);
-    appState.attempts = Array.isArray(attemptsRaw) ? attemptsRaw : [];
+    appState.attempts = dedupeHistoryById(
+      (Array.isArray(attemptsRaw) ? attemptsRaw : [])
+        .map(normalizeAttemptEntry)
+        .filter(Boolean)
+    );
+
+    var prefsRaw = safeRead(STORE_KEYS.progressPrefs, null);
+    if (prefsRaw && typeof prefsRaw === "object") {
+      appState.progressPrefs.range = sanitizeProgressRange(prefsRaw.range);
+      appState.progressPrefs.granularity = sanitizeProgressGranularity(prefsRaw.granularity);
+    }
 
     var cogRaw = safeRead(STORE_KEYS.cognitive, null);
     if (cogRaw && typeof cogRaw === "object") {
@@ -576,15 +829,29 @@
         appState.cognitive.concentrationLevel,
         clamp(Number(cogRaw.concentrationBest) || appState.cognitive.concentrationLevel, 1, 8)
       );
-      appState.cognitive.reactionRuns = Array.isArray(cogRaw.reactionRuns) ? cogRaw.reactionRuns.slice(-20) : [];
-      appState.cognitive.drillLogs = Array.isArray(cogRaw.drillLogs) ? cogRaw.drillLogs.slice(-400) : [];
+      appState.cognitive.reactionRuns = Array.isArray(cogRaw.reactionRuns)
+        ? cogRaw.reactionRuns.map(function (value) {
+          return Math.round(Number(value) || 0);
+        }).filter(function (value) {
+          return Number.isFinite(value) && value >= 80 && value <= 3000;
+        })
+        : [];
+      appState.cognitive.drillLogs = dedupeHistoryById(
+        (Array.isArray(cogRaw.drillLogs) ? cogRaw.drillLogs : [])
+          .map(normalizeDrillLogEntry)
+          .filter(Boolean)
+      );
     }
+
+    recalculateProfileFromHistory();
   }
 
   function persistState() {
     safeWrite(STORE_KEYS.profile, appState.profile);
     safeWrite(STORE_KEYS.attempts, appState.attempts);
     safeWrite(STORE_KEYS.cognitive, appState.cognitive);
+    safeWrite(STORE_KEYS.progressPrefs, appState.progressPrefs);
+    safeWrite(STORE_KEYS.installationId, appState.installationId);
   }
 
   function showGateStatus(message, type) {
@@ -1076,6 +1343,7 @@
     var boundedScore = clamp(Math.round(score), 0, 100);
     var xpEarned = xpFromCognitiveScore(boundedScore);
     var entry = {
+      id: createHistoryEntryId("dr"),
       timestamp: new Date().toISOString(),
       type: type,
       score: boundedScore,
@@ -1084,7 +1352,6 @@
     };
 
     appState.cognitive.drillLogs.push(entry);
-    appState.cognitive.drillLogs = appState.cognitive.drillLogs.slice(-400);
     appState.profile.xp += xpEarned;
     updateStreak();
     refreshBadges();
@@ -1137,6 +1404,7 @@
     var modeLabel = quiz.mode;
 
     var attempt = {
+      id: createHistoryEntryId("qz"),
       timestamp: new Date().toISOString(),
       mode: modeLabel,
       topicId: quiz.mode === "random-all" ? "all" : quiz.topicId,
@@ -1150,7 +1418,6 @@
     };
 
     appState.attempts.push(attempt);
-    appState.attempts = appState.attempts.slice(-250);
 
     appState.profile.quizCount += 1;
     appState.profile.xp += xpEarned;
@@ -2099,7 +2366,6 @@
     setReactionState(elapsed + " ms", "");
 
     appState.cognitive.reactionRuns.push(elapsed);
-    appState.cognitive.reactionRuns = appState.cognitive.reactionRuns.slice(-20);
     var score = clamp(Math.round(100 - (elapsed - 180) / 6), 15, 100);
     var logEntry = logCognitiveActivity("reaction-time", score, elapsed + "ms");
     renderReactionStatus();
@@ -3603,16 +3869,129 @@
     els.profileQuizCount.textContent = String(appState.profile.quizCount);
   }
 
-  function drawScoreSeries(ctx, pad, w, h, series, color) {
+  function parseRangeDays(rangeKey) {
+    if (rangeKey === "30d") {
+      return 30;
+    }
+    if (rangeKey === "90d") {
+      return 90;
+    }
+    if (rangeKey === "180d") {
+      return 180;
+    }
+    if (rangeKey === "365d") {
+      return 365;
+    }
+    return null;
+  }
+
+  function formatRangeLabel(rangeKey) {
+    if (rangeKey === "30d") {
+      return "Last 30 days";
+    }
+    if (rangeKey === "90d") {
+      return "Last 90 days";
+    }
+    if (rangeKey === "180d") {
+      return "Last 6 months";
+    }
+    if (rangeKey === "365d") {
+      return "Last 12 months";
+    }
+    return "All time";
+  }
+
+  function resolveChartGranularity(preferred, rangeKey, minTs, maxTs) {
+    if (preferred && preferred !== "auto") {
+      return preferred;
+    }
+    var rangeDays = parseRangeDays(rangeKey);
+    if (rangeDays == null) {
+      var spanDays = Math.max(1, Math.round((maxTs - minTs) / 86400000));
+      if (spanDays <= 75) {
+        return "day";
+      }
+      if (spanDays <= 420) {
+        return "week";
+      }
+      return "month";
+    }
+    if (rangeDays <= 75) {
+      return "day";
+    }
+    if (rangeDays <= 420) {
+      return "week";
+    }
+    return "month";
+  }
+
+  function bucketStartMs(ts, granularity) {
+    var dt = new Date(ts);
+    dt.setHours(0, 0, 0, 0);
+    if (granularity === "week") {
+      var day = (dt.getDay() + 6) % 7;
+      dt.setDate(dt.getDate() - day);
+    } else if (granularity === "month") {
+      dt.setDate(1);
+    }
+    return dt.getTime();
+  }
+
+  function aggregateSeriesByTime(entries, granularity, startMs) {
+    var buckets = new Map();
+    entries.forEach(function (entry) {
+      var ts = parseTimestampMs(entry.timestamp);
+      if (ts == null || ts < startMs) {
+        return;
+      }
+      var bucketTs = bucketStartMs(ts, granularity);
+      var existing = buckets.get(bucketTs);
+      if (existing) {
+        existing.sum += clamp(Number(entry.score) || 0, 0, 100);
+        existing.count += 1;
+      } else {
+        buckets.set(bucketTs, {
+          ts: bucketTs,
+          sum: clamp(Number(entry.score) || 0, 0, 100),
+          count: 1
+        });
+      }
+    });
+
+    return Array.from(buckets.values())
+      .sort(function (a, b) { return a.ts - b.ts; })
+      .map(function (bucket) {
+        return {
+          ts: bucket.ts,
+          score: Math.round(bucket.sum / bucket.count),
+          count: bucket.count
+        };
+      });
+  }
+
+  function formatChartTickLabel(ts, granularity) {
+    var dt = new Date(ts);
+    var opts;
+    if (granularity === "day") {
+      opts = { month: "short", day: "numeric" };
+    } else if (granularity === "week") {
+      opts = { month: "short", day: "numeric" };
+    } else {
+      opts = { month: "short", year: "2-digit" };
+    }
+    return dt.toLocaleDateString(undefined, opts);
+  }
+
+  function drawScoreSeries(ctx, pad, w, h, series, color, minTs, maxTs) {
     if (!series.length) {
       return;
     }
-    var step = series.length > 1 ? w / (series.length - 1) : 0;
+    var span = Math.max(1, maxTs - minTs);
     ctx.strokeStyle = color;
     ctx.lineWidth = 2;
     ctx.beginPath();
     series.forEach(function (point, idx) {
-      var x = pad.left + idx * step;
+      var x = pad.left + ((point.ts - minTs) / span) * w;
       var y = pad.top + (1 - clamp(point.score, 0, 100) / 100) * h;
       if (idx === 0) {
         ctx.moveTo(x, y);
@@ -3620,11 +3999,13 @@
         ctx.lineTo(x, y);
       }
     });
-    ctx.stroke();
+    if (series.length > 1) {
+      ctx.stroke();
+    }
 
     ctx.fillStyle = color;
-    series.forEach(function (point, idx) {
-      var x = pad.left + idx * step;
+    series.forEach(function (point) {
+      var x = pad.left + ((point.ts - minTs) / span) * w;
       var y = pad.top + (1 - clamp(point.score, 0, 100) / 100) * h;
       ctx.beginPath();
       ctx.arc(x, y, 3, 0, Math.PI * 2);
@@ -3635,7 +4016,7 @@
   function drawChart(attempts, drillLogs) {
     var canvas = els.progressChart;
     if (!canvas) {
-      return;
+      return null;
     }
 
     var parentWidth = canvas.parentElement ? canvas.parentElement.clientWidth : canvas.width;
@@ -3645,9 +4026,56 @@
     var ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    var pad = { left: 40, right: 16, top: 20, bottom: 34 };
+    var pad = { left: 40, right: 16, top: 20, bottom: 42 };
     var w = canvas.width - pad.left - pad.right;
     var h = canvas.height - pad.top - pad.bottom;
+
+    var quizRaw = attempts.map(function (entry) {
+      return {
+        timestamp: entry.timestamp,
+        score: clamp(Number(entry.score) || 0, 0, 100)
+      };
+    }).filter(function (entry) {
+      return parseTimestampMs(entry.timestamp) != null;
+    });
+    var drillRaw = drillLogs.map(function (entry) {
+      return {
+        timestamp: entry.timestamp,
+        score: clamp(Number(entry.score) || 0, 0, 100)
+      };
+    }).filter(function (entry) {
+      return parseTimestampMs(entry.timestamp) != null;
+    });
+
+    var allRaw = quizRaw.concat(drillRaw);
+    if (!allRaw.length) {
+      ctx.fillStyle = "rgba(120, 140, 170, 0.9)";
+      ctx.font = "14px sans-serif";
+      ctx.fillText("No activity recorded yet.", pad.left + 12, pad.top + h / 2);
+      return {
+        hasData: false,
+        rangeLabel: formatRangeLabel(appState.progressPrefs.range),
+        granularity: "day",
+        quizPoints: 0,
+        drillPoints: 0
+      };
+    }
+
+    var allTs = allRaw.map(function (entry) { return parseTimestampMs(entry.timestamp) || 0; });
+    var minAllTs = Math.min.apply(null, allTs);
+    var maxAllTs = Math.max.apply(null, allTs);
+    var nowMs = Date.now();
+    var rangeDays = parseRangeDays(appState.progressPrefs.range);
+    var windowEnd = rangeDays == null ? maxAllTs : nowMs;
+    var windowStart = rangeDays == null ? minAllTs : windowEnd - rangeDays * 86400000;
+    var granularity = resolveChartGranularity(
+      appState.progressPrefs.granularity,
+      appState.progressPrefs.range,
+      windowStart,
+      windowEnd
+    );
+    var quizSeries = aggregateSeriesByTime(quizRaw, granularity, windowStart);
+    var drillSeries = aggregateSeriesByTime(drillRaw, granularity, windowStart);
 
     ctx.strokeStyle = "rgba(120, 140, 170, 0.45)";
     ctx.lineWidth = 1;
@@ -3664,22 +4092,44 @@
       ctx.fillText(String(labelVal), 8, yy + 4);
     }
 
-    var quizSeries = attempts.slice(-40).map(function (attempt) {
-      return { score: Number(attempt.score) || 0 };
-    });
-    var drillSeries = drillLogs.slice(-40).map(function (entry) {
-      return { score: Number(entry.score) || 0 };
-    });
-
     if (!quizSeries.length && !drillSeries.length) {
       ctx.fillStyle = "rgba(120, 140, 170, 0.9)";
       ctx.font = "14px sans-serif";
-      ctx.fillText("No activity recorded yet.", pad.left + 12, pad.top + h / 2);
-      return;
+      ctx.fillText("No activity in selected window.", pad.left + 12, pad.top + h / 2);
+      return {
+        hasData: true,
+        rangeLabel: formatRangeLabel(appState.progressPrefs.range),
+        granularity: granularity,
+        quizPoints: 0,
+        drillPoints: 0
+      };
     }
 
-    drawScoreSeries(ctx, pad, w, h, quizSeries, "#2f8cff");
-    drawScoreSeries(ctx, pad, w, h, drillSeries, "#8c5cff");
+    var plotMinTs = rangeDays == null ? minAllTs : windowStart;
+    var plotMaxTs = rangeDays == null ? maxAllTs : windowEnd;
+    if (plotMaxTs <= plotMinTs) {
+      plotMaxTs = plotMinTs + 86400000;
+    }
+
+    var xTicks = 5;
+    for (var tick = 0; tick <= xTicks; tick += 1) {
+      var ratio = tick / xTicks;
+      var xx = pad.left + ratio * w;
+      var tickTs = plotMinTs + ratio * (plotMaxTs - plotMinTs);
+      ctx.strokeStyle = "rgba(120, 140, 170, 0.2)";
+      ctx.beginPath();
+      ctx.moveTo(xx, pad.top);
+      ctx.lineTo(xx, pad.top + h);
+      ctx.stroke();
+      var tickLabel = formatChartTickLabel(tickTs, granularity);
+      ctx.fillStyle = "rgba(120, 140, 170, 0.92)";
+      ctx.font = "11px sans-serif";
+      var textWidth = ctx.measureText(tickLabel).width;
+      ctx.fillText(tickLabel, clamp(xx - textWidth / 2, pad.left, pad.left + w - textWidth), pad.top + h + 16);
+    }
+
+    drawScoreSeries(ctx, pad, w, h, quizSeries, "#2f8cff", plotMinTs, plotMaxTs);
+    drawScoreSeries(ctx, pad, w, h, drillSeries, "#8c5cff", plotMinTs, plotMaxTs);
 
     ctx.font = "12px sans-serif";
     var legendY = canvas.height - 10;
@@ -3703,6 +4153,14 @@
       ctx.fillStyle = "rgba(100, 120, 150, 0.95)";
       ctx.fillText("Cognitive", legendX + 15, legendY);
     }
+
+    return {
+      hasData: true,
+      rangeLabel: formatRangeLabel(appState.progressPrefs.range),
+      granularity: granularity,
+      quizPoints: quizSeries.reduce(function (sum, point) { return sum + (point.count || 0); }, 0),
+      drillPoints: drillSeries.reduce(function (sum, point) { return sum + (point.count || 0); }, 0)
+    };
   }
 
   function formatAttemptDate(iso) {
@@ -3743,7 +4201,23 @@
     var lastAnyTs = Math.max(lastQuizTs || 0, lastDrillTs || 0);
     els.progressLast.textContent = lastAnyTs ? formatAttemptDate(new Date(lastAnyTs).toISOString()) : "Never";
 
-    drawChart(attempts, drillLogs);
+    var chartMeta = drawChart(attempts, drillLogs);
+    if (els.progressSummary) {
+      if (!chartMeta || !chartMeta.hasData) {
+        els.progressSummary.textContent = "Chart tracks quiz scores (blue) and cognitive drill scores (purple).";
+      } else {
+        var granularityLabel = chartMeta.granularity.charAt(0).toUpperCase() + chartMeta.granularity.slice(1);
+        els.progressSummary.textContent =
+          chartMeta.rangeLabel +
+          " | " +
+          granularityLabel +
+          " trend | " +
+          chartMeta.quizPoints +
+          " quiz entries + " +
+          chartMeta.drillPoints +
+          " cognitive entries.";
+      }
+    }
 
     els.historyBody.innerHTML = "";
     var combined = attempts.map(function (attempt) {
@@ -3763,7 +4237,7 @@
         resultText: entry.detail || "-"
       };
     })).sort(function (a, b) {
-      return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+      return (parseTimestampMs(b.timestamp) || 0) - (parseTimestampMs(a.timestamp) || 0);
     }).slice(0, 40);
 
     combined.forEach(function (row) {
@@ -3803,10 +4277,128 @@
     }
   }
 
+  function setProgressSyncStatus(message, type) {
+    if (!els.progressSyncStatus) {
+      return;
+    }
+    var fallback = "Tip: practice data stays on this device. Export JSON on one device and Import + Merge on another to combine progress across offline phone and desktop sessions.";
+    els.progressSyncStatus.textContent = message || fallback;
+    els.progressSyncStatus.classList.remove("success", "error");
+    if (type) {
+      els.progressSyncStatus.classList.add(type);
+    }
+  }
+
+  function mergeProgressPayload(payload) {
+    if (!payload || typeof payload !== "object") {
+      throw new Error("Invalid JSON structure.");
+    }
+
+    var incomingAttempts = dedupeHistoryById(
+      (Array.isArray(payload.attempts) ? payload.attempts : [])
+        .map(normalizeAttemptEntry)
+        .filter(Boolean)
+    );
+
+    var incomingCognitive = payload.cognitive && typeof payload.cognitive === "object" ? payload.cognitive : {};
+    var incomingDrills = dedupeHistoryById(
+      (Array.isArray(incomingCognitive.drillLogs) ? incomingCognitive.drillLogs : [])
+        .map(normalizeDrillLogEntry)
+        .filter(Boolean)
+    );
+
+    var incomingReactionRuns = Array.isArray(incomingCognitive.reactionRuns)
+      ? incomingCognitive.reactionRuns.map(function (value) {
+        return Math.round(Number(value) || 0);
+      }).filter(function (value) {
+        return Number.isFinite(value) && value >= 80 && value <= 3000;
+      })
+      : [];
+
+    var attemptsBefore = appState.attempts.length;
+    var drillsBefore = appState.cognitive.drillLogs.length;
+
+    appState.attempts = dedupeHistoryById(appState.attempts.concat(incomingAttempts));
+    appState.cognitive.drillLogs = dedupeHistoryById(appState.cognitive.drillLogs.concat(incomingDrills));
+    appState.cognitive.reactionRuns = appState.cognitive.reactionRuns.concat(incomingReactionRuns).filter(function (value) {
+      return Number.isFinite(value) && value >= 80 && value <= 3000;
+    });
+
+    appState.cognitive.digitLevel = Math.max(appState.cognitive.digitLevel, Number(incomingCognitive.digitLevel) || 0);
+    appState.cognitive.digitBest = Math.max(appState.cognitive.digitBest, Number(incomingCognitive.digitBest) || 0, appState.cognitive.digitLevel);
+    appState.cognitive.visualLevel = clamp(
+      Math.max(
+        appState.cognitive.visualLevel,
+        Number(incomingCognitive.visualLevel) || 0,
+        Number(incomingCognitive.visualTiles) || 0
+      ),
+      5,
+      18
+    );
+    appState.cognitive.visualBest = clamp(
+      Math.max(appState.cognitive.visualBest, Number(incomingCognitive.visualBest) || 0, appState.cognitive.visualLevel),
+      5,
+      18
+    );
+    appState.cognitive.rmsLevel = Math.max(appState.cognitive.rmsLevel, Number(incomingCognitive.rmsLevel) || 0);
+    appState.cognitive.rmsBest = Math.max(appState.cognitive.rmsBest, Number(incomingCognitive.rmsBest) || 0, appState.cognitive.rmsLevel);
+    appState.cognitive.speedLevel = Math.max(appState.cognitive.speedLevel, Number(incomingCognitive.speedLevel) || 0);
+    appState.cognitive.speedBest = Math.max(appState.cognitive.speedBest, Number(incomingCognitive.speedBest) || 0, appState.cognitive.speedLevel);
+    appState.cognitive.speed2Level = Math.max(appState.cognitive.speed2Level, Number(incomingCognitive.speed2Level) || 0);
+    appState.cognitive.speed2Best = Math.max(appState.cognitive.speed2Best, Number(incomingCognitive.speed2Best) || 0, appState.cognitive.speed2Level);
+    appState.cognitive.rotationLevel = Math.max(appState.cognitive.rotationLevel, Number(incomingCognitive.rotationLevel) || 0);
+    appState.cognitive.rotationBest = Math.max(appState.cognitive.rotationBest, Number(incomingCognitive.rotationBest) || 0, appState.cognitive.rotationLevel);
+    appState.cognitive.mathLevel = Math.max(appState.cognitive.mathLevel, Number(incomingCognitive.mathLevel) || 0);
+    appState.cognitive.mathBest = Math.max(appState.cognitive.mathBest, Number(incomingCognitive.mathBest) || 0, appState.cognitive.mathLevel);
+    appState.cognitive.concentrationLevel = clamp(
+      Math.max(appState.cognitive.concentrationLevel, Number(incomingCognitive.concentrationLevel) || 0),
+      1,
+      8
+    );
+    appState.cognitive.concentrationBest = Math.max(
+      appState.cognitive.concentrationBest,
+      clamp(Number(incomingCognitive.concentrationBest) || appState.cognitive.concentrationLevel, 1, 8),
+      appState.cognitive.concentrationLevel
+    );
+
+    recalculateProfileFromHistory();
+    refreshBadges();
+    persistState();
+    renderProfile();
+    renderProgress();
+
+    return {
+      addedAttempts: appState.attempts.length - attemptsBefore,
+      addedDrills: appState.cognitive.drillLogs.length - drillsBefore
+    };
+  }
+
   function initProgressActions() {
+    if (els.progressRange) {
+      els.progressRange.value = appState.progressPrefs.range;
+      els.progressRange.addEventListener("change", function () {
+        appState.progressPrefs.range = sanitizeProgressRange(els.progressRange.value);
+        persistState();
+        renderProgress();
+      });
+    }
+
+    if (els.progressGranularity) {
+      els.progressGranularity.value = appState.progressPrefs.granularity;
+      els.progressGranularity.addEventListener("change", function () {
+        appState.progressPrefs.granularity = sanitizeProgressGranularity(els.progressGranularity.value);
+        persistState();
+        renderProgress();
+      });
+    }
+
+    setProgressSyncStatus("");
+
     els.exportHistory.addEventListener("click", function () {
       var payload = {
         exportedAt: new Date().toISOString(),
+        installationId: appState.installationId,
+        progressPrefs: appState.progressPrefs,
         profile: appState.profile,
         attempts: appState.attempts,
         cognitive: appState.cognitive,
@@ -3822,7 +4414,33 @@
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
+      setProgressSyncStatus("Export complete. Save this JSON and import it on your other device to merge progress.", "success");
     });
+
+    if (els.importHistory && els.importHistoryFile) {
+      els.importHistory.addEventListener("click", function () {
+        els.importHistoryFile.click();
+      });
+      els.importHistoryFile.addEventListener("change", function (event) {
+        var file = event.target.files && event.target.files[0];
+        if (!file) {
+          return;
+        }
+        file.text().then(function (text) {
+          var payload = JSON.parse(text);
+          var summary = mergeProgressPayload(payload);
+          setProgressSyncStatus(
+            "Merged " + summary.addedAttempts + " quiz attempt(s) and " + summary.addedDrills + " cognitive drill record(s).",
+            "success"
+          );
+        }).catch(function (err) {
+          console.error(err);
+          setProgressSyncStatus("Import failed. Please use a valid astronaut-training progress JSON file.", "error");
+        }).finally(function () {
+          els.importHistoryFile.value = "";
+        });
+      });
+    }
 
     els.clearHistory.addEventListener("click", function () {
       var confirmed = window.confirm("Clear all local training history and reset XP? This cannot be undone.");
@@ -4000,12 +4618,23 @@
       els.mathStop.disabled = true;
       els.mathStatus.textContent = "Progress reset.";
       els.mathStatus.className = "astro-status";
+      setProgressSyncStatus("");
+    });
+  }
+
+  function requestPersistentStorage() {
+    if (!navigator.storage || typeof navigator.storage.persist !== "function") {
+      return;
+    }
+    navigator.storage.persist().catch(function () {
+      // Silent fallback for browsers that do not grant persistence.
     });
   }
 
   function initializeTrainingUI() {
     loadData();
     restoreState();
+    requestPersistentStorage();
 
     initTabs();
     populateTopicInputs();
