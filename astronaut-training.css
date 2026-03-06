@@ -1106,6 +1106,10 @@
   line-height: 1.5;
 }
 
+.panel-head .cog-row {
+  margin-top: 0.42rem;
+}
+
 .panel-note.success,
 .panel-note.error {
   opacity: 1;
@@ -1117,6 +1121,29 @@
 
 .panel-note.error {
   color: #c45151;
+}
+
+.status-pop {
+  animation: status-pop 300ms ease;
+}
+
+@keyframes status-pop {
+  0% { transform: translateY(0); opacity: 0.82; }
+  35% { transform: translateY(-2px); opacity: 1; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-pop,
+  .digit-char.ok,
+  .digit-char.bad,
+  .quiz-option,
+  .speed-option,
+  .rot-option,
+  .math-option {
+    animation: none !important;
+    transition: none !important;
+  }
 }
 
 @media (min-width: 860px) {

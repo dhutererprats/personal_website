@@ -70,6 +70,11 @@
   var SPEED2_PRESENTATION_STEP_MS = 500; // [ms]
   var SPEED2_PRESENTATION_MIN_MS = 1500; // [ms]
   var SPEED2_RULE_PREVIEW_MS = 900; // [ms]
+  var REACTION_MIN_VALID_MS = 115;
+  var SPEED_MIN_VALID_ROUND_MS = 450;
+  var SPEED2_MIN_VALID_ANSWER_MS = 250;
+  var SESSION_BREAK_DRILL_THRESHOLD = 10;
+  var SESSION_BREAK_ELAPSED_MS = 18 * 60 * 1000;
 
   var els = {};
   var appState = {
@@ -101,6 +106,12 @@
     installationId: "",
     attempts: [],
     questionStats: {},
+    session: {
+      startedAt: 0,
+      lastBreakAt: 0,
+      drillsSinceBreak: 0,
+      totalDrills: 0
+    },
     progressPrefs: {
       range: "180d",
       granularity: "auto"
@@ -125,6 +136,9 @@
       concentrationLevel: 1,
       concentrationBest: 1,
       reactionRuns: [],
+      reactionAudit: [],
+      speedAudit: [],
+      speed2Audit: [],
       drillLogs: []
     },
     digit: {
@@ -143,7 +157,8 @@
       timer: null,
       waiting: false,
       ready: false,
-      readyAt: 0
+      readyAt: 0,
+      interrupted: false
     },
     rms: {
       sequence: [],
@@ -161,7 +176,11 @@
       selected: new Set(),
       deadline: 0,
       durationMs: 0,
-      running: false
+      running: false,
+      roundStartedAt: 0,
+      interactionCount: 0,
+      interrupted: false,
+      submittedTrusted: true
     },
     speed2: {
       timer: null,
@@ -171,7 +190,11 @@
       presenting: false,
       paused: false,
       deadline: 0,
-      remainingMs: 0
+      remainingMs: 0,
+      answerStartedAt: 0,
+      inputKeyCount: 0,
+      interrupted: false,
+      checkTrusted: true
     },
     rotation: {
       scenario: null,
@@ -273,6 +296,54 @@
     }
 
     return chosen;
+  }
+
+  function eventIsTrusted(event) {
+    return !event || event.isTrusted !== false;
+  }
+
+  function prefersReducedMotion() {
+    return Boolean(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  }
+
+  function pulseStatus(el) {
+    if (!el || prefersReducedMotion()) {
+      return;
+    }
+    el.classList.remove("status-pop");
+    void el.offsetWidth;
+    el.classList.add("status-pop");
+    setTimeout(function () {
+      el.classList.remove("status-pop");
+    }, 320);
+  }
+
+  function triggerHaptic(pattern) {
+    if (!navigator.vibrate || prefersReducedMotion()) {
+      return;
+    }
+    var map = {
+      success: [18],
+      error: [24, 40, 24],
+      ready: [10],
+      warning: [16, 32, 16]
+    };
+    var seq = map[pattern] || [12];
+    try {
+      navigator.vibrate(seq);
+    } catch (err) {
+      // Ignore unsupported vibration errors.
+    }
+  }
+
+  function pushCapped(list, value, maxSize) {
+    if (!Array.isArray(list)) {
+      return;
+    }
+    list.push(value);
+    while (list.length > maxSize) {
+      list.shift();
+    }
   }
 
   function uniqueBy(array, keyFn) {
@@ -885,6 +956,10 @@
     els.mathStart = byId("math-start");
     els.mathStop = byId("math-stop");
     els.mathStatus = byId("math-status");
+    els.cognitivePacingNote = byId("cognitive-pacing-note");
+    els.timingQualitySummary = byId("timing-quality-summary");
+    els.sessionBreakBtn = byId("session-break-btn");
+    els.timingQualityReset = byId("timing-quality-reset");
 
     els.progressAverage = byId("progress-average");
     els.progressBest = byId("progress-best");
@@ -1026,6 +1101,21 @@
         }).filter(function (value) {
           return Number.isFinite(value) && value >= 80 && value <= 3000;
         })
+        : [];
+      appState.cognitive.reactionAudit = Array.isArray(cogRaw.reactionAudit)
+        ? cogRaw.reactionAudit.filter(function (entry) {
+          return entry && typeof entry === "object";
+        }).slice(-200)
+        : [];
+      appState.cognitive.speedAudit = Array.isArray(cogRaw.speedAudit)
+        ? cogRaw.speedAudit.filter(function (entry) {
+          return entry && typeof entry === "object";
+        }).slice(-200)
+        : [];
+      appState.cognitive.speed2Audit = Array.isArray(cogRaw.speed2Audit)
+        ? cogRaw.speed2Audit.filter(function (entry) {
+          return entry && typeof entry === "object";
+        }).slice(-200)
         : [];
       appState.cognitive.drillLogs = dedupeHistoryById(
         (Array.isArray(cogRaw.drillLogs) ? cogRaw.drillLogs : [])
@@ -1531,6 +1621,8 @@
     els.quizSubmit.disabled = true;
     els.quizNext.disabled = false;
     els.quizProgress.textContent = correct ? "Correct." : "Incorrect.";
+    pulseStatus(els.quizProgress);
+    triggerHaptic(correct ? "success" : "error");
   }
 
   function xpFromResult(score, correct, total) {
@@ -1580,6 +1672,171 @@
     return clamp(Math.round(score / 7), 3, 14);
   }
 
+  function ensureSessionState() {
+    if (!appState.session.startedAt) {
+      var now = Date.now();
+      appState.session.startedAt = now;
+      appState.session.lastBreakAt = now;
+      appState.session.drillsSinceBreak = 0;
+      appState.session.totalDrills = 0;
+    }
+  }
+
+  function updateSessionPacingNote(forceMessage) {
+    if (!els.cognitivePacingNote) {
+      return;
+    }
+    ensureSessionState();
+    if (forceMessage) {
+      els.cognitivePacingNote.textContent = forceMessage;
+      pulseStatus(els.cognitivePacingNote);
+      return;
+    }
+
+    var elapsedMs = Date.now() - appState.session.lastBreakAt;
+    var drills = appState.session.drillsSinceBreak;
+    if (drills >= SESSION_BREAK_DRILL_THRESHOLD || elapsedMs >= SESSION_BREAK_ELAPSED_MS) {
+      els.cognitivePacingNote.textContent =
+        "Pacing tip: take a 2-minute break now (quality drops after ~" +
+        SESSION_BREAK_DRILL_THRESHOLD + " drills or ~18 minutes continuous load).";
+      pulseStatus(els.cognitivePacingNote);
+      return;
+    }
+
+    var mins = Math.max(0, Math.round(elapsedMs / 60000));
+    els.cognitivePacingNote.textContent =
+      "Current block: " + drills + " drills in " + mins + " min since last break.";
+  }
+
+  function registerSessionBreak() {
+    ensureSessionState();
+    appState.session.lastBreakAt = Date.now();
+    appState.session.drillsSinceBreak = 0;
+    updateSessionPacingNote("Break logged. Nice reset. Start the next block when ready.");
+    triggerHaptic("ready");
+  }
+
+  function registerDrillForPacing() {
+    ensureSessionState();
+    appState.session.drillsSinceBreak += 1;
+    appState.session.totalDrills += 1;
+    updateSessionPacingNote();
+  }
+
+  function auditStoreForType(kind) {
+    if (kind === "reaction") {
+      return appState.cognitive.reactionAudit;
+    }
+    if (kind === "speed") {
+      return appState.cognitive.speedAudit;
+    }
+    return appState.cognitive.speed2Audit;
+  }
+
+  function recordTimingAudit(kind, valid, reason, details) {
+    var store = auditStoreForType(kind);
+    if (!Array.isArray(store)) {
+      return;
+    }
+    pushCapped(store, {
+      timestamp: new Date().toISOString(),
+      valid: Boolean(valid),
+      reason: String(reason || ""),
+      details: details || {}
+    }, 200);
+    renderTimingQualitySummary();
+    persistState();
+  }
+
+  function qualitySummaryFor(store) {
+    if (!Array.isArray(store) || !store.length) {
+      return { total: 0, valid: 0, pct: null };
+    }
+    var valid = store.filter(function (entry) { return entry && entry.valid; }).length;
+    var total = store.length;
+    return {
+      total: total,
+      valid: valid,
+      pct: Math.round((valid / total) * 100)
+    };
+  }
+
+  function renderTimingQualitySummary() {
+    if (!els.timingQualitySummary) {
+      return;
+    }
+    var reaction = qualitySummaryFor(appState.cognitive.reactionAudit);
+    var speed = qualitySummaryFor(appState.cognitive.speedAudit);
+    var speed2 = qualitySummaryFor(appState.cognitive.speed2Audit);
+    if (!reaction.total && !speed.total && !speed2.total) {
+      els.timingQualitySummary.textContent = "Timing quality: no timing rounds recorded yet.";
+      return;
+    }
+
+    function fmt(label, item) {
+      if (!item.total) {
+        return label + ": n/a";
+      }
+      return label + ": " + item.pct + "% valid (" + item.valid + "/" + item.total + ")";
+    }
+
+    els.timingQualitySummary.textContent =
+      "Timing quality - " +
+      fmt("Reaction", reaction) +
+      " | " +
+      fmt("Speed", speed) +
+      " | " +
+      fmt("Speed v2", speed2) + ".";
+  }
+
+  function resetTimingQualityAudits() {
+    appState.cognitive.reactionAudit = [];
+    appState.cognitive.speedAudit = [];
+    appState.cognitive.speed2Audit = [];
+    renderTimingQualitySummary();
+    persistState();
+  }
+
+  function markTimingInterruption(reason) {
+    if (appState.reaction.waiting || appState.reaction.ready) {
+      appState.reaction.interrupted = true;
+    }
+    if (appState.speed.running) {
+      appState.speed.interrupted = true;
+    }
+    if (appState.speed2.previewing || appState.speed2.presenting || appState.speed2.challenge) {
+      appState.speed2.interrupted = true;
+    }
+    if (reason && els.timingQualitySummary) {
+      pulseStatus(els.timingQualitySummary);
+    }
+  }
+
+  function markStatusAccessible(el) {
+    if (!el) {
+      return;
+    }
+    el.setAttribute("role", "status");
+    el.setAttribute("aria-live", "polite");
+    el.setAttribute("aria-atomic", "true");
+  }
+
+  function setupStatusAccessibility() {
+    [
+      els.digitStatus,
+      els.memoryStatus,
+      els.concStatus,
+      els.reactionStatus,
+      els.rmsStatus,
+      els.speedStatus,
+      els.speed2Status,
+      els.rotStatus,
+      els.mathStatus,
+      els.cognitivePacingNote,
+      els.timingQualitySummary
+    ].forEach(markStatusAccessible);
+  }
+
   function logCognitiveActivity(type, score, detail) {
     var boundedScore = clamp(Math.round(score), 0, 100);
     var xpEarned = xpFromCognitiveScore(boundedScore);
@@ -1594,6 +1851,7 @@
 
     appState.cognitive.drillLogs.push(entry);
     appState.profile.xp += xpEarned;
+    registerDrillForPacing();
     updateStreak();
     refreshBadges();
     persistState();
@@ -2555,12 +2813,14 @@
     appState.reaction.waiting = false;
     appState.reaction.ready = false;
     appState.reaction.readyAt = 0;
+    appState.reaction.interrupted = false;
     setReactionState("Press Start", "");
     renderReactionStatus();
   }
 
   function renderReactionStatus() {
     var runs = appState.cognitive.reactionRuns;
+    var audit = qualitySummaryFor(appState.cognitive.reactionAudit);
     if (!runs.length) {
       els.reactionStatus.textContent = "No trials yet.";
       els.reactionStatus.className = "astro-status";
@@ -2569,7 +2829,8 @@
 
     var avg = Math.round(runs.reduce(function (sum, val) { return sum + val; }, 0) / runs.length);
     var best = Math.min.apply(null, runs);
-    els.reactionStatus.textContent = "Average: " + avg + " ms | Best: " + best + " ms";
+    var qualityText = audit.total ? " | Quality: " + audit.pct + "% valid" : "";
+    els.reactionStatus.textContent = "Average: " + avg + " ms | Best: " + best + " ms" + qualityText;
     els.reactionStatus.className = "astro-status";
   }
 
@@ -2579,12 +2840,14 @@
     }
 
     appState.reaction.waiting = true;
+    appState.reaction.interrupted = false;
     setReactionState("Wait for green...", "waiting");
 
     var delay = 1100 + Math.random() * 2500;
     appState.reaction.timer = setTimeout(function () {
       appState.reaction.waiting = false;
       setReactionState("CLICK NOW", "ready");
+      triggerHaptic("ready");
       requestAnimationFrame(function () {
         requestAnimationFrame(function () {
           appState.reaction.ready = true;
@@ -2595,6 +2858,7 @@
   }
 
   function handleReactionClick(event) {
+    var trusted = eventIsTrusted(event);
     if (appState.reaction.waiting) {
       if (appState.reaction.timer) {
         clearTimeout(appState.reaction.timer);
@@ -2604,6 +2868,9 @@
       setReactionState("Too early", "too-soon");
       els.reactionStatus.textContent = "False start. Wait for green next run.";
       els.reactionStatus.className = "astro-status error";
+      pulseStatus(els.reactionStatus);
+      triggerHaptic("error");
+      recordTimingAudit("reaction", false, "false-start", { trusted: trusted });
       return;
     }
 
@@ -2611,17 +2878,52 @@
       return;
     }
 
-    var clickTs = event && typeof event.timeStamp === "number" ? event.timeStamp : performance.now();
-    var elapsed = Math.max(80, Math.round(clickTs - appState.reaction.readyAt) - 15);
+    if (!trusted) {
+      appState.reaction.ready = false;
+      setReactionState("Untrusted input", "too-soon");
+      els.reactionStatus.textContent = "Quality check: synthetic/untrusted input blocked.";
+      els.reactionStatus.className = "astro-status error";
+      pulseStatus(els.reactionStatus);
+      triggerHaptic("warning");
+      recordTimingAudit("reaction", false, "untrusted-input", {});
+      return;
+    }
+
+    if (appState.reaction.interrupted) {
+      appState.reaction.ready = false;
+      setReactionState("Interrupted", "too-soon");
+      els.reactionStatus.textContent = "Quality check: focus changed during trial. Round discarded.";
+      els.reactionStatus.className = "astro-status error";
+      pulseStatus(els.reactionStatus);
+      triggerHaptic("warning");
+      recordTimingAudit("reaction", false, "focus-interrupted", {});
+      return;
+    }
+
+    var elapsed = Math.round(performance.now() - appState.reaction.readyAt);
     appState.reaction.ready = false;
+    if (elapsed < REACTION_MIN_VALID_MS) {
+      setReactionState(elapsed + " ms", "too-soon");
+      els.reactionStatus.textContent =
+        "Quality check: " + elapsed + " ms is below valid human threshold (" + REACTION_MIN_VALID_MS + " ms).";
+      els.reactionStatus.className = "astro-status error";
+      pulseStatus(els.reactionStatus);
+      triggerHaptic("warning");
+      recordTimingAudit("reaction", false, "too-fast-threshold", { elapsedMs: elapsed });
+      return;
+    }
+
     setReactionState(elapsed + " ms", "");
 
     appState.cognitive.reactionRuns.push(elapsed);
     var score = clamp(Math.round(100 - (elapsed - 180) / 6), 15, 100);
     var logEntry = logCognitiveActivity("reaction-time", score, elapsed + "ms");
+    recordTimingAudit("reaction", true, "ok", { elapsedMs: elapsed, score: score });
     renderReactionStatus();
     els.reactionStatus.textContent = els.reactionStatus.textContent + " | Last: " + elapsed + " ms | +" + logEntry.xpEarned + " XP";
     els.reactionStatus.className = "astro-status success";
+    pulseStatus(els.reactionStatus);
+    triggerHaptic("success");
   }
 
   function randomInt(min, max) {
@@ -2860,10 +3162,15 @@
       btn.textContent = code;
       btn.dataset.index = String(idx);
       btn.disabled = !appState.speed.running;
-      btn.addEventListener("click", function () {
+      btn.addEventListener("click", function (event) {
         if (!appState.speed.running) {
           return;
         }
+        if (!eventIsTrusted(event)) {
+          appState.speed.submittedTrusted = false;
+          return;
+        }
+        appState.speed.interactionCount += 1;
         if (appState.speed.selected.has(idx)) {
           appState.speed.selected.delete(idx);
           btn.classList.remove("selected");
@@ -2905,6 +3212,10 @@
     appState.speed.durationMs = clamp(19000 - level * 1400, 7000, 19000);
     appState.speed.deadline = performance.now() + appState.speed.durationMs;
     appState.speed.running = true;
+    appState.speed.roundStartedAt = performance.now();
+    appState.speed.interactionCount = 0;
+    appState.speed.interrupted = false;
+    appState.speed.submittedTrusted = true;
 
     els.speedTarget.textContent = target;
     els.speedStatus.textContent = "Select all exact matches. Similar distractors are intentional.";
@@ -2944,6 +3255,22 @@
     var f1 = precision + recall > 0 ? (2 * precision * recall) / (precision + recall) : 0;
     var exact = falsePos === 0 && falseNeg === 0 && truePos === correct.length;
     var remainingMs = Math.max(0, appState.speed.deadline - performance.now());
+    var durationMs = Math.max(0, Math.round(performance.now() - appState.speed.roundStartedAt));
+    var qualityFlags = [];
+    if (appState.speed.interrupted) {
+      qualityFlags.push("focus-interrupted");
+    }
+    if (!appState.speed.submittedTrusted) {
+      qualityFlags.push("untrusted-input");
+    }
+    if (!timedOut && durationMs < SPEED_MIN_VALID_ROUND_MS) {
+      qualityFlags.push("too-fast-duration");
+    }
+    if (!timedOut && appState.speed.interactionCount === 0) {
+      qualityFlags.push("no-interaction");
+    }
+
+    var invalidQuality = qualityFlags.length > 0;
 
     Array.from(els.speedGrid.querySelectorAll("button")).forEach(function (btn, idx) {
       var isCorrect = correctSet.has(idx);
@@ -2957,6 +3284,20 @@
       }
     });
 
+    if (invalidQuality) {
+      els.speedSubmit.disabled = true;
+      els.speedStatus.textContent =
+        "Quality check failed (" + qualityFlags.join(", ") + "). Round discarded from scoring.";
+      els.speedStatus.className = "astro-status error";
+      pulseStatus(els.speedStatus);
+      triggerHaptic("warning");
+      recordTimingAudit("speed", false, qualityFlags.join(","), {
+        durationMs: durationMs,
+        interactionCount: appState.speed.interactionCount
+      });
+      return;
+    }
+
     var priorLevel = clamp(appState.cognitive.speedLevel, 1, 8);
     if (exact) {
       appState.cognitive.speedLevel = clamp(appState.cognitive.speedLevel + 1, 1, 8);
@@ -2965,23 +3306,40 @@
       appState.cognitive.speedLevel = clamp(appState.cognitive.speedLevel - 1, 1, 8);
     }
 
+    var qualityTier = (durationMs < 1200 || appState.speed.interactionCount < 2) ? "moderate" : "high";
     var score = clamp(Math.round(f1 * 85 + (remainingMs / appState.speed.durationMs) * 15 + (exact ? 8 : 0)), 10, 100);
-    var detail = "hits " + truePos + "/" + correct.length + ", false " + falsePos;
+    var detail =
+      "hits " + truePos + "/" + correct.length +
+      ", false " + falsePos +
+      ", duration " + durationMs + "ms" +
+      ", qc " + qualityTier;
     var logEntry = logCognitiveActivity("perceptual-speed", score, detail);
+    recordTimingAudit("speed", true, "ok-" + qualityTier, {
+      durationMs: durationMs,
+      interactionCount: appState.speed.interactionCount,
+      score: score
+    });
     els.speedSubmit.disabled = true;
 
     if (exact) {
-      els.speedStatus.textContent = "Excellent scan. Level " + appState.cognitive.speedLevel + " | +" + logEntry.xpEarned + " XP";
+      els.speedStatus.textContent =
+        "Excellent scan. Level " + appState.cognitive.speedLevel +
+        " | QC " + qualityTier + " | +" + logEntry.xpEarned + " XP";
       els.speedStatus.className = "astro-status success";
+      triggerHaptic("success");
     } else {
       els.speedStatus.textContent =
         (timedOut ? "Time expired. " : "Submitted. ") +
-        "Accuracy: " + Math.round(f1 * 100) + "% | Level " + appState.cognitive.speedLevel + " | +" + logEntry.xpEarned + " XP";
+        "Accuracy: " + Math.round(f1 * 100) + "% | Level " + appState.cognitive.speedLevel +
+        " | QC " + qualityTier + " | +" + logEntry.xpEarned + " XP";
       els.speedStatus.className = "astro-status error";
+      triggerHaptic("error");
     }
+    pulseStatus(els.speedStatus);
   }
 
-  function submitSpeedRound() {
+  function submitSpeedRound(event) {
+    appState.speed.submittedTrusted = eventIsTrusted(event);
     finalizeSpeedRound(false);
   }
 
@@ -3171,6 +3529,9 @@
     appState.speed2.paused = false;
     appState.speed2.remainingMs = 0;
     appState.speed2.deadline = 0;
+    appState.speed2.answerStartedAt = performance.now();
+    appState.speed2.inputKeyCount = 0;
+    appState.speed2.checkTrusted = true;
 
     renderSpeed2Grid(appState.speed2.challenge, true);
     renderSpeed2Meta(appState.speed2.challenge, appState.speed2.challenge.presentationMs);
@@ -3236,6 +3597,10 @@
     appState.speed2.paused = false;
     appState.speed2.remainingMs = challenge.presentationMs;
     appState.speed2.deadline = 0;
+    appState.speed2.answerStartedAt = 0;
+    appState.speed2.inputKeyCount = 0;
+    appState.speed2.interrupted = false;
+    appState.speed2.checkTrusted = true;
 
     renderSpeed2Grid(null, true);
     renderSpeed2Meta(challenge, challenge.presentationMs);
@@ -3294,6 +3659,10 @@
     appState.speed2.paused = false;
     appState.speed2.deadline = 0;
     appState.speed2.remainingMs = 0;
+    appState.speed2.answerStartedAt = 0;
+    appState.speed2.inputKeyCount = 0;
+    appState.speed2.interrupted = false;
+    appState.speed2.checkTrusted = true;
 
     renderSpeed2Grid(null, true);
     renderSpeed2Meta(null, null);
@@ -3313,7 +3682,8 @@
     }
   }
 
-  function checkSpeed2Round() {
+  function checkSpeed2Round(event) {
+    appState.speed2.checkTrusted = eventIsTrusted(event);
     if (appState.speed2.previewing) {
       els.speed2Status.textContent = "Wait for panel presentation to begin.";
       els.speed2Status.className = "astro-status error";
@@ -3343,6 +3713,35 @@
     }
 
     var challenge = appState.speed2.challenge;
+    var answerDurationMs = appState.speed2.answerStartedAt
+      ? Math.max(0, Math.round(performance.now() - appState.speed2.answerStartedAt))
+      : 0;
+    var qualityFlags = [];
+    if (!appState.speed2.checkTrusted) {
+      qualityFlags.push("untrusted-input");
+    }
+    if (appState.speed2.interrupted) {
+      qualityFlags.push("focus-interrupted");
+    }
+    if (answerDurationMs > 0 && answerDurationMs < SPEED2_MIN_VALID_ANSWER_MS) {
+      qualityFlags.push("too-fast-answer");
+    }
+    if (appState.speed2.inputKeyCount < 2) {
+      qualityFlags.push("insufficient-keystrokes");
+    }
+    if (qualityFlags.length) {
+      recordTimingAudit("speed2", false, qualityFlags.join(","), {
+        answerMs: answerDurationMs,
+        keyCount: appState.speed2.inputKeyCount
+      });
+      resetSpeed2Round();
+      els.speed2Status.textContent = "Quality check failed (" + qualityFlags.join(", ") + "). Round discarded.";
+      els.speed2Status.className = "astro-status error";
+      pulseStatus(els.speed2Status);
+      triggerHaptic("warning");
+      return;
+    }
+
     var target = challenge.sequence;
     var exact = guess === target;
     var priorLevel = clamp(appState.cognitive.speed2Level, 1, 9);
@@ -3376,7 +3775,13 @@
     }
 
     var detail = challenge.ruleLabel + " | target " + target + " | guess " + guess;
+    detail += " | response " + answerDurationMs + "ms";
     var logEntry = logCognitiveActivity("perceptual-speed-panel", score, detail);
+    recordTimingAudit("speed2", true, "ok", {
+      answerMs: answerDurationMs,
+      keyCount: appState.speed2.inputKeyCount,
+      score: score
+    });
     renderSpeed2Grid(null, true);
     renderSpeed2Meta(null, null);
     els.speed2Input.disabled = true;
@@ -3390,6 +3795,7 @@
       els.speed2Status.textContent =
         "Correct (" + target + "). Level " + appState.cognitive.speed2Level + " | +" + logEntry.xpEarned + " XP";
       els.speed2Status.className = "astro-status success";
+      triggerHaptic("success");
     } else {
       var wrongChar = guess[firstWrong] || "∅";
       els.speed2Status.textContent =
@@ -3397,7 +3803,9 @@
         " at position " + String(firstWrong + 1) + " | Level " + appState.cognitive.speed2Level +
         " | +" + logEntry.xpEarned + " XP";
       els.speed2Status.className = "astro-status error";
+      triggerHaptic("error");
     }
+    pulseStatus(els.speed2Status);
   }
 
   function vecKey(vec) {
@@ -4000,6 +4408,36 @@
   }
 
   function initCognitive() {
+    setupStatusAccessibility();
+    ensureSessionState();
+    updateSessionPacingNote();
+    renderTimingQualitySummary();
+
+    if (els.sessionBreakBtn) {
+      els.sessionBreakBtn.addEventListener("click", function () {
+        registerSessionBreak();
+      });
+    }
+    if (els.timingQualityReset) {
+      els.timingQualityReset.addEventListener("click", function () {
+        resetTimingQualityAudits();
+        els.timingQualitySummary.textContent = "Timing quality reset. New timing rounds will build fresh validity stats.";
+        pulseStatus(els.timingQualitySummary);
+      });
+    }
+
+    if (!initCognitive._qualityListenersBound) {
+      document.addEventListener("visibilitychange", function () {
+        if (document.hidden) {
+          markTimingInterruption("hidden");
+        }
+      });
+      window.addEventListener("blur", function () {
+        markTimingInterruption("blur");
+      });
+      initCognitive._qualityListenersBound = true;
+    }
+
     els.digitStart.addEventListener("click", startDigitRound);
     els.digitCheck.addEventListener("click", checkDigitRound);
     els.digitInput.addEventListener("keydown", function (event) {
@@ -4094,10 +4532,21 @@
     });
     els.speed2Check.addEventListener("click", checkSpeed2Round);
     els.speed2Input.addEventListener("keydown", function (event) {
+      if (eventIsTrusted(event) && /[0-9]/.test(event.key)) {
+        appState.speed2.inputKeyCount += 1;
+      }
       if (event.key === "Enter") {
         event.preventDefault();
-        checkSpeed2Round();
+        checkSpeed2Round(event);
       }
+    });
+    els.speed2Input.addEventListener("paste", function (event) {
+      event.preventDefault();
+      appState.speed2.checkTrusted = false;
+      els.speed2Status.textContent = "Paste is disabled for quality-controlled timing practice.";
+      els.speed2Status.className = "astro-status error";
+      pulseStatus(els.speed2Status);
+      triggerHaptic("warning");
     });
     resetSpeed2Round();
 
@@ -4659,6 +5108,21 @@
         return Number.isFinite(value) && value >= 80 && value <= 3000;
       })
       : [];
+    var incomingReactionAudit = Array.isArray(incomingCognitive.reactionAudit)
+      ? incomingCognitive.reactionAudit.filter(function (entry) {
+        return entry && typeof entry === "object";
+      })
+      : [];
+    var incomingSpeedAudit = Array.isArray(incomingCognitive.speedAudit)
+      ? incomingCognitive.speedAudit.filter(function (entry) {
+        return entry && typeof entry === "object";
+      })
+      : [];
+    var incomingSpeed2Audit = Array.isArray(incomingCognitive.speed2Audit)
+      ? incomingCognitive.speed2Audit.filter(function (entry) {
+        return entry && typeof entry === "object";
+      })
+      : [];
 
     var attemptsBefore = appState.attempts.length;
     var drillsBefore = appState.cognitive.drillLogs.length;
@@ -4668,6 +5132,9 @@
     appState.cognitive.reactionRuns = appState.cognitive.reactionRuns.concat(incomingReactionRuns).filter(function (value) {
       return Number.isFinite(value) && value >= 80 && value <= 3000;
     });
+    appState.cognitive.reactionAudit = appState.cognitive.reactionAudit.concat(incomingReactionAudit).slice(-200);
+    appState.cognitive.speedAudit = appState.cognitive.speedAudit.concat(incomingSpeedAudit).slice(-200);
+    appState.cognitive.speed2Audit = appState.cognitive.speed2Audit.concat(incomingSpeed2Audit).slice(-200);
 
     appState.cognitive.digitLevel = Math.max(appState.cognitive.digitLevel, Number(incomingCognitive.digitLevel) || 0);
     appState.cognitive.digitBest = Math.max(appState.cognitive.digitBest, Number(incomingCognitive.digitBest) || 0, appState.cognitive.digitLevel);
@@ -4821,6 +5288,12 @@
       };
       appState.attempts = [];
       appState.questionStats = {};
+      appState.session = {
+        startedAt: Date.now(),
+        lastBreakAt: Date.now(),
+        drillsSinceBreak: 0,
+        totalDrills: 0
+      };
       appState.cognitive = {
         digitLevel: 4,
         digitBest: 4,
@@ -4841,6 +5314,9 @@
         concentrationLevel: 1,
         concentrationBest: 1,
         reactionRuns: [],
+        reactionAudit: [],
+        speedAudit: [],
+        speed2Audit: [],
         drillLogs: []
       };
       appState.memory = {
@@ -4965,6 +5441,8 @@
       els.mathStop.disabled = true;
       els.mathStatus.textContent = "Progress reset.";
       els.mathStatus.className = "astro-status";
+      updateSessionPacingNote("Session reset. Start a fresh focused block.");
+      renderTimingQualitySummary();
       setProgressSyncStatus("");
     });
   }
@@ -4982,6 +5460,7 @@
     loadData();
     restoreState();
     requestPersistentStorage();
+    ensureSessionState();
 
     initTabs();
     populateTopicInputs();
