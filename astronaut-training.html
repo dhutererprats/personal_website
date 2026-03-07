@@ -520,6 +520,29 @@
             </p>
           </div>
 
+          <div class="leaderboard-section" aria-label="Leaderboard controls">
+            <h3>Leaderboard (Optional)</h3>
+            <p class="panel-note">
+              Opt in if you want your profile visible on the public leaderboard. You can disable this at any time.
+            </p>
+            <div class="leaderboard-controls">
+              <label for="leaderboard-display-name">
+                Display name
+                <input id="leaderboard-display-name" type="text" maxlength="40" placeholder="Your display name" />
+              </label>
+              <label class="leaderboard-optin">
+                <input id="leaderboard-opt-in" type="checkbox" />
+                Include me on leaderboard
+              </label>
+              <div class="cog-row">
+                <button id="leaderboard-save" class="astro-btn" type="button">Save Leaderboard Settings</button>
+                <button id="leaderboard-refresh" class="astro-btn" type="button">Refresh Leaderboard</button>
+              </div>
+              <p id="leaderboard-status" class="panel-note">Sign in to sync leaderboard settings.</p>
+            </div>
+            <ol id="leaderboard-list" class="leaderboard-list"></ol>
+          </div>
+
           <div class="history-table-wrap" style="margin-top:0.6rem;">
             <table class="history-table">
               <thead>

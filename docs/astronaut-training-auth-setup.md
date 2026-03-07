@@ -41,3 +41,8 @@ Notes:
 ## 5) Fallback behavior
 
 If Supabase config is missing/empty, the page stays usable in `Local-Only Mode`.
+
+## 6) Leaderboard schema
+
+To enable optional leaderboard sync, apply the SQL in:
+[astronaut-training-leaderboard-setup.md](/Users/dahu1128/Library/CloudStorage/OneDrive-UCB-O365/Documents/Daniel/Personal_Website/HutererPrats.github.io-main/docs/astronaut-training-leaderboard-setup.md)

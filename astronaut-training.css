@@ -1105,6 +1105,74 @@
   opacity: 0.75;
 }
 
+.leaderboard-section {
+  margin-top: 0.72rem;
+}
+
+.leaderboard-section h3 {
+  margin: 0 0 0.36rem;
+}
+
+.leaderboard-controls {
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 0.64rem;
+  background: var(--bg-color);
+  display: grid;
+  gap: 0.46rem;
+}
+
+.leaderboard-controls label {
+  display: grid;
+  gap: 0.18rem;
+  font-size: 0.83rem;
+}
+
+.leaderboard-controls input[type="text"] {
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
+  color: var(--text-color);
+  padding: 0.52rem 0.68rem;
+  font: inherit;
+}
+
+.leaderboard-optin {
+  display: flex;
+  align-items: center;
+  gap: 0.46rem;
+  font-size: 0.87rem;
+}
+
+.leaderboard-list {
+  margin: 0.52rem 0 0;
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 0.32rem;
+  font-size: 0.9rem;
+}
+
+.leaderboard-item {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.6rem;
+  align-items: baseline;
+}
+
+.leaderboard-rank {
+  font-weight: 700;
+  min-width: 2rem;
+}
+
+.leaderboard-name {
+  font-weight: 600;
+}
+
+.leaderboard-meta {
+  color: var(--muted-text);
+  font-size: 0.84rem;
+}
+
 .badge-chip {
   display: inline-flex;
   align-items: center;
@@ -1236,6 +1304,10 @@
   }
 
   .astro-gate-form .cog-row {
+    gap: 0.42rem;
+  }
+
+  .leaderboard-controls .cog-row {
     gap: 0.42rem;
   }
 

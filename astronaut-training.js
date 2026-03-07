@@ -7,6 +7,7 @@
   var activeAuthUser = null;
   var activeAccessMode = "local";
   var trainingUiInitialized = false;
+  var leaderboardSyncTimer = null;
 
   var STORE_KEYS = {
     unlocked: "astro_training_unlocked_v1",
@@ -14,7 +15,8 @@
     attempts: "astro_training_attempts_v1",
     cognitive: "astro_training_cognitive_v1",
     installationId: "astro_training_installation_id_v1",
-    progressPrefs: "astro_training_progress_prefs_v1"
+    progressPrefs: "astro_training_progress_prefs_v1",
+    leaderboardPrefs: "astro_training_leaderboard_prefs_v1"
   };
 
   var BADGE_DEFS = [
@@ -131,6 +133,10 @@
     progressPrefs: {
       range: "180d",
       granularity: "auto"
+    },
+    leaderboard: {
+      displayName: "",
+      optIn: false
     },
     cognitive: {
       digitLevel: 4,
@@ -1028,6 +1034,12 @@
     els.importHistoryFile = byId("import-history-file");
     els.progressSyncStatus = byId("progress-sync-status");
     els.clearHistory = byId("clear-history");
+    els.leaderboardDisplayName = byId("leaderboard-display-name");
+    els.leaderboardOptIn = byId("leaderboard-opt-in");
+    els.leaderboardSave = byId("leaderboard-save");
+    els.leaderboardRefresh = byId("leaderboard-refresh");
+    els.leaderboardStatus = byId("leaderboard-status");
+    els.leaderboardList = byId("leaderboard-list");
 
     els.sourcesList = byId("sources-list");
   }
@@ -1113,6 +1125,12 @@
       appState.progressPrefs.granularity = sanitizeProgressGranularity(prefsRaw.granularity);
     }
 
+    var leaderboardRaw = safeRead(STORE_KEYS.leaderboardPrefs, null);
+    if (leaderboardRaw && typeof leaderboardRaw === "object") {
+      appState.leaderboard.displayName = String(leaderboardRaw.displayName || "").trim();
+      appState.leaderboard.optIn = Boolean(leaderboardRaw.optIn);
+    }
+
     var cogRaw = safeRead(STORE_KEYS.cognitive, null);
     if (cogRaw && typeof cogRaw === "object") {
       appState.cognitive.digitLevel = Number(cogRaw.digitLevel) || 4;
@@ -1179,7 +1197,9 @@
     safeWrite(STORE_KEYS.attempts, appState.attempts);
     safeWrite(STORE_KEYS.cognitive, appState.cognitive);
     safeWrite(STORE_KEYS.progressPrefs, appState.progressPrefs);
+    safeWrite(STORE_KEYS.leaderboardPrefs, appState.leaderboard);
     safeWrite(STORE_KEYS.installationId, appState.installationId);
+    scheduleLeaderboardSync("persist");
   }
 
   function showGateStatus(message, type) {
@@ -1292,6 +1312,7 @@
     activeAuthSession = null;
     activeAuthUser = null;
     updateAuthBadge();
+    populateLeaderboardControls();
     els.app.hidden = true;
     els.gate.hidden = false;
     if (message) {
@@ -1309,6 +1330,9 @@
       sessionStorage.removeItem(STORE_KEYS.unlocked);
       activeAuthSession = session || null;
       activeAuthUser = session && session.user ? session.user : null;
+      if (!String(appState.leaderboard.displayName || "").trim() && activeAuthUser) {
+        appState.leaderboard.displayName = authDisplayName(activeAuthUser);
+      }
     }
     activeAccessMode = accessMode;
     updateAuthBadge();
@@ -1321,6 +1345,10 @@
       } else {
         renderProfile();
         renderProgress();
+      }
+      populateLeaderboardControls();
+      if (canUseRemoteLeaderboard() && appState.leaderboard.optIn) {
+        scheduleLeaderboardSync("auth");
       }
     } catch (err) {
       console.error(err);
@@ -1487,6 +1515,242 @@
     });
   }
 
+  function canUseRemoteLeaderboard() {
+    return (
+      activeAccessMode === "supabase" &&
+      activeAuthUser &&
+      typeof activeAuthUser.id === "string" &&
+      activeAuthUser.id.length > 0 &&
+      Boolean(getSupabaseClient())
+    );
+  }
+
+  function leaderboardDisplayName() {
+    var localName = String(appState.leaderboard.displayName || "").trim();
+    if (localName) {
+      return localName;
+    }
+    if (activeAuthUser) {
+      return authDisplayName(activeAuthUser);
+    }
+    return "";
+  }
+
+  function setLeaderboardStatus(message, type) {
+    if (!els.leaderboardStatus) {
+      return;
+    }
+    var fallback = canUseRemoteLeaderboard()
+      ? "Signed in. Save your opt-in settings and refresh leaderboard."
+      : "Sign in to sync leaderboard settings.";
+    els.leaderboardStatus.textContent = message || fallback;
+    els.leaderboardStatus.classList.remove("success", "error");
+    if (type) {
+      els.leaderboardStatus.classList.add(type);
+    }
+  }
+
+  function renderLeaderboardList(rows) {
+    if (!els.leaderboardList) {
+      return;
+    }
+    var list = Array.isArray(rows) ? rows : [];
+    els.leaderboardList.innerHTML = "";
+    if (!list.length) {
+      var empty = document.createElement("li");
+      empty.textContent = "No public leaderboard entries yet.";
+      els.leaderboardList.appendChild(empty);
+      return;
+    }
+    list.forEach(function (item, idx) {
+      var li = document.createElement("li");
+      li.className = "leaderboard-item";
+      var rank = document.createElement("span");
+      rank.className = "leaderboard-rank";
+      rank.textContent = "#" + String(idx + 1);
+      var name = document.createElement("span");
+      name.className = "leaderboard-name";
+      name.textContent = String(item.displayName || "Anonymous");
+      var meta = document.createElement("span");
+      meta.className = "leaderboard-meta";
+      meta.textContent =
+        String(item.totalXp || 0) + " XP | " +
+        String(item.quizCount || 0) + " quizzes | " +
+        String(item.cognitiveCount || 0) + " drills";
+      li.appendChild(rank);
+      li.appendChild(name);
+      li.appendChild(meta);
+      els.leaderboardList.appendChild(li);
+    });
+  }
+
+  function setLeaderboardControlsEnabled(enabled) {
+    var active = Boolean(enabled);
+    if (els.leaderboardDisplayName) {
+      els.leaderboardDisplayName.disabled = !active;
+    }
+    if (els.leaderboardOptIn) {
+      els.leaderboardOptIn.disabled = !active;
+    }
+    if (els.leaderboardSave) {
+      els.leaderboardSave.disabled = !active;
+    }
+    if (els.leaderboardRefresh) {
+      els.leaderboardRefresh.disabled = !active;
+    }
+  }
+
+  function populateLeaderboardControls() {
+    if (els.leaderboardDisplayName) {
+      els.leaderboardDisplayName.value = leaderboardDisplayName();
+    }
+    if (els.leaderboardOptIn) {
+      els.leaderboardOptIn.checked = Boolean(appState.leaderboard.optIn);
+    }
+    setLeaderboardControlsEnabled(canUseRemoteLeaderboard());
+  }
+
+  function leaderboardSnapshotRow() {
+    var attempts = Array.isArray(appState.attempts) ? appState.attempts : [];
+    var drills = Array.isArray(appState.cognitive.drillLogs) ? appState.cognitive.drillLogs : [];
+    var avgQuiz = attempts.length
+      ? Math.round(attempts.reduce(function (sum, entry) { return sum + (Number(entry.score) || 0); }, 0) / attempts.length)
+      : 0;
+    var avgDrill = drills.length
+      ? Math.round(drills.reduce(function (sum, entry) { return sum + (Number(entry.score) || 0); }, 0) / drills.length)
+      : 0;
+    var bestQuiz = attempts.length
+      ? Math.max.apply(null, attempts.map(function (entry) { return Number(entry.score) || 0; }))
+      : 0;
+    var bestDrill = drills.length
+      ? Math.max.apply(null, drills.map(function (entry) { return Number(entry.score) || 0; }))
+      : 0;
+
+    return {
+      user_id: activeAuthUser.id,
+      total_xp: Number(appState.profile.xp) || 0,
+      streak_days: Number(appState.profile.streak) || 0,
+      quiz_count: attempts.length,
+      cognitive_count: drills.length,
+      avg_quiz_score: avgQuiz,
+      avg_cognitive_score: avgDrill,
+      best_quiz_score: bestQuiz,
+      best_cognitive_score: bestDrill,
+      updated_at: new Date().toISOString()
+    };
+  }
+
+  function syncLeaderboardNow(reason) {
+    if (!canUseRemoteLeaderboard()) {
+      return Promise.resolve(false);
+    }
+    var client = getSupabaseClient();
+    var profileRow = {
+      user_id: activeAuthUser.id,
+      display_name: String(appState.leaderboard.displayName || authDisplayName(activeAuthUser)).trim().slice(0, 40),
+      leaderboard_opt_in: Boolean(appState.leaderboard.optIn),
+      updated_at: new Date().toISOString()
+    };
+    var scoreRow = leaderboardSnapshotRow();
+    return client.from("astro_profiles")
+      .upsert([profileRow], { onConflict: "user_id" })
+      .then(function (profileResult) {
+        if (profileResult && profileResult.error) {
+          throw profileResult.error;
+        }
+        return client.from("astro_leaderboard_scores")
+          .upsert([scoreRow], { onConflict: "user_id" });
+      }).then(function (scoreResult) {
+        if (scoreResult && scoreResult.error) {
+          throw scoreResult.error;
+        }
+        setLeaderboardStatus(
+          "Leaderboard sync complete" + (reason ? " (" + reason + ")" : "") + ".",
+          "success"
+        );
+        return true;
+      }).catch(function (err) {
+        console.error(err);
+        setLeaderboardStatus(
+          "Leaderboard sync failed. Ensure tables + RLS are configured. (" + String(err.message || err) + ")",
+          "error"
+        );
+        return false;
+      });
+  }
+
+  function scheduleLeaderboardSync(reason) {
+    if (!canUseRemoteLeaderboard()) {
+      return;
+    }
+    if (leaderboardSyncTimer) {
+      clearTimeout(leaderboardSyncTimer);
+    }
+    leaderboardSyncTimer = setTimeout(function () {
+      syncLeaderboardNow(reason || "auto");
+    }, 1400);
+  }
+
+  function refreshLeaderboardList() {
+    if (!canUseRemoteLeaderboard()) {
+      setLeaderboardStatus("Sign in to fetch leaderboard data.", "error");
+      renderLeaderboardList([]);
+      return Promise.resolve(false);
+    }
+    var client = getSupabaseClient();
+    return client.from("astro_leaderboard_scores")
+      .select("user_id,total_xp,quiz_count,cognitive_count,updated_at")
+      .order("total_xp", { ascending: false })
+      .limit(50)
+      .then(function (scoresResult) {
+        if (scoresResult && scoresResult.error) {
+          throw scoresResult.error;
+        }
+        var scoreRows = Array.isArray(scoresResult.data) ? scoresResult.data : [];
+        if (!scoreRows.length) {
+          renderLeaderboardList([]);
+          setLeaderboardStatus("Leaderboard is empty for now.");
+          return true;
+        }
+        var userIds = scoreRows.map(function (row) { return row.user_id; }).filter(Boolean);
+        return client.from("astro_profiles")
+          .select("user_id,display_name,leaderboard_opt_in")
+          .in("user_id", userIds)
+          .eq("leaderboard_opt_in", true)
+          .then(function (profilesResult) {
+            if (profilesResult && profilesResult.error) {
+              throw profilesResult.error;
+            }
+            var profileMap = {};
+            (profilesResult.data || []).forEach(function (profile) {
+              profileMap[profile.user_id] = profile;
+            });
+            var rows = scoreRows
+              .filter(function (row) { return Boolean(profileMap[row.user_id]); })
+              .map(function (row) {
+                var profile = profileMap[row.user_id];
+                return {
+                  displayName: profile.display_name || "Anonymous",
+                  totalXp: row.total_xp || 0,
+                  quizCount: row.quiz_count || 0,
+                  cognitiveCount: row.cognitive_count || 0
+                };
+              });
+            renderLeaderboardList(rows);
+            setLeaderboardStatus("Leaderboard refreshed.");
+            return true;
+          });
+      })
+      .catch(function (err) {
+        console.error(err);
+        setLeaderboardStatus(
+          "Could not load leaderboard. Check schema/RLS setup. (" + String(err.message || err) + ")",
+          "error"
+        );
+        return false;
+      });
+  }
+
   function setTab(panelId) {
     els.tabButtons.forEach(function (button) {
       var active = button.getAttribute("aria-controls") === panelId;
@@ -1499,6 +1763,10 @@
 
     if (panelId === "panel-progress") {
       renderProgress();
+      populateLeaderboardControls();
+      if (canUseRemoteLeaderboard() && appState.leaderboard.optIn) {
+        refreshLeaderboardList();
+      }
     } else if (panelId === "panel-quiz") {
       renderQuizRecommendation();
     }
@@ -5941,7 +6209,7 @@
       ? incomingCognitive.reactionRuns.map(function (value) {
         return Math.round(Number(value) || 0);
       }).filter(function (value) {
-        return Number.isFinite(value) && value >= 80 && value <= 3000;
+        return Number.isFinite(value) && value >= REACTION_MIN_VALID_MS && value <= 3000;
       })
       : [];
     var incomingReactionAudit = Array.isArray(incomingCognitive.reactionAudit)
@@ -5966,7 +6234,7 @@
     appState.attempts = dedupeHistoryById(appState.attempts.concat(incomingAttempts));
     appState.cognitive.drillLogs = dedupeHistoryById(appState.cognitive.drillLogs.concat(incomingDrills));
     appState.cognitive.reactionRuns = appState.cognitive.reactionRuns.concat(incomingReactionRuns).filter(function (value) {
-      return Number.isFinite(value) && value >= 80 && value <= 3000;
+      return Number.isFinite(value) && value >= REACTION_MIN_VALID_MS && value <= 3000;
     });
     appState.cognitive.reactionAudit = appState.cognitive.reactionAudit.concat(incomingReactionAudit).slice(-200);
     appState.cognitive.speedAudit = appState.cognitive.speedAudit.concat(incomingSpeedAudit).slice(-200);
@@ -6042,6 +6310,39 @@
     }
 
     setProgressSyncStatus("");
+    populateLeaderboardControls();
+    setLeaderboardStatus("");
+    renderLeaderboardList([]);
+
+    if (els.leaderboardSave) {
+      els.leaderboardSave.addEventListener("click", function () {
+        if (!canUseRemoteLeaderboard()) {
+          setLeaderboardStatus("Sign in with a Supabase-backed account to save leaderboard settings.", "error");
+          return;
+        }
+        var displayName = String((els.leaderboardDisplayName && els.leaderboardDisplayName.value) || "").trim().slice(0, 40);
+        if (!displayName) {
+          setLeaderboardStatus("Display name is required to save leaderboard settings.", "error");
+          return;
+        }
+        appState.leaderboard.displayName = displayName;
+        appState.leaderboard.optIn = Boolean(els.leaderboardOptIn && els.leaderboardOptIn.checked);
+        persistState();
+        syncLeaderboardNow("settings-save").then(function (ok) {
+          if (ok && appState.leaderboard.optIn) {
+            refreshLeaderboardList();
+          } else if (ok) {
+            renderLeaderboardList([]);
+          }
+        });
+      });
+    }
+
+    if (els.leaderboardRefresh) {
+      els.leaderboardRefresh.addEventListener("click", function () {
+        refreshLeaderboardList();
+      });
+    }
 
     els.exportHistory.addEventListener("click", function () {
       var payload = {
