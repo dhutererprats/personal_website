@@ -132,7 +132,8 @@
     },
     progressPrefs: {
       range: "180d",
-      granularity: "auto"
+      granularity: "auto",
+      speedMode: "classic"
     },
     leaderboard: {
       displayName: "",
@@ -705,6 +706,11 @@
     return valid.indexOf(value) >= 0 ? value : "auto";
   }
 
+  function sanitizeSpeedMode(value) {
+    var valid = ["classic", "panel"];
+    return valid.indexOf(value) >= 0 ? value : "classic";
+  }
+
   function refreshQuestionStatsFromAttempts() {
     var stats = {};
     (Array.isArray(appState.attempts) ? appState.attempts : []).forEach(function (attempt) {
@@ -985,6 +991,9 @@
     els.speedStart = byId("speed-start");
     els.speedSubmit = byId("speed-submit");
     els.speedStatus = byId("speed-status");
+    els.speedCard = byId("speed-card");
+    els.speed2Card = byId("speed2-card");
+    els.speedModeTabs = Array.from(document.querySelectorAll(".speed-mode-tab"));
     els.speed2Rule = byId("speed2-rule");
     els.speed2Time = byId("speed2-time");
     els.speed2Level = byId("speed2-level");
@@ -1123,6 +1132,7 @@
     if (prefsRaw && typeof prefsRaw === "object") {
       appState.progressPrefs.range = sanitizeProgressRange(prefsRaw.range);
       appState.progressPrefs.granularity = sanitizeProgressGranularity(prefsRaw.granularity);
+      appState.progressPrefs.speedMode = sanitizeSpeedMode(prefsRaw.speedMode);
     }
 
     var leaderboardRaw = safeRead(STORE_KEYS.leaderboardPrefs, null);
@@ -4198,6 +4208,61 @@
     renderRmsMeta();
   }
 
+  function cancelClassicSpeedForModeSwitch() {
+    if (!appState.speed.running) {
+      return;
+    }
+    clearSpeedTimer();
+    appState.speed.running = false;
+    renderSpeedTimer();
+    disableContainerButtons(els.speedGrid, true);
+    els.speedSubmit.disabled = true;
+    els.speedStatus.textContent = "Classic speed round canceled due to drill-mode switch.";
+    els.speedStatus.className = "astro-status";
+  }
+
+  function cancelPanelSpeedForModeSwitch() {
+    if (!(appState.speed2.previewing || appState.speed2.presenting || appState.speed2.challenge)) {
+      return;
+    }
+    resetSpeed2Round(false);
+    els.speed2Status.textContent = "Instrument panel round canceled due to drill-mode switch.";
+    els.speed2Status.className = "astro-status";
+  }
+
+  function renderSpeedModeUI() {
+    var mode = sanitizeSpeedMode(appState.progressPrefs.speedMode);
+    appState.progressPrefs.speedMode = mode;
+    if (els.speedModeTabs && els.speedModeTabs.length) {
+      els.speedModeTabs.forEach(function (tab) {
+        var active = tab.getAttribute("data-speed-mode") === mode;
+        tab.classList.toggle("active", active);
+        tab.setAttribute("aria-pressed", active ? "true" : "false");
+      });
+    }
+    if (els.speedCard) {
+      els.speedCard.hidden = mode !== "classic";
+    }
+    if (els.speed2Card) {
+      els.speed2Card.hidden = mode !== "panel";
+    }
+  }
+
+  function setSpeedMode(mode) {
+    var targetMode = sanitizeSpeedMode(mode);
+    if (targetMode === appState.progressPrefs.speedMode) {
+      return;
+    }
+    if (appState.progressPrefs.speedMode === "classic") {
+      cancelClassicSpeedForModeSwitch();
+    } else {
+      cancelPanelSpeedForModeSwitch();
+    }
+    appState.progressPrefs.speedMode = targetMode;
+    renderSpeedModeUI();
+    persistState();
+  }
+
   function renderSpeedTimer() {
     if (!appState.speed.running) {
       if (appState.speed.durationMs > 0) {
@@ -5628,6 +5693,14 @@
     els.speedSubmit.addEventListener("click", submitSpeedRound);
     els.speedSubmit.disabled = true;
     renderSpeedTimer();
+    if (els.speedModeTabs && els.speedModeTabs.length) {
+      els.speedModeTabs.forEach(function (tab) {
+        tab.addEventListener("click", function () {
+          setSpeedMode(tab.getAttribute("data-speed-mode"));
+        });
+      });
+    }
+    renderSpeedModeUI();
     els.speed2Start.addEventListener("click", startSpeed2Round);
     els.speed2Pause.addEventListener("click", toggleSpeed2Pause);
     els.speed2Reset.addEventListener("click", function () {

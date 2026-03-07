@@ -836,6 +836,33 @@
   border-width: 2px;
 }
 
+.speed-switcher {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.36rem;
+}
+
+.speed-mode-tab {
+  border: 1px solid var(--border-color);
+  background: var(--bg-color);
+  color: var(--text-color);
+  border-radius: 999px;
+  padding: 0.3rem 0.62rem;
+  font-size: 0.79rem;
+  cursor: pointer;
+  transition: border-color 0.16s ease, background 0.16s ease, transform 0.16s ease;
+}
+
+.speed-mode-tab:hover {
+  transform: translateY(-1px);
+}
+
+.speed-mode-tab.active {
+  border-color: rgba(47, 140, 255, 0.9);
+  background: rgba(47, 140, 255, 0.18);
+}
+
 .speed-grid {
   margin: 0.45rem 0 0.65rem;
   display: grid;
@@ -1344,6 +1371,10 @@
     gap: 0.32rem;
   }
 
+  .speed-switcher {
+    gap: 0.32rem;
+  }
+
   .reaction-mode-tab {
     flex: 1 1 calc(50% - 0.2rem);
     min-height: 40px;
@@ -1359,6 +1390,13 @@
   #reaction-card .cog-row .astro-btn {
     width: auto;
     flex: 1 1 0;
+  }
+
+  .speed-mode-tab {
+    flex: 1 1 calc(50% - 0.2rem);
+    min-height: 40px;
+    font-size: 0.74rem;
+    padding: 0.34rem 0.42rem;
   }
 
   .speed-grid {
@@ -1416,6 +1454,10 @@
   }
 
   .reaction-mode-tab {
+    flex: 1 1 100%;
+  }
+
+  .speed-mode-tab {
     flex: 1 1 100%;
   }
 

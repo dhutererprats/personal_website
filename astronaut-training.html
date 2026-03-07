@@ -383,6 +383,11 @@
               <p id="rms-status" class="astro-status"></p>
             </article>
 
+            <div class="speed-switcher" role="group" aria-label="Perceptual speed drill mode">
+              <button type="button" class="speed-mode-tab active" data-speed-mode="classic" aria-pressed="true">Classic OWT/SKT</button>
+              <button type="button" class="speed-mode-tab" data-speed-mode="panel" aria-pressed="false">Instrument Panel v2</button>
+            </div>
+
             <article class="cog-card" id="speed-card">
               <h3>Perceptual Speed (OWT/SKT)</h3>
               <p>Select every code that exactly matches the target before time runs out.</p>
@@ -396,7 +401,7 @@
               <p id="speed-status" class="astro-status"></p>
             </article>
 
-            <article class="cog-card" id="speed2-card">
+            <article class="cog-card" id="speed2-card" hidden>
               <h3>Perceptual Speed v2 (Instrument Panel)</h3>
               <p>Memorize values of critical instruments in top-to-bottom, left-to-right order.</p>
               <div class="cog-meta">Critical rule: <span id="speed2-rule">-</span></div>
