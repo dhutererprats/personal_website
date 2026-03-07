@@ -16,7 +16,8 @@
     cognitive: "astro_training_cognitive_v1",
     installationId: "astro_training_installation_id_v1",
     progressPrefs: "astro_training_progress_prefs_v1",
-    leaderboardPrefs: "astro_training_leaderboard_prefs_v1"
+    leaderboardPrefs: "astro_training_leaderboard_prefs_v1",
+    leaderboardCache: "astro_training_leaderboard_cache_v1"
   };
 
   var BADGE_DEFS = [
@@ -131,13 +132,18 @@
       totalDrills: 0
     },
     progressPrefs: {
-      range: "180d",
+      range: "all",
       granularity: "auto",
-      speedMode: "classic"
+      speedMode: "classic",
+      historyLimit: "100"
     },
     leaderboard: {
       displayName: "",
       optIn: false
+    },
+    leaderboardCache: {
+      rows: [],
+      fetchedAt: null
     },
     cognitive: {
       digitLevel: 4,
@@ -711,6 +717,20 @@
     return valid.indexOf(value) >= 0 ? value : "classic";
   }
 
+  function sanitizeHistoryLimit(value) {
+    var valid = ["40", "100", "250", "all"];
+    return valid.indexOf(String(value || "")) >= 0 ? String(value) : "100";
+  }
+
+  function parseHistoryLimit(value) {
+    var cleaned = sanitizeHistoryLimit(value);
+    if (cleaned === "all") {
+      return null;
+    }
+    var num = Number(cleaned);
+    return Number.isFinite(num) && num > 0 ? Math.round(num) : 100;
+  }
+
   function refreshQuestionStatsFromAttempts() {
     var stats = {};
     (Array.isArray(appState.attempts) ? appState.attempts : []).forEach(function (attempt) {
@@ -1032,12 +1052,14 @@
     els.progressNeedsReview = byId("progress-needs-review");
     els.progressRange = byId("progress-range");
     els.progressGranularity = byId("progress-granularity");
+    els.historyLimit = byId("history-limit");
     els.progressSummary = byId("progress-summary");
     els.progressChart = byId("progress-chart");
     els.topicMasteryList = byId("topic-mastery-list");
     els.masteryFocus = byId("mastery-focus");
     els.badgeRow = byId("badge-row");
     els.historyBody = byId("history-body");
+    els.historyOverview = byId("history-overview");
     els.exportHistory = byId("export-history");
     els.importHistory = byId("import-history");
     els.importHistoryFile = byId("import-history-file");
@@ -1133,12 +1155,19 @@
       appState.progressPrefs.range = sanitizeProgressRange(prefsRaw.range);
       appState.progressPrefs.granularity = sanitizeProgressGranularity(prefsRaw.granularity);
       appState.progressPrefs.speedMode = sanitizeSpeedMode(prefsRaw.speedMode);
+      appState.progressPrefs.historyLimit = sanitizeHistoryLimit(prefsRaw.historyLimit);
     }
 
     var leaderboardRaw = safeRead(STORE_KEYS.leaderboardPrefs, null);
     if (leaderboardRaw && typeof leaderboardRaw === "object") {
       appState.leaderboard.displayName = String(leaderboardRaw.displayName || "").trim();
       appState.leaderboard.optIn = Boolean(leaderboardRaw.optIn);
+    }
+
+    var leaderboardCacheRaw = safeRead(STORE_KEYS.leaderboardCache, null);
+    if (leaderboardCacheRaw && typeof leaderboardCacheRaw === "object") {
+      appState.leaderboardCache.rows = normalizeLeaderboardRows(leaderboardCacheRaw.rows);
+      appState.leaderboardCache.fetchedAt = normalizeIsoTimestamp(leaderboardCacheRaw.fetchedAt);
     }
 
     var cogRaw = safeRead(STORE_KEYS.cognitive, null);
@@ -1546,6 +1575,43 @@
     return "";
   }
 
+  function normalizeLeaderboardRows(rows) {
+    var list = Array.isArray(rows) ? rows : [];
+    return list.map(function (row) {
+      if (!row || typeof row !== "object") {
+        return null;
+      }
+      var name = String(row.displayName || "").trim().slice(0, 40);
+      var xp = Math.max(0, Math.round(Number(row.totalXp) || 0));
+      var quizCount = Math.max(0, Math.round(Number(row.quizCount) || 0));
+      var cognitiveCount = Math.max(0, Math.round(Number(row.cognitiveCount) || 0));
+      if (!name) {
+        return null;
+      }
+      return {
+        displayName: name,
+        totalXp: xp,
+        quizCount: quizCount,
+        cognitiveCount: cognitiveCount
+      };
+    }).filter(Boolean).slice(0, 50);
+  }
+
+  function leaderboardCacheStampLabel(iso) {
+    var ts = normalizeIsoTimestamp(iso);
+    return ts ? formatAttemptDate(ts) : "";
+  }
+
+  function persistLeaderboardCache(rows, fetchedAt) {
+    var normalizedRows = normalizeLeaderboardRows(rows);
+    var timestamp = normalizeIsoTimestamp(fetchedAt) || new Date().toISOString();
+    appState.leaderboardCache = {
+      rows: normalizedRows,
+      fetchedAt: timestamp
+    };
+    safeWrite(STORE_KEYS.leaderboardCache, appState.leaderboardCache);
+  }
+
   function setLeaderboardStatus(message, type) {
     if (!els.leaderboardStatus) {
       return;
@@ -1702,7 +1768,17 @@
   }
 
   function refreshLeaderboardList() {
+    var cachedRows = normalizeLeaderboardRows(appState.leaderboardCache.rows);
+    var cachedStamp = leaderboardCacheStampLabel(appState.leaderboardCache.fetchedAt);
+    var cachedStampText = cachedStamp || "your recent session";
     if (!canUseRemoteLeaderboard()) {
+      if (cachedRows.length) {
+        renderLeaderboardList(cachedRows);
+        setLeaderboardStatus(
+          "Showing cached leaderboard from " + cachedStampText + ". Sign in to refresh live data."
+        );
+        return Promise.resolve(true);
+      }
       setLeaderboardStatus("Sign in to fetch leaderboard data.", "error");
       renderLeaderboardList([]);
       return Promise.resolve(false);
@@ -1718,6 +1794,7 @@
         }
         var scoreRows = Array.isArray(scoresResult.data) ? scoresResult.data : [];
         if (!scoreRows.length) {
+          persistLeaderboardCache([], new Date().toISOString());
           renderLeaderboardList([]);
           setLeaderboardStatus("Leaderboard is empty for now.");
           return true;
@@ -1746,6 +1823,7 @@
                   cognitiveCount: row.cognitive_count || 0
                 };
               });
+            persistLeaderboardCache(rows, new Date().toISOString());
             renderLeaderboardList(rows);
             setLeaderboardStatus("Leaderboard refreshed.");
             return true;
@@ -1753,6 +1831,14 @@
       })
       .catch(function (err) {
         console.error(err);
+        if (cachedRows.length) {
+          renderLeaderboardList(cachedRows);
+          setLeaderboardStatus(
+            "Live refresh failed. Showing cached leaderboard from " + cachedStampText + ".",
+            "error"
+          );
+          return true;
+        }
         setLeaderboardStatus(
           "Could not load leaderboard. Check schema/RLS setup. (" + String(err.message || err) + ")",
           "error"
@@ -1774,9 +1860,7 @@
     if (panelId === "panel-progress") {
       renderProgress();
       populateLeaderboardControls();
-      if (canUseRemoteLeaderboard() && appState.leaderboard.optIn) {
-        refreshLeaderboardList();
-      }
+      refreshLeaderboardList();
     } else if (panelId === "panel-quiz") {
       renderQuizRecommendation();
     }
@@ -5968,6 +6052,9 @@
       ctx.font = "11px sans-serif";
       ctx.fillText(String(labelVal), 8, yy + 4);
     }
+    ctx.fillStyle = "rgba(120, 140, 170, 0.96)";
+    ctx.font = "11px sans-serif";
+    ctx.fillText("Score (%)", pad.left, 13);
 
     if (!quizSeries.length && !drillSeries.length) {
       ctx.fillStyle = "rgba(120, 140, 170, 0.9)";
@@ -6004,6 +6091,9 @@
       var textWidth = ctx.measureText(tickLabel).width;
       ctx.fillText(tickLabel, clamp(xx - textWidth / 2, pad.left, pad.left + w - textWidth), pad.top + h + 16);
     }
+    ctx.fillStyle = "rgba(120, 140, 170, 0.96)";
+    ctx.font = "11px sans-serif";
+    ctx.fillText("Time", canvas.width - pad.right - 28, canvas.height - 26);
 
     drawScoreSeries(ctx, pad, w, h, quizSeries, "#2f8cff", plotMinTs, plotMaxTs);
     drawScoreSeries(ctx, pad, w, h, drillSeries, "#8c5cff", plotMinTs, plotMaxTs);
@@ -6191,7 +6281,7 @@
     renderQuizRecommendation();
 
     els.historyBody.innerHTML = "";
-    var combined = attempts.map(function (attempt) {
+    var combinedAll = attempts.map(function (attempt) {
       return {
         timestamp: attempt.timestamp,
         mode: formatQuizModeLabel(attempt.mode),
@@ -6209,7 +6299,10 @@
       };
     })).sort(function (a, b) {
       return (parseTimestampMs(b.timestamp) || 0) - (parseTimestampMs(a.timestamp) || 0);
-    }).slice(0, 40);
+    });
+
+    var historyLimit = parseHistoryLimit(appState.progressPrefs.historyLimit);
+    var combined = historyLimit == null ? combinedAll : combinedAll.slice(0, historyLimit);
 
     combined.forEach(function (row) {
       var tr = document.createElement("tr");
@@ -6227,6 +6320,27 @@
       });
       els.historyBody.appendChild(tr);
     });
+
+    if (els.historyOverview) {
+      var earliestTs = combinedAll.length ? parseTimestampMs(combinedAll[combinedAll.length - 1].timestamp) : null;
+      var latestTs = combinedAll.length ? parseTimestampMs(combinedAll[0].timestamp) : null;
+      var windowText = (earliestTs && latestTs)
+        ? (formatAttemptDate(new Date(earliestTs).toISOString()) + " -> " + formatAttemptDate(new Date(latestTs).toISOString()))
+        : "No records yet";
+      var shownLabel = historyLimit == null ? "all rows" : ("latest " + historyLimit + " rows");
+      els.historyOverview.textContent =
+        "Stored records: " +
+        combinedAll.length +
+        " total (" +
+        attempts.length +
+        " quiz + " +
+        drillLogs.length +
+        " drills). Showing " +
+        shownLabel +
+        ". Range: " +
+        windowText +
+        ".";
+    }
 
     els.badgeRow.innerHTML = "";
     if (!appState.profile.badges.length) {
@@ -6252,7 +6366,7 @@
     if (!els.progressSyncStatus) {
       return;
     }
-    var fallback = "Tip: practice data stays on this device. Export JSON on one device and Import + Merge on another to combine progress across offline phone and desktop sessions.";
+    var fallback = "Tip: all practice history is stored on this device. Export JSON on one device and Import + Merge on another to combine offline phone and desktop sessions.";
     els.progressSyncStatus.textContent = message || fallback;
     els.progressSyncStatus.classList.remove("success", "error");
     if (type) {
@@ -6382,10 +6496,19 @@
       });
     }
 
+    if (els.historyLimit) {
+      els.historyLimit.value = sanitizeHistoryLimit(appState.progressPrefs.historyLimit);
+      els.historyLimit.addEventListener("change", function () {
+        appState.progressPrefs.historyLimit = sanitizeHistoryLimit(els.historyLimit.value);
+        persistState();
+        renderProgress();
+      });
+    }
+
     setProgressSyncStatus("");
     populateLeaderboardControls();
     setLeaderboardStatus("");
-    renderLeaderboardList([]);
+    renderLeaderboardList(normalizeLeaderboardRows(appState.leaderboardCache.rows));
 
     if (els.leaderboardSave) {
       els.leaderboardSave.addEventListener("click", function () {
@@ -6402,10 +6525,8 @@
         appState.leaderboard.optIn = Boolean(els.leaderboardOptIn && els.leaderboardOptIn.checked);
         persistState();
         syncLeaderboardNow("settings-save").then(function (ok) {
-          if (ok && appState.leaderboard.optIn) {
+          if (ok) {
             refreshLeaderboardList();
-          } else if (ok) {
-            renderLeaderboardList([]);
           }
         });
       });

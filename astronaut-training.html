@@ -491,9 +491,9 @@
               <select id="progress-range">
                 <option value="30d">Last 30 days</option>
                 <option value="90d">Last 90 days</option>
-                <option value="180d" selected>Last 6 months</option>
+                <option value="180d">Last 6 months</option>
                 <option value="365d">Last 12 months</option>
-                <option value="all">All time</option>
+                <option value="all" selected>All time</option>
               </select>
             </label>
             <label for="progress-granularity">
@@ -503,6 +503,15 @@
                 <option value="day">Daily</option>
                 <option value="week">Weekly</option>
                 <option value="month">Monthly</option>
+              </select>
+            </label>
+            <label for="history-limit">
+              History rows
+              <select id="history-limit">
+                <option value="40">Latest 40</option>
+                <option value="100" selected>Latest 100</option>
+                <option value="250">Latest 250</option>
+                <option value="all">All rows</option>
               </select>
             </label>
           </div>
@@ -562,6 +571,7 @@
               <tbody id="history-body"></tbody>
             </table>
           </div>
+          <p id="history-overview" class="panel-note">Stored records: 0.</p>
 
           <div class="cog-row" style="margin-top:0.7rem;">
             <button id="export-history" class="astro-btn" type="button">Export Backup JSON</button>
@@ -570,7 +580,7 @@
             <button id="clear-history" class="astro-btn danger" type="button">Clear Local Progress</button>
           </div>
           <p id="progress-sync-status" class="panel-note">
-            Tip: practice data stays on this device. Export JSON on one device and Import + Merge on another to combine progress across offline phone and desktop sessions.
+            Tip: all practice history stays on this device. Export JSON on one device and Import + Merge on another to combine progress across offline phone and desktop sessions.
           </p>
         </section>
 
