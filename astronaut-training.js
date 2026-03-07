@@ -2051,6 +2051,26 @@
   }
 
   function buildQuestion(card, mode) {
+    var explicitOptions = Array.isArray(card.options)
+      ? card.options.map(function (opt) { return String(opt || "").trim(); }).filter(Boolean)
+      : [];
+    if (explicitOptions.length >= 2) {
+      if (!explicitOptions.some(function (opt) { return opt === card.a; })) {
+        explicitOptions.unshift(card.a);
+      }
+      explicitOptions = uniqueBy(explicitOptions, function (opt) { return opt; });
+      return {
+        id: card.id,
+        prompt: card.q,
+        image: card.image || "",
+        imageAlt: card.imageAlt || "",
+        correctAnswer: card.a,
+        options: shuffle(explicitOptions),
+        topicId: card.topicId,
+        topicName: card.topicName
+      };
+    }
+
     var sameTopicPool = appState.allCards.filter(function (c) {
       return c.topicId === card.topicId && c.id !== card.id;
     });

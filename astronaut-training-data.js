@@ -1,5 +1,5 @@
 window.ASTRO_TRAINING_DATA = {
-  version: "2026-02-26",
+  version: "2026-03-07",
   title: "Astronaut Training Databank",
   description: "Concept bank for astronaut-relevant technical, operational, and cognitive preparation.",
   sources: [
@@ -42,6 +42,18 @@ window.ASTRO_TRAINING_DATA = {
     {
       label: "FAA - Aeronautical Information Manual",
       url: "https://www.faa.gov/air_traffic/publications/atpubs/aim_html/"
+    },
+    {
+      label: "ASEN 5016 Space Life Sciences - Quiz 1 (course material)",
+      url: "https://canvas.colorado.edu/courses/129198/quizzes/534377?headless=1"
+    },
+    {
+      label: "ASEN 5016 Space Life Sciences - Quiz 2 (course material)",
+      url: "https://canvas.colorado.edu/courses/129198/quizzes/535666?headless=1"
+    },
+    {
+      label: "ASEN 5016 Space Life Sciences - Quiz 3 (course material)",
+      url: "https://canvas.colorado.edu/courses/129198/quizzes/537591?headless=1"
     }
   ],
   topics: [
@@ -312,7 +324,83 @@ window.ASTRO_TRAINING_DATA = {
         { id: "bio-019", q: "What is resource closure ratio?", a: "Fraction of consumed resources recovered/recycled internally." },
         { id: "bio-020", q: "Why are pre-mission microbial baselines collected?", a: "They help detect abnormal microbial shifts during mission." },
         { id: "bio-021", q: "Why are crew procedures for hygiene standardized?", a: "Consistency lowers infection and contamination risk." },
-        { id: "bio-022", q: "What is latent habitat risk?", a: "Risk that is hidden initially but grows over mission duration if unmitigated." }
+        { id: "bio-022", q: "What is latent habitat risk?", a: "Risk that is hidden initially but grows over mission duration if unmitigated." },
+        { id: "bio-023", q: "Define oxygen toxicity.", a: "Harmful effects from elevated oxygen partial pressure, often affecting CNS and lungs." },
+        { id: "bio-024", q: "Define local ischemia.", a: "Insufficient blood flow to a localized tissue region causing oxygen/nutrient deprivation." },
+        { id: "bio-025", q: "Define pulmonary edema.", a: "Fluid accumulation in the lungs that impairs gas exchange." },
+        { id: "bio-026", q: "Define hyperoxia.", a: "Exposure to oxygen levels higher than physiologically normal." },
+        { id: "bio-027", q: "Define normoxia.", a: "Oxygen availability in a normal physiological range for healthy tissue function." },
+        { id: "bio-028", q: "Define hypoxia.", a: "Inadequate oxygen availability at tissue level." },
+        { id: "bio-029", q: "What is the oxygen cascade?", a: "Stepwise drop in oxygen partial pressure from ambient air to mitochondria that enables diffusion at each stage." },
+        { id: "bio-030", q: "Define partial pressure (ppO2 context).", a: "Pressure contribution of one gas in a mixture; diffusion is driven by partial-pressure gradients." },
+        { id: "bio-031", q: "What is cardiovascular deconditioning in spaceflight?", a: "Reduced cardiovascular capacity and orthostatic tolerance caused by microgravity adaptation." },
+        { id: "bio-032", q: "What is lower body negative pressure (LBNP)?", a: "Countermeasure applying suction to lower body to simulate fluid loading and support cardiovascular adaptation." },
+        { id: "bio-033", q: "What is space motion sickness?", a: "Vestibular conflict syndrome in early microgravity causing nausea, disorientation, and malaise." },
+        { id: "bio-034", q: "What are scopolamine and promethazine used for in flight medicine?", a: "Pharmaceutical anti-motion-sickness countermeasures commonly used for nausea/vestibular symptoms." },
+        { id: "bio-035", q: "Define ICE stressors in human spaceflight.", a: "Stressors tied to isolated, confined, and extreme environments." },
+        { id: "bio-036", q: "Define organizational stressor.", a: "Stressor arising from management structure, policies, role constraints, or administrative practices." },
+        { id: "bio-037", q: "Define physical environmental stressor.", a: "Stressor from habitat/operational environment such as noise, workload, vibration, thermal burden, or equipment dependence." },
+        { id: "bio-038", q: "What is bone modeling?", a: "Net shape/size change from uncoupled formation and resorption, dominant during growth." },
+        { id: "bio-039", q: "What is bone remodeling?", a: "Continuous coupled replacement cycle of old bone with new bone tissue." },
+        { id: "bio-040", q: "What is an antigravity muscle?", a: "Postural muscle group that opposes gravity to maintain upright orientation in 1g." },
+        { id: "bio-041", q: "What is a fascicle (muscle anatomy)?", a: "Bundle of muscle fibers within a skeletal muscle." },
+        { id: "bio-042", q: "What is a myofibril?", a: "Contractile substructure inside a muscle fiber containing repeating sarcomeres." },
+        { id: "bio-043", q: "Role of actin and myosin in muscle contraction.", a: "They are thin and thick filaments whose cross-bridge cycling generates force." },
+        { id: "bio-044", q: "What is periosteum?", a: "Fibrous vascular membrane covering outer bone surfaces (except articular regions)." },
+        { id: "bio-045", q: "What is diaphysis?", a: "Shaft region of a long bone." },
+        { id: "bio-046", q: "What is epiphysis?", a: "End region of a long bone involved in joint articulation and trabecular structure." },
+        { id: "bio-047", q: "At ISS altitudes, what atomic species is a dominant concern for surface interactions?", a: "Atomic oxygen (O), which can erode exposed materials." },
+        { id: "bio-048", q: "Define orbital debris for safety context.", a: "Human-made object fragments in orbit that can threaten spacecraft (not natural meteoroids)." },
+        { id: "bio-049", q: "Why can elevated CO2 impair performance?", a: "It can drive headache, reduced alertness, and cognitive degradation at sufficiently high levels." },
+        { id: "bio-050", q: "Why is resistance training central for long-duration ISS crew health?", a: "High-load resistance exercise is one of the most effective operational countermeasures against musculoskeletal deconditioning." },
+
+        { id: "bioq1-01", q: "[ASEN 5016 Quiz 1] What are the two main types of radiation?", a: "Electromagnetic and particulate", options: ["Electromagnetic and particulate", "Electromagnetic and flux", "Particulate and energetic", "Particulate and solar flares"] },
+        { id: "bioq1-02", q: "[ASEN 5016 Quiz 1] Impact damage to the Space Shuttle windows were most likely caused by:", a: "orbital debris or micrometeoroids", options: ["orbital debris or micrometeoroids", "meteors", "meteorites", "orbital debris or meteorites"] },
+        { id: "bioq1-03", q: "[ASEN 5016 Quiz 1] Which of the following statements about the human inputs and outputs is not true?", a: "O2 is a throughput", options: ["O2 is a throughput", "potable water is an input", "CO2 is an output", "hygiene water is a throughput"] },
+        { id: "bioq1-04", q: "[ASEN 5016 Quiz 1] If a person is in a small sealed volume at sea-level pressure with thermal/vacuum protection, what kills first?", a: "CO2 build up", options: ["CO2 build up", "O2 depletion", "Isolation and confinement", "Micrometeoroids and orbital debris"] },
+        { id: "bioq1-05", q: "[ASEN 5016 Quiz 1] Which of the following was NOT a function of the Space Shuttle Program?", a: "Sampling asteroids to learn the origins of matter", options: ["Sampling asteroids to learn the origins of matter", "Deploying and repairing satellites", "Bringing payloads to/from space", "Construction of the ISS"] },
+        { id: "bioq1-06", q: "[ASEN 5016 Quiz 1] Which mission/habitat design considerations are affected by sex?", a: "All of the options are correct", options: ["Nutrional needs", "Allowable radiation limits", "Commode design", "All of the options are correct"] },
+        { id: "bioq1-07", q: "[ASEN 5016 Quiz 1] In this class context, which are self-induced environmental factors?", a: "thruster firings and material off-gassing", options: ["thruster firings and material off-gassing", "material off-gassing and micrometeoroids", "space radiation and microgravity", "space radiation and orbital debris"] },
+        { id: "bioq1-08", q: "[ASEN 5016 Quiz 1] In human history, how many people have stepped foot on the Moon?", a: "12", options: ["12", "18", "14", "40"] },
+        { id: "bioq1-09", q: "[ASEN 5016 Quiz 1] Which considerations are used to determine habitable volume?", a: "All answers are correct", options: ["Number of crew", "Duration", "Psychological considerations", "All answers are correct"] },
+        { id: "bioq1-10", q: "[ASEN 5016 Quiz 1] The main effects of radiation are a result of ____.", a: "Energy deposition", options: ["Energy deposition", "GSRs", "the South Atlantic Anomaly", "All of the X-ray machines on Earth combined"] },
+        { id: "bioq1-11", q: "[ASEN 5016 Quiz 1] Radiation risk on the Moon's surface is less than on Mars' surface.", a: "False", options: ["True", "False"] },
+        { id: "bioq1-12", q: "[ASEN 5016 Quiz 1] Rule of thumb: a human can survive about 3 days without water intake.", a: "True", options: ["True", "False"] },
+        { id: "bioq1-13", q: "[ASEN 5016 Quiz 1] Orbital debris refers to hazardous pieces of natural matter in orbit.", a: "False", options: ["True", "False"] },
+        { id: "bioq1-14", q: "[ASEN 5016 Quiz 1] The world's first EVA was completed by Ed White in March 1965.", a: "False", options: ["True", "False"] },
+        { id: "bioq1-15", q: "[ASEN 5016 Quiz 1] Human factors can be considered a dimension of habitability.", a: "True", options: ["True", "False"] },
+
+        { id: "bioq2-01", q: "[ASEN 5016 Quiz 2] Which of the following is NOT a symptom of oxygen toxicity?", a: "Local ischemia", options: ["Brain dysfunction", "Nausea", "Muscle twitching", "Local ischemia", "Pulmonary edema"] },
+        { id: "bioq2-02", q: "[ASEN 5016 Quiz 2] What is a person's automatic reaction to prepare for catching a ball?", a: "Muscle contraction to increase joint stiffness", options: ["Muscle contraction to increase joint stiffness", "Relaxing the muscles to increase flexibility", "Holding the breath to increase focus", "Closing the eyes to reduce distraction"] },
+        { id: "bioq2-03", q: "[ASEN 5016 Quiz 2] Which of the following is NOT a core dimension of human performance?", a: "anatomical", options: ["cognitive", "anatomical", "psychological", "physical"] },
+        { id: "bioq2-04", q: "[ASEN 5016 Quiz 2] Which of the following is NOT a side effect of elevated carbon dioxide?", a: "Fever", options: ["Mild narcosis", "Dimmed sight", "Fever", "Headache"] },
+        { id: "bioq2-05", q: "[ASEN 5016 Quiz 2] Which of the following is NOT a factor that influences atmospheric pressure?", a: "longitude", options: ["altitude", "longitude", "all answers influence atmospheric pressure", "latitude"] },
+        { id: "bioq2-06", q: "[ASEN 5016 Quiz 2] At the altitude of the ISS, what is the dominant atmospheric constituent?", a: "O", options: ["O", "O2", "N", "N2"] },
+        { id: "bioq2-07", q: "[ASEN 5016 Quiz 2] Which of the following is NOT a potential countermeasure for cardiovascular deconditioning in space?", a: "Vitamin D supplements", options: ["Exercise", "Vitamin D supplements", "Lower body negative pressure", "Artificial gravity"] },
+        { id: "bioq2-08", q: "[ASEN 5016 Quiz 2] What psychological performance challenges are possible for astronauts?", a: "Lack of private space and interpersonal communication issues", options: ["Elevated metabolic rates and poor ergonomics", "Lack of private space and interpersonal communication issues", "Reduced sensorimotor performance and a need to relearn movements", "High levels of noise and routine work activities"] },
+        { id: "bioq2-09", q: "[ASEN 5016 Quiz 2] Which option may negatively impact the O2 cascade?", a: "ppO2 within lungs is too low for enable diffusion", options: ["residual ppO2 in capillaries is too high", "ppO2 outside lungs is too low to enable diffusion", "too many RBCs", "ppO2 within lungs is too low for enable diffusion"] },
+        { id: "bioq2-10", q: "[ASEN 5016 Quiz 2] For ISS missions, a main countermeasure to space motion sickness is:", a: "Pharmaceuticals, like scopolamine and promethazine", options: ["Lower body negative pressure", "Artificial gravity", "Pharmaceuticals, like scopolamine and promethazine", "Extensive exercise"] },
+        { id: "bioq2-11", q: "[ASEN 5016 Quiz 2] Pressure at specific altitudes varies daily but is non-seasonal over the year.", a: "False", options: ["True", "False"] },
+        { id: "bioq2-12", q: "[ASEN 5016 Quiz 2] Humans can only survive in normoxic conditions.", a: "False", options: ["True", "False"] },
+        { id: "bioq2-13", q: "[ASEN 5016 Quiz 2] Cognitive impairment in spaceflight is solely caused by elevated CO2.", a: "False", options: ["True", "False"] },
+        { id: "bioq2-14", q: "[ASEN 5016 Quiz 2] Auditory hearing loss in astronauts is likely due only to long-duration microgravity effects on the cochlea.", a: "False", options: ["True", "False"] },
+        { id: "bioq2-15", q: "[ASEN 5016 Quiz 2] Diaphragm contraction increases lung air pressure and forces air out.", a: "False", options: ["True", "False"] },
+
+        { id: "bioq3-01", q: "[ASEN 5016 Quiz 3] NASA studies show vitamins in stored food do NOT decrease over time.", a: "False", options: ["True", "False"] },
+        { id: "bioq3-02", q: "[ASEN 5016 Quiz 3] Bone modeling is the process by which bone grows and primarily occurs in youth.", a: "True", options: ["True", "False"] },
+        { id: "bioq3-03", q: "[ASEN 5016 Quiz 3] Bone tissue is remodeled approximately every 7 weeks.", a: "False", options: ["True", "False"] },
+        { id: "bioq3-04", q: "[ASEN 5016 Quiz 3] Unnatural loading patterns are the primary concern for bone loss during spaceflight.", a: "True", options: ["True", "False"] },
+        { id: "bioq3-05", q: "[ASEN 5016 Quiz 3] The spinal cord after spaceflight resembles what it looks like on Earth in the morning.", a: "True", options: ["True", "False"] },
+        { id: "bioq3-06", q: "[ASEN 5016 Quiz 3] Which of the following is an effect of ICE stressors?", a: "Decreased alertness and loss of concentration", options: ["Decreased resistance to common allergens", "Decreased alertness and loss of concentration", "Expedited loss of muscle mass", "Increased incidences of radiation-induced cancers"] },
+        { id: "bioq3-07", q: "[ASEN 5016 Quiz 3] Skeletal muscle is responsible for:", a: "voluntary actions that may be completed by striated bundles", options: ["All of the answers are correct", "None of the answers are correct", "voluntary actions that may be completed by striated bundles", "slow, sustained, involuntary actions (under autonomic control), such as those in the stomach or intestines.", "involuntary actions that may be completed by specialized, striated bundles"] },
+        { id: "bioq3-08", q: "[ASEN 5016 Quiz 3] Largest to smallest muscle structure is:", a: "fascicles, which contain muscle fibers, which contain many myofibrils, which each contain thousands of actin and myosin filaments.", options: ["fascicles, which contain muscle fibers, which contain many myofibrils, which each contain thousands of actin and myosin filaments.", "myofibrils, which contain muscle fibers, which then contain fascicles, which each contain thousands of actin and myosin filaments.", "myosin filaments, which contain muscle fibers, which contain many myofibrils, which each contain thousands of actin filaments.", "muscle fibers, which contain fascicles, which contain many myofibrils, which each contain thousands of actin and myosin filaments."] },
+        { id: "bioq3-09", q: "[ASEN 5016 Quiz 3] Which statement regarding bone loss is true?", a: "Bone loss is self-limiting, meaning that it will reach a steady-state in a new environment similar to cardiovascular atrophy, fluid shift/blood loss, and muscle loss.", options: ["Bone regrowth/formation after returning to 1g is always of the same quality as original bone growth", "None of the answers are true", "Bone loss is self-limiting, meaning that it will reach a steady-state in a new environment similar to cardiovascular atrophy, fluid shift/blood loss, and muscle loss.", "All astronauts have increased bone density after returning to 1g"] },
+        { id: "bioq3-10", q: "[ASEN 5016 Quiz 3] Which of the following is NOT a physical environmental stressor?", a: "ambiguity of flight assignment", options: ["constant background noise", "ambiguity of flight assignment", "complete dependence on ECLSS technologies", "demanding work schedules"] },
+        { id: "bioq3-11", q: "[ASEN 5016 Quiz 3] Which of the following are considered organizational stressors?", a: "all of the answers are correct", options: ["all of the answers are correct", "the feeling that you're always being watched", "last-minute substitutions", "the feeling of inability to challenge management", "None of these answers are correct"] },
+        { id: "bioq3-12", q: "[ASEN 5016 Quiz 3] Which of the following is a portion of skeletal bones?", a: "all of these", options: ["Periosteum", "none of these", "all of these", "Diaphysis", "Epiphysis"] },
+        { id: "bioq3-13", q: "[ASEN 5016 Quiz 3] Which of the following is an example of an organizational stressor?", a: "The knowledge that you are always watched and need to be on your best behavior", options: ["None of the answers are correct", "Little control over life", "Awareness of adverse biomedical effects", "All of the answers are correct", "The knowledge that you are always watched and need to be on your best behavior"] },
+        { id: "bioq3-14", q: "[ASEN 5016 Quiz 3] Antigravity muscles ______.", a: "are primarily responsible for maintaining an \"upright\" orientation", options: ["are primarily responsible for maintaining an \"upright\" orientation", "All of the answers are correct", "are the muscles which become stronger in microgravity (i.e., are \"anti\" gravity).", "are unique in that they don't include sarcomeres.", "are the most powerful muscles to fight against the large force of gravity."] },
+        { id: "bioq3-15", q: "[ASEN 5016 Quiz 3] Most effective one-year ISS musculoskeletal deconditioning countermeasure:", a: "daily strength and resistance training exercises with large impact forces", options: ["30 minutes of daily exposure to artificial gravity at a low level of 0.1 G's", "daily strength and resistance training exercises with large impact forces", "lower body negative pressure", "head down tilt bed rest"] }
       ]
     },
     {
