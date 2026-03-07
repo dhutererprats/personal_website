@@ -70,11 +70,21 @@
   var SPEED2_PRESENTATION_STEP_MS = 500; // [ms]
   var SPEED2_PRESENTATION_MIN_MS = 1500; // [ms]
   var SPEED2_RULE_PREVIEW_MS = 900; // [ms]
-  var REACTION_MIN_VALID_MS = 115;
+  var REACTION_MIN_VALID_MS = 50;
   var SPEED_MIN_VALID_ROUND_MS = 450;
   var SPEED2_MIN_VALID_ANSWER_MS = 250;
   var SESSION_BREAK_DRILL_THRESHOLD = 10;
   var SESSION_BREAK_ELAPSED_MS = 18 * 60 * 1000;
+  var REACTION_SESSION_ROUNDS = 10;
+  var STROOP_COLORS = [
+    { name: "GREEN", hex: "#2a9a62" },
+    { name: "RED", hex: "#c24a4a" },
+    { name: "BLUE", hex: "#3a67d9" },
+    { name: "YELLOW", hex: "#d4ad2d" },
+    { name: "ORANGE", hex: "#d9802f" },
+    { name: "VIOLET", hex: "#7d4ed1" },
+    { name: "BLACK", hex: "#0f1420" }
+  ];
 
   var els = {};
   var appState = {
@@ -144,21 +154,33 @@
     digit: {
       current: "",
       revealTimer: null,
-      feedbackTimer: null
+      feedbackTimer: null,
+      startedAt: 0
     },
     memory: {
       activePattern: [],
       picks: new Set(),
       revealLock: false,
       revealTimer: null,
-      gridSize: 4
+      gridSize: 4,
+      startedAt: 0
     },
     reaction: {
       timer: null,
       waiting: false,
       ready: false,
       readyAt: 0,
-      interrupted: false
+      trialStartedAt: 0,
+      interrupted: false,
+      mode: "baseline",
+      sessionRunning: false,
+      sessionPaused: false,
+      sessionIndex: 0,
+      sessionRounds: REACTION_SESSION_ROUNDS,
+      sessionPlan: [],
+      sessionResults: [],
+      currentStimulus: "none",
+      awaitingSessionResponse: false
     },
     rms: {
       sequence: [],
@@ -166,7 +188,8 @@
       index: 0,
       timer: null,
       running: false,
-      readyForInput: false
+      readyForInput: false,
+      startedAt: 0
     },
     speed: {
       timer: null,
@@ -194,11 +217,13 @@
       answerStartedAt: 0,
       inputKeyCount: 0,
       interrupted: false,
-      checkTrusted: true
+      checkTrusted: true,
+      roundStartedAt: 0
     },
     rotation: {
       scenario: null,
-      answered: false
+      answered: false,
+      startedAt: 0
     },
     math: {
       timer: null,
@@ -208,7 +233,8 @@
       total: 0,
       correct: 0,
       question: null,
-      recentTypes: []
+      recentTypes: [],
+      startedAt: 0
     },
     concentration: {
       running: false,
@@ -233,7 +259,8 @@
       revealTop: false,
       revealBottom: false,
       revealTopTimer: null,
-      revealBottomTimer: null
+      revealBottomTimer: null,
+      roundStartedAt: 0
     }
   };
 
@@ -610,8 +637,9 @@
     var type = String(raw.type || "drill");
     var detail = String(raw.detail || "");
     var score = clamp(Math.round(Number(raw.score) || 0), 0, 100);
+    var meta = raw.meta && typeof raw.meta === "object" ? raw.meta : {};
     var xpRaw = Number(raw.xpEarned);
-    var xpEarned = Number.isFinite(xpRaw) ? Math.max(0, Math.round(xpRaw)) : xpFromCognitiveScore(score);
+    var xpEarned = Number.isFinite(xpRaw) ? Math.max(0, Math.round(xpRaw)) : xpFromCognitiveScore(type, score, meta);
     var id = typeof raw.id === "string" && raw.id.trim()
       ? raw.id.trim()
       : buildDrillFallbackId({
@@ -626,6 +654,7 @@
       type: type,
       score: score,
       detail: detail,
+      meta: meta,
       xpEarned: xpEarned
     };
   }
@@ -915,8 +944,12 @@
 
     els.reactionTarget = byId("reaction-target");
     els.reactionStart = byId("reaction-start");
+    els.reactionPause = byId("reaction-pause");
     els.reactionReset = byId("reaction-reset");
     els.reactionStatus = byId("reaction-status");
+    els.reactionModeMeta = byId("reaction-mode-meta");
+    els.reactionSessionProgress = byId("reaction-session-progress");
+    els.reactionModeTabs = Array.from(document.querySelectorAll(".reaction-mode-tab"));
 
     els.rmsMeta = byId("rms-meta");
     els.rmsStream = byId("rms-stream");
@@ -1099,7 +1132,7 @@
         ? cogRaw.reactionRuns.map(function (value) {
           return Math.round(Number(value) || 0);
         }).filter(function (value) {
-          return Number.isFinite(value) && value >= 80 && value <= 3000;
+          return Number.isFinite(value) && value >= REACTION_MIN_VALID_MS && value <= 3000;
         })
         : [];
       appState.cognitive.reactionAudit = Array.isArray(cogRaw.reactionAudit)
@@ -1668,8 +1701,72 @@
     }, null);
   }
 
-  function xpFromCognitiveScore(score) {
-    return clamp(Math.round(score / 7), 3, 14);
+  function drillXpConfig(type) {
+    var table = {
+      "digit-span": { base: 4.8, refSec: 14, levelScale: 0.045, scoreWeight: 0.72, durationMode: "longer", min: 2, max: 14 },
+      "visual-pattern": { base: 6.8, refSec: 22, levelScale: 0.06, scoreWeight: 0.76, durationMode: "longer", min: 4, max: 20 },
+      "triangle-concentration": { base: 36, refSec: 110, levelScale: 0.07, scoreWeight: 0.84, durationMode: "longer", min: 18, max: 85 },
+      "reaction-time": { base: 0.95, refSec: 4.5, levelScale: 0.01, scoreWeight: 0.5, durationMode: "longer", min: 0, max: 3 },
+      "reaction-go-nogo": { base: 10.5, refSec: 35, levelScale: 0.045, scoreWeight: 0.78, durationMode: "faster", min: 6, max: 28 },
+      "reaction-stroop": { base: 13, refSec: 45, levelScale: 0.05, scoreWeight: 0.82, durationMode: "faster", min: 7, max: 34 },
+      "running-memory-span": { base: 6.4, refSec: 20, levelScale: 0.055, scoreWeight: 0.76, durationMode: "longer", min: 3, max: 18 },
+      "perceptual-speed": { base: 4.9, refSec: 16, levelScale: 0.05, scoreWeight: 0.74, durationMode: "faster", min: 3, max: 16 },
+      "perceptual-speed-panel": { base: 4.8, refSec: 15, levelScale: 0.055, scoreWeight: 0.76, durationMode: "faster", min: 3, max: 17 },
+      "spatial-rotation": { base: 7.2, refSec: 24, levelScale: 0.06, scoreWeight: 0.75, durationMode: "longer", min: 4, max: 20 },
+      "math-physics-sprint": { base: 19, refSec: 60, levelScale: 0.05, scoreWeight: 0.83, durationMode: "longer", min: 10, max: 50 }
+    };
+    return table[type] || { base: 6, refSec: 20, levelScale: 0.05, scoreWeight: 0.7, durationMode: "longer", min: 3, max: 20 };
+  }
+
+  function sameDrillStreakMultiplier(type) {
+    var logs = Array.isArray(appState.cognitive.drillLogs) ? appState.cognitive.drillLogs : [];
+    if (!logs.length) {
+      return 1;
+    }
+    var streak = 0;
+    for (var idx = logs.length - 1; idx >= 0; idx -= 1) {
+      if (logs[idx] && logs[idx].type === type) {
+        streak += 1;
+      } else {
+        break;
+      }
+    }
+    if (streak >= 12) {
+      return 0.45;
+    }
+    if (streak >= 8) {
+      return 0.6;
+    }
+    if (streak >= 5) {
+      return 0.72;
+    }
+    if (streak >= 3) {
+      return 0.85;
+    }
+    return 1;
+  }
+
+  function xpFromCognitiveScore(type, score, meta) {
+    var cfg = drillXpConfig(type);
+    var safeMeta = meta && typeof meta === "object" ? meta : {};
+    var durationSecRaw = Number(safeMeta.durationSec);
+    var durationSec = Number.isFinite(durationSecRaw) ? durationSecRaw : cfg.refSec;
+    durationSec = clamp(durationSec, cfg.refSec * 0.4, cfg.refSec * 3.2);
+    var level = clamp(Math.round(Number(safeMeta.level) || 1), 1, 20);
+    var scoreFactor = 0.45 + (clamp(Number(score) || 0, 0, 100) / 100) * cfg.scoreWeight;
+    var durationRatio = durationSec / cfg.refSec;
+    var durationFactor;
+    if (cfg.durationMode === "faster") {
+      durationFactor = Math.sqrt(1 / durationRatio);
+    } else {
+      durationFactor = Math.sqrt(durationRatio);
+    }
+    durationFactor = clamp(durationFactor, 0.75, 1.35);
+    var levelFactor = 1 + (level - 1) * cfg.levelScale;
+    var farmFactor = sameDrillStreakMultiplier(type);
+    var invalidFactor = safeMeta.invalidQuality ? 0.25 : 1;
+    var xp = cfg.base * scoreFactor * durationFactor * levelFactor * farmFactor * invalidFactor;
+    return clamp(Math.round(xp), cfg.min, cfg.max);
   }
 
   function ensureSessionState() {
@@ -1798,7 +1895,12 @@
   }
 
   function markTimingInterruption(reason) {
-    if (appState.reaction.waiting || appState.reaction.ready) {
+    if (
+      appState.reaction.waiting ||
+      appState.reaction.ready ||
+      appState.reaction.sessionRunning ||
+      appState.reaction.awaitingSessionResponse
+    ) {
       appState.reaction.interrupted = true;
     }
     if (appState.speed.running) {
@@ -1837,15 +1939,17 @@
     ].forEach(markStatusAccessible);
   }
 
-  function logCognitiveActivity(type, score, detail) {
+  function logCognitiveActivity(type, score, detail, meta) {
     var boundedScore = clamp(Math.round(score), 0, 100);
-    var xpEarned = xpFromCognitiveScore(boundedScore);
+    var safeMeta = meta && typeof meta === "object" ? meta : {};
+    var xpEarned = xpFromCognitiveScore(type, boundedScore, safeMeta);
     var entry = {
       id: createHistoryEntryId("dr"),
       timestamp: new Date().toISOString(),
       type: type,
       score: boundedScore,
       detail: detail || "",
+      meta: safeMeta,
       xpEarned: xpEarned
     };
 
@@ -2079,6 +2183,7 @@
     var level = clamp(appState.cognitive.digitLevel, 3, 14);
     var seq = generateDigits(level);
     appState.digit.current = seq;
+    appState.digit.startedAt = performance.now();
 
     els.digitInput.value = "";
     els.digitInput.disabled = true;
@@ -2113,18 +2218,27 @@
     clearDigitFeedback();
     var score;
     var logEntry;
+    var durationSec = appState.digit.startedAt
+      ? Math.max(1, (performance.now() - appState.digit.startedAt) / 1000)
+      : 0;
     if (guess === appState.digit.current) {
       appState.cognitive.digitLevel = clamp(appState.cognitive.digitLevel + 1, 3, 14);
       appState.cognitive.digitBest = Math.max(appState.cognitive.digitBest, appState.cognitive.digitLevel);
       score = clamp(58 + priorLevel * 4, 40, 100);
-      logEntry = logCognitiveActivity("digit-span", score, "correct");
+      logEntry = logCognitiveActivity("digit-span", score, "correct", {
+        durationSec: durationSec,
+        level: priorLevel
+      });
       renderDigitCorrectFlash(guess);
       els.digitStatus.textContent = "Correct. Next level: " + appState.cognitive.digitLevel + " | +" + logEntry.xpEarned + " XP";
       els.digitStatus.className = "astro-status success";
     } else {
       appState.cognitive.digitLevel = clamp(appState.cognitive.digitLevel - 1, 3, 14);
       score = clamp(34 + priorLevel * 3, 20, 90);
-      logEntry = logCognitiveActivity("digit-span", score, "incorrect");
+      logEntry = logCognitiveActivity("digit-span", score, "incorrect", {
+        durationSec: durationSec,
+        level: priorLevel
+      });
       renderDigitErrorFlash(appState.digit.current, guess);
       els.digitStatus.textContent = "Not quite. Full correct sequence is shown above. | +" + logEntry.xpEarned + " XP";
       els.digitStatus.className = "astro-status error";
@@ -2196,6 +2310,7 @@
 
     clearMemoryPicks();
     appState.memory.revealLock = true;
+    appState.memory.startedAt = performance.now();
 
     var info = getVisualLevelInfo();
     if (appState.memory.gridSize !== info.gridSize) {
@@ -2252,6 +2367,9 @@
     var targetSet = new Set(target);
     var hits = picked.filter(function (idx) { return targetSet.has(idx); }).length;
     var precision = target.length ? hits / target.length : 0;
+    var durationSec = appState.memory.startedAt
+      ? Math.max(1, (performance.now() - appState.memory.startedAt) / 1000)
+      : 0;
 
     var score;
     var logEntry;
@@ -2260,7 +2378,10 @@
       appState.cognitive.visualBest = Math.max(appState.cognitive.visualBest, appState.cognitive.visualLevel);
       appState.cognitive.visualMistakes = 0;
       score = clamp(52 + priorLevel * 2 + priorGrid * 5, 40, 100);
-      logEntry = logCognitiveActivity("visual-pattern", score, "correct");
+      logEntry = logCognitiveActivity("visual-pattern", score, "correct", {
+        durationSec: durationSec,
+        level: priorLevel
+      });
       var nextGrid = visualGridSizeForTiles(appState.cognitive.visualLevel);
       els.memoryStatus.textContent =
         "Correct. Next: " + appState.cognitive.visualLevel + " tiles on " + nextGrid + "x" + nextGrid +
@@ -2277,7 +2398,10 @@
         appState.cognitive.visualLevel = priorLevel;
       }
       score = clamp(Math.round(22 + precision * 58 + priorGrid * 3), 15, 92);
-      logEntry = logCognitiveActivity("visual-pattern", score, "incorrect");
+      logEntry = logCognitiveActivity("visual-pattern", score, "incorrect", {
+        durationSec: durationSec,
+        level: priorLevel
+      });
       var strikeText = demoted
         ? "Second miss: dropped to " + appState.cognitive.visualLevel + " tiles."
         : "One miss recorded (" + appState.cognitive.visualMistakes + "/2).";
@@ -2640,6 +2764,7 @@
     appState.concentration.deadlineAt = 0;
     appState.concentration.timeRemainingMs = appState.concentration.timeoutMs;
     appState.concentration.level = level;
+    appState.concentration.roundStartedAt = performance.now();
 
     showConcentrationRulesForMs(10000);
     els.concRoundInfo.textContent =
@@ -2690,6 +2815,7 @@
     appState.concentration.deadlineAt = 0;
     appState.concentration.timeRemainingMs = 0;
     appState.concentration.rulesMasked = false;
+    appState.concentration.roundStartedAt = 0;
     appState.concentration.sequence = [];
     appState.concentration.index = 0;
     appState.concentration.correct = 0;
@@ -2720,6 +2846,10 @@
     appState.concentration.locked = false;
     appState.concentration.deadlineAt = 0;
     appState.concentration.timeRemainingMs = 0;
+    var roundDurationSec = appState.concentration.roundStartedAt
+      ? Math.max(1, (performance.now() - appState.concentration.roundStartedAt) / 1000)
+      : 0;
+    appState.concentration.roundStartedAt = 0;
     els.concStartBtn.disabled = false;
     els.concPauseBtn.disabled = true;
     els.concPauseBtn.textContent = "Pause";
@@ -2736,7 +2866,10 @@
     var level = clamp(appState.cognitive.concentrationLevel, 1, 8);
     var score = clamp(Math.round(25 + accuracy * 0.63 + level * 4 - timeouts), 15, 100);
     var detail = correct + "/" + total + " | timeouts " + timeouts;
-    var logEntry = logCognitiveActivity("triangle-concentration", score, detail);
+    var logEntry = logCognitiveActivity("triangle-concentration", score, detail, {
+      durationSec: roundDurationSec,
+      level: level
+    });
 
     if (accuracy >= 82 && wrong <= Math.floor(total * 0.28)) {
       appState.cognitive.concentrationLevel = clamp(level + 1, 1, 8);
@@ -2800,21 +2933,94 @@
     }, correct ? 130 : 190);
   }
 
-  function setReactionState(label, className) {
-    els.reactionTarget.textContent = label;
-    els.reactionTarget.className = "reaction-target" + (className ? " " + className : "");
-  }
-
-  function resetReaction() {
+  function clearReactionTimer() {
     if (appState.reaction.timer) {
       clearTimeout(appState.reaction.timer);
       appState.reaction.timer = null;
     }
+  }
+
+  function reactionModeLabel(mode) {
+    if (mode === "go-nogo") {
+      return "Go/No-Go";
+    }
+    if (mode === "stroop") {
+      return "Text-Color Match";
+    }
+    return "Baseline";
+  }
+
+  function renderReactionModeUI() {
+    var mode = appState.reaction.mode || "baseline";
+    if (els.reactionModeTabs && els.reactionModeTabs.length) {
+      els.reactionModeTabs.forEach(function (tab) {
+        var active = tab.getAttribute("data-reaction-mode") === mode;
+        tab.classList.toggle("active", active);
+        tab.setAttribute("aria-pressed", active ? "true" : "false");
+      });
+    }
+    if (els.reactionStart) {
+      els.reactionStart.textContent = mode === "baseline" ? "Start Trial" : "Start 10-Round Session";
+      els.reactionStart.disabled = appState.reaction.sessionRunning && mode !== "baseline";
+    }
+    if (els.reactionPause) {
+      els.reactionPause.disabled =
+        mode === "baseline" ||
+        !appState.reaction.sessionRunning ||
+        appState.reaction.awaitingSessionResponse;
+      els.reactionPause.textContent = appState.reaction.sessionPaused ? "Resume" : "Pause";
+    }
+    if (els.reactionModeMeta) {
+      if (mode === "baseline") {
+        els.reactionModeMeta.textContent = "Mode: Baseline | Click only when the panel turns green.";
+      } else if (mode === "go-nogo") {
+        els.reactionModeMeta.textContent = "Mode: Go/No-Go | Click on GREEN GO, do not click RED NO-GO.";
+      } else {
+        els.reactionModeMeta.textContent = "Mode: Text-Color Match | Click only when word meaning matches font color.";
+      }
+    }
+    if (els.reactionSessionProgress) {
+      if (mode === "baseline") {
+        els.reactionSessionProgress.textContent = "Session: baseline single-trial mode";
+      } else {
+        els.reactionSessionProgress.textContent =
+          "Session: " + appState.reaction.sessionIndex + " / " + appState.reaction.sessionRounds;
+      }
+    }
+  }
+
+  function setReactionMode(mode) {
+    var allowed = ["baseline", "go-nogo", "stroop"];
+    appState.reaction.mode = allowed.indexOf(mode) >= 0 ? mode : "baseline";
+    resetReaction();
+  }
+
+  function setReactionState(label, className, textColor) {
+    els.reactionTarget.textContent = label;
+    els.reactionTarget.className = "reaction-target" + (className ? " " + className : "");
+    if (typeof textColor === "string" && textColor) {
+      els.reactionTarget.style.color = textColor;
+    } else {
+      els.reactionTarget.style.color = "";
+    }
+  }
+
+  function resetReaction() {
+    clearReactionTimer();
     appState.reaction.waiting = false;
     appState.reaction.ready = false;
     appState.reaction.readyAt = 0;
+    appState.reaction.trialStartedAt = 0;
     appState.reaction.interrupted = false;
+    appState.reaction.sessionRunning = false;
+    appState.reaction.sessionPaused = false;
+    appState.reaction.sessionIndex = 0;
+    appState.reaction.sessionPlan = [];
+    appState.reaction.sessionResults = [];
+    appState.reaction.awaitingSessionResponse = false;
+    appState.reaction.currentStimulus = "none";
     setReactionState("Press Start", "");
+    renderReactionModeUI();
     renderReactionStatus();
   }
 
@@ -2822,7 +3028,7 @@
     var runs = appState.cognitive.reactionRuns;
     var audit = qualitySummaryFor(appState.cognitive.reactionAudit);
     if (!runs.length) {
-      els.reactionStatus.textContent = "No trials yet.";
+      els.reactionStatus.textContent = "No valid reaction samples yet.";
       els.reactionStatus.className = "astro-status";
       return;
     }
@@ -2834,13 +3040,14 @@
     els.reactionStatus.className = "astro-status";
   }
 
-  function startReactionTrial() {
-    if (appState.reaction.waiting || appState.reaction.ready) {
+  function startReactionBaselineTrial() {
+    if (appState.reaction.waiting || appState.reaction.ready || appState.reaction.sessionRunning) {
       return;
     }
 
     appState.reaction.waiting = true;
     appState.reaction.interrupted = false;
+    appState.reaction.trialStartedAt = performance.now();
     setReactionState("Wait for green...", "waiting");
 
     var delay = 1100 + Math.random() * 2500;
@@ -2857,14 +3064,308 @@
     }, delay);
   }
 
-  function handleReactionClick(event) {
+  function createStroopStimulus(forceShouldClick) {
+    var word = sample(STROOP_COLORS, 1)[0];
+    var shouldClick = typeof forceShouldClick === "boolean" ? forceShouldClick : Math.random() < 0.6;
+    var ink = word;
+    if (!shouldClick) {
+      var other = STROOP_COLORS.filter(function (item) {
+        return item.name !== word.name;
+      });
+      ink = sample(other, 1)[0];
+    }
+    return {
+      shouldClick: shouldClick,
+      label: word.name,
+      textColor: ink.hex,
+      className: shouldClick ? "ready stroop-match" : "waiting",
+      timeoutMs: shouldClick ? 1800 : 1500
+    };
+  }
+
+  function createGoNoGoStimulus(forceShouldClick) {
+    var shouldClick = typeof forceShouldClick === "boolean" ? forceShouldClick : Math.random() < 0.6;
+    return {
+      shouldClick: shouldClick,
+      label: shouldClick ? "GO" : "NO-GO",
+      textColor: "",
+      className: shouldClick ? "ready" : "nogo",
+      timeoutMs: 1500
+    };
+  }
+
+  function currentReactionStimulus() {
+    var forceShouldClick = null;
+    var plan = Array.isArray(appState.reaction.sessionPlan) ? appState.reaction.sessionPlan : [];
+    if (plan.length && appState.reaction.sessionIndex < plan.length) {
+      forceShouldClick = Boolean(plan[appState.reaction.sessionIndex]);
+    }
+    if (appState.reaction.mode === "stroop") {
+      return createStroopStimulus(forceShouldClick);
+    }
+    return createGoNoGoStimulus(forceShouldClick);
+  }
+
+  function finishReactionSession() {
+    clearReactionTimer();
+    appState.reaction.sessionRunning = false;
+    appState.reaction.sessionPaused = false;
+    appState.reaction.awaitingSessionResponse = false;
+    appState.reaction.sessionPlan = [];
+    appState.reaction.ready = false;
+    appState.reaction.waiting = false;
+    setReactionState("Session done", "");
+
+    var results = appState.reaction.sessionResults.slice();
+    var total = results.length;
+    if (!total) {
+      els.reactionStatus.textContent = "No session rounds recorded.";
+      els.reactionStatus.className = "astro-status";
+      renderReactionModeUI();
+      return;
+    }
+
+    var shouldClickItems = results.filter(function (r) { return r.shouldClick; });
+    var noClickItems = results.filter(function (r) { return !r.shouldClick; });
+    var hits = shouldClickItems.filter(function (r) { return r.correct; }).length;
+    var misses = shouldClickItems.length - hits;
+    var correctRejects = noClickItems.filter(function (r) { return r.correct; }).length;
+    var falseAlarms = noClickItems.length - correctRejects;
+    var hitRts = shouldClickItems.filter(function (r) { return r.correct && Number.isFinite(r.rtMs); }).map(function (r) {
+      return r.rtMs;
+    });
+    hitRts.forEach(function (rt) {
+      appState.cognitive.reactionRuns.push(rt);
+    });
+    var meanRt = hitRts.length
+      ? Math.round(hitRts.reduce(function (sum, value) { return sum + value; }, 0) / hitRts.length)
+      : 900;
+    var accuracy = Math.round(((hits + correctRejects) / total) * 100);
+    var speedScore = clamp(Math.round(100 - (meanRt - 180) / 5), 20, 100);
+    var modeBonus = appState.reaction.mode === "stroop" ? 5 : 2;
+    var score = clamp(Math.round(accuracy * 0.72 + speedScore * 0.28 + modeBonus), 12, 100);
+    var type = appState.reaction.mode === "stroop" ? "reaction-stroop" : "reaction-go-nogo";
+    var sessionDurationSec = Math.max(10, Math.round((performance.now() - appState.reaction.sessionStartedAt) / 1000));
+    var logEntry = logCognitiveActivity(
+      type,
+      score,
+      "hits " + hits + "/" + shouldClickItems.length + ", false alarms " + falseAlarms,
+      {
+        durationSec: sessionDurationSec,
+        level: appState.reaction.mode === "stroop" ? 3 : 2
+      }
+    );
+    recordTimingAudit("reaction", true, "session-ok", {
+      mode: appState.reaction.mode,
+      accuracy: accuracy,
+      meanRt: meanRt
+    });
+    renderReactionStatus();
+    els.reactionStatus.textContent =
+      reactionModeLabel(appState.reaction.mode) +
+      " complete | Accuracy " + accuracy + "% | Mean RT " + meanRt + " ms | +" + logEntry.xpEarned + " XP";
+    els.reactionStatus.className = accuracy >= 70 ? "astro-status success" : "astro-status error";
+    pulseStatus(els.reactionStatus);
+    triggerHaptic(accuracy >= 70 ? "success" : "error");
+    renderReactionModeUI();
+  }
+
+  function queueReactionSessionRound(delayMs) {
+    clearReactionTimer();
+    appState.reaction.interrupted = false;
+    appState.reaction.waiting = true;
+    appState.reaction.ready = false;
+    appState.reaction.awaitingSessionResponse = false;
+    setReactionState("...", "waiting");
+    appState.reaction.timer = setTimeout(function () {
+      if (!appState.reaction.sessionRunning || appState.reaction.sessionPaused) {
+        return;
+      }
+      var stimulus = currentReactionStimulus();
+      appState.reaction.currentStimulus = stimulus;
+      appState.reaction.waiting = false;
+      appState.reaction.ready = true;
+      appState.reaction.awaitingSessionResponse = true;
+      appState.reaction.readyAt = performance.now();
+      setReactionState(stimulus.label, stimulus.className, stimulus.textColor);
+      if (stimulus.shouldClick) {
+        triggerHaptic("ready");
+      }
+      clearReactionTimer();
+      appState.reaction.timer = setTimeout(function () {
+        if (!appState.reaction.sessionRunning || appState.reaction.sessionPaused) {
+          return;
+        }
+        if (!appState.reaction.awaitingSessionResponse) {
+          return;
+        }
+        var roundInterrupted = appState.reaction.interrupted;
+        appState.reaction.awaitingSessionResponse = false;
+        appState.reaction.ready = false;
+        if (roundInterrupted) {
+          recordTimingAudit("reaction", false, "focus-interrupted", { mode: appState.reaction.mode, via: "timeout" });
+        }
+        appState.reaction.sessionResults.push({
+          shouldClick: stimulus.shouldClick,
+          correct: !roundInterrupted && !stimulus.shouldClick,
+          rtMs: null
+        });
+        appState.reaction.sessionIndex += 1;
+        if (appState.reaction.sessionIndex >= appState.reaction.sessionRounds) {
+          finishReactionSession();
+        } else {
+          renderReactionModeUI();
+          queueReactionSessionRound(340);
+        }
+      }, stimulus.timeoutMs);
+    }, delayMs);
+  }
+
+  function startReactionSession() {
+    if (appState.reaction.sessionRunning) {
+      return;
+    }
+    appState.reaction.sessionRunning = true;
+    appState.reaction.sessionPaused = false;
+    appState.reaction.interrupted = false;
+    appState.reaction.sessionIndex = 0;
+    appState.reaction.sessionRounds = REACTION_SESSION_ROUNDS;
+    appState.reaction.sessionResults = [];
+    if (appState.reaction.sessionRounds <= 1) {
+      appState.reaction.sessionPlan = [true];
+    } else {
+      var targetCount = Math.round(appState.reaction.sessionRounds * 0.6);
+      targetCount = clamp(targetCount, 1, appState.reaction.sessionRounds - 1);
+      var nonTargetCount = appState.reaction.sessionRounds - targetCount;
+      var plan = [];
+      for (var targetIdx = 0; targetIdx < targetCount; targetIdx += 1) {
+        plan.push(true);
+      }
+      for (var nontargetIdx = 0; nontargetIdx < nonTargetCount; nontargetIdx += 1) {
+        plan.push(false);
+      }
+      appState.reaction.sessionPlan = shuffle(plan);
+    }
+    appState.reaction.sessionStartedAt = performance.now();
+    appState.reaction.trialStartedAt = 0;
+    appState.reaction.awaitingSessionResponse = false;
+    appState.reaction.ready = false;
+    appState.reaction.waiting = false;
+    renderReactionModeUI();
+    els.reactionStatus.textContent = reactionModeLabel(appState.reaction.mode) + " session running.";
+    els.reactionStatus.className = "astro-status";
+    queueReactionSessionRound(240);
+  }
+
+  function toggleReactionPause() {
+    if (!appState.reaction.sessionRunning || appState.reaction.mode === "baseline") {
+      return;
+    }
+    if (appState.reaction.awaitingSessionResponse) {
+      els.reactionStatus.textContent = "Pause is available between stimuli to avoid skipping active rounds.";
+      els.reactionStatus.className = "astro-status";
+      pulseStatus(els.reactionStatus);
+      return;
+    }
+    if (appState.reaction.sessionPaused) {
+      appState.reaction.sessionPaused = false;
+      renderReactionModeUI();
+      els.reactionStatus.textContent = "Resumed.";
+      els.reactionStatus.className = "astro-status";
+      queueReactionSessionRound(220);
+      return;
+    }
+    appState.reaction.sessionPaused = true;
+    appState.reaction.ready = false;
+    appState.reaction.waiting = false;
+    appState.reaction.awaitingSessionResponse = false;
+    clearReactionTimer();
+    setReactionState("Paused", "waiting");
+    els.reactionStatus.textContent = "Paused.";
+    els.reactionStatus.className = "astro-status";
+    renderReactionModeUI();
+  }
+
+  function handleReactionSessionClick(event) {
+    if (!appState.reaction.sessionRunning || appState.reaction.sessionPaused) {
+      return;
+    }
+    if (!appState.reaction.awaitingSessionResponse) {
+      return;
+    }
+    var trusted = eventIsTrusted(event);
+    if (!trusted) {
+      recordTimingAudit("reaction", false, "untrusted-input", { mode: appState.reaction.mode });
+      return;
+    }
+    if (appState.reaction.interrupted) {
+      recordTimingAudit("reaction", false, "focus-interrupted", { mode: appState.reaction.mode });
+      appState.reaction.awaitingSessionResponse = false;
+      appState.reaction.ready = false;
+      appState.reaction.sessionResults.push({
+        shouldClick: Boolean(appState.reaction.currentStimulus && appState.reaction.currentStimulus.shouldClick),
+        correct: false,
+        rtMs: null
+      });
+      appState.reaction.sessionIndex += 1;
+      if (appState.reaction.sessionIndex >= appState.reaction.sessionRounds) {
+        finishReactionSession();
+      } else {
+        renderReactionModeUI();
+        queueReactionSessionRound(320);
+      }
+      return;
+    }
+
+    var stimulus = appState.reaction.currentStimulus;
+    if (!stimulus) {
+      return;
+    }
+    clearReactionTimer();
+    appState.reaction.awaitingSessionResponse = false;
+    appState.reaction.ready = false;
+    var elapsed = Math.round(performance.now() - appState.reaction.readyAt);
+    var correct = false;
+    if (stimulus.shouldClick) {
+      correct = elapsed >= REACTION_MIN_VALID_MS;
+    } else {
+      correct = false;
+    }
+    if (stimulus.shouldClick && elapsed < REACTION_MIN_VALID_MS) {
+      recordTimingAudit("reaction", false, "too-fast-threshold", { elapsedMs: elapsed, mode: appState.reaction.mode });
+    }
+    appState.reaction.sessionResults.push({
+      shouldClick: stimulus.shouldClick,
+      correct: correct,
+      rtMs: stimulus.shouldClick ? elapsed : null
+    });
+    appState.reaction.sessionIndex += 1;
+    setReactionState(
+      correct ? (elapsed + " ms") : (stimulus.shouldClick ? "Too early" : "False alarm"),
+      correct ? "ready" : "too-soon"
+    );
+    if (appState.reaction.sessionIndex >= appState.reaction.sessionRounds) {
+      finishReactionSession();
+    } else {
+      renderReactionModeUI();
+      queueReactionSessionRound(correct ? 260 : 360);
+    }
+  }
+
+  function startReactionTrial() {
+    if (appState.reaction.mode === "baseline") {
+      startReactionBaselineTrial();
+      return;
+    }
+    startReactionSession();
+  }
+
+  function handleReactionBaselineClick(event) {
     var trusted = eventIsTrusted(event);
     if (appState.reaction.waiting) {
-      if (appState.reaction.timer) {
-        clearTimeout(appState.reaction.timer);
-        appState.reaction.timer = null;
-      }
+      clearReactionTimer();
       appState.reaction.waiting = false;
+      appState.reaction.trialStartedAt = 0;
       setReactionState("Too early", "too-soon");
       els.reactionStatus.textContent = "False start. Wait for green next run.";
       els.reactionStatus.className = "astro-status error";
@@ -2880,6 +3381,7 @@
 
     if (!trusted) {
       appState.reaction.ready = false;
+      appState.reaction.trialStartedAt = 0;
       setReactionState("Untrusted input", "too-soon");
       els.reactionStatus.textContent = "Quality check: synthetic/untrusted input blocked.";
       els.reactionStatus.className = "astro-status error";
@@ -2891,6 +3393,7 @@
 
     if (appState.reaction.interrupted) {
       appState.reaction.ready = false;
+      appState.reaction.trialStartedAt = 0;
       setReactionState("Interrupted", "too-soon");
       els.reactionStatus.textContent = "Quality check: focus changed during trial. Round discarded.";
       els.reactionStatus.className = "astro-status error";
@@ -2905,7 +3408,7 @@
     if (elapsed < REACTION_MIN_VALID_MS) {
       setReactionState(elapsed + " ms", "too-soon");
       els.reactionStatus.textContent =
-        "Quality check: " + elapsed + " ms is below valid human threshold (" + REACTION_MIN_VALID_MS + " ms).";
+        "Quality check: " + elapsed + " ms is below valid threshold (" + REACTION_MIN_VALID_MS + " ms).";
       els.reactionStatus.className = "astro-status error";
       pulseStatus(els.reactionStatus);
       triggerHaptic("warning");
@@ -2917,13 +3420,27 @@
 
     appState.cognitive.reactionRuns.push(elapsed);
     var score = clamp(Math.round(100 - (elapsed - 180) / 6), 15, 100);
-    var logEntry = logCognitiveActivity("reaction-time", score, elapsed + "ms");
+    var logEntry = logCognitiveActivity("reaction-time", score, elapsed + "ms", {
+      durationSec: appState.reaction.trialStartedAt
+        ? Math.max(1, (performance.now() - appState.reaction.trialStartedAt) / 1000)
+        : Math.max(1, elapsed / 1000),
+      level: 1
+    });
+    appState.reaction.trialStartedAt = 0;
     recordTimingAudit("reaction", true, "ok", { elapsedMs: elapsed, score: score });
     renderReactionStatus();
     els.reactionStatus.textContent = els.reactionStatus.textContent + " | Last: " + elapsed + " ms | +" + logEntry.xpEarned + " XP";
     els.reactionStatus.className = "astro-status success";
     pulseStatus(els.reactionStatus);
     triggerHaptic("success");
+  }
+
+  function handleReactionClick(event) {
+    if (appState.reaction.mode === "baseline") {
+      handleReactionBaselineClick(event);
+      return;
+    }
+    handleReactionSessionClick(event);
   }
 
   function randomInt(min, max) {
@@ -3051,6 +3568,7 @@
     appState.rms.index = 0;
     appState.rms.running = true;
     appState.rms.readyForInput = false;
+    appState.rms.startedAt = performance.now();
 
     els.rmsInput.value = "";
     els.rmsInput.disabled = true;
@@ -3102,6 +3620,9 @@
 
     var target = appState.rms.target;
     var priorLevel = clamp(appState.cognitive.rmsLevel, 3, 10);
+    var durationSec = appState.rms.startedAt
+      ? Math.max(1, (performance.now() - appState.rms.startedAt) / 1000)
+      : 0;
     var exact = guess === target;
     var positionalHits = 0;
     for (var i = 0; i < Math.min(guess.length, target.length); i += 1) {
@@ -3117,13 +3638,19 @@
       appState.cognitive.rmsLevel = clamp(appState.cognitive.rmsLevel + 1, 3, 10);
       appState.cognitive.rmsBest = Math.max(appState.cognitive.rmsBest, appState.cognitive.rmsLevel);
       score = clamp(62 + priorLevel * 4, 35, 100);
-      logEntry = logCognitiveActivity("running-memory-span", score, "exact");
+      logEntry = logCognitiveActivity("running-memory-span", score, "exact", {
+        durationSec: durationSec,
+        level: priorLevel
+      });
       els.rmsStatus.textContent = "Correct. Next level: " + appState.cognitive.rmsLevel + " | +" + logEntry.xpEarned + " XP";
       els.rmsStatus.className = "astro-status success";
     } else {
       appState.cognitive.rmsLevel = clamp(appState.cognitive.rmsLevel - 1, 3, 10);
       score = clamp(25 + Math.round(hitRatio * 45) + priorLevel * 2, 15, 90);
-      logEntry = logCognitiveActivity("running-memory-span", score, "partial");
+      logEntry = logCognitiveActivity("running-memory-span", score, "partial", {
+        durationSec: durationSec,
+        level: priorLevel
+      });
       els.rmsStatus.textContent = "Not exact. Target: " + target + " | Hits: " + positionalHits + "/" + target.length + " | +" + logEntry.xpEarned + " XP";
       els.rmsStatus.className = "astro-status error";
     }
@@ -3313,7 +3840,10 @@
       ", false " + falsePos +
       ", duration " + durationMs + "ms" +
       ", qc " + qualityTier;
-    var logEntry = logCognitiveActivity("perceptual-speed", score, detail);
+    var logEntry = logCognitiveActivity("perceptual-speed", score, detail, {
+      durationSec: Math.max(1, durationMs / 1000),
+      level: priorLevel
+    });
     recordTimingAudit("speed", true, "ok-" + qualityTier, {
       durationMs: durationMs,
       interactionCount: appState.speed.interactionCount,
@@ -3601,6 +4131,8 @@
     appState.speed2.inputKeyCount = 0;
     appState.speed2.interrupted = false;
     appState.speed2.checkTrusted = true;
+    appState.speed2.roundStartedAt = 0;
+    appState.speed2.roundStartedAt = performance.now();
 
     renderSpeed2Grid(null, true);
     renderSpeed2Meta(challenge, challenge.presentationMs);
@@ -3776,7 +4308,13 @@
 
     var detail = challenge.ruleLabel + " | target " + target + " | guess " + guess;
     detail += " | response " + answerDurationMs + "ms";
-    var logEntry = logCognitiveActivity("perceptual-speed-panel", score, detail);
+    var roundDurationSec = appState.speed2.roundStartedAt
+      ? Math.max(1, (performance.now() - appState.speed2.roundStartedAt) / 1000)
+      : Math.max(1, answerDurationMs / 1000);
+    var logEntry = logCognitiveActivity("perceptual-speed-panel", score, detail, {
+      durationSec: roundDurationSec,
+      level: priorLevel
+    });
     recordTimingAudit("speed2", true, "ok", {
       answerMs: answerDurationMs,
       keyCount: appState.speed2.inputKeyCount,
@@ -3825,6 +4363,7 @@
 
   function startRotationScenario() {
     var level = clamp(appState.cognitive.rotationLevel, 2, 8);
+    appState.rotation.startedAt = performance.now();
     var stepCount = clamp(2 + Math.floor(level / 2), 2, 6);
     var start = sample(DIRECTION_AXES, 1)[0];
     var ops = [];
@@ -3908,14 +4447,23 @@
       }
     });
 
-    var logEntry = logCognitiveActivity("spatial-rotation", score, isCorrect ? "correct" : "incorrect");
+    var durationSec = appState.rotation.startedAt
+      ? Math.max(1, (performance.now() - appState.rotation.startedAt) / 1000)
+      : 0;
+    var logEntry = logCognitiveActivity("spatial-rotation", score, isCorrect ? "correct" : "incorrect", {
+      durationSec: durationSec,
+      level: priorLevel
+    });
     if (isCorrect) {
       els.rotStatus.textContent = "Correct. Level " + appState.cognitive.rotationLevel + " | +" + logEntry.xpEarned + " XP";
       els.rotStatus.className = "astro-status success";
+      triggerHaptic("success");
     } else {
       els.rotStatus.textContent = "Not quite. Correct: " + correct.label + " | Level " + appState.cognitive.rotationLevel + " | +" + logEntry.xpEarned + " XP";
       els.rotStatus.className = "astro-status error";
+      triggerHaptic("error");
     }
+    pulseStatus(els.rotStatus);
   }
 
   function formatValue(value, decimals) {
@@ -4328,7 +4876,13 @@
     }
 
     var detail = appState.math.correct + "/" + appState.math.total + " answered";
-    var logEntry = logCognitiveActivity("math-physics-sprint", score, detail);
+    var durationSec = appState.math.startedAt
+      ? Math.max(1, (performance.now() - appState.math.startedAt) / 1000)
+      : 60;
+    var logEntry = logCognitiveActivity("math-physics-sprint", score, detail, {
+      durationSec: durationSec,
+      level: appState.cognitive.mathLevel
+    });
     els.mathStatus.textContent =
       "Sprint complete: " + detail + " (" + accuracy + "%) | Level " + appState.cognitive.mathLevel + " | +" + logEntry.xpEarned + " XP";
     els.mathStatus.className = accuracy >= 70 ? "astro-status success" : "astro-status error";
@@ -4355,6 +4909,7 @@
     appState.math.correct = 0;
     appState.math.question = null;
     appState.math.recentTypes = [];
+    appState.math.startedAt = performance.now();
 
     els.mathStart.disabled = true;
     els.mathStop.disabled = false;
@@ -4485,7 +5040,17 @@
     });
 
     els.reactionStart.addEventListener("click", startReactionTrial);
+    if (els.reactionPause) {
+      els.reactionPause.addEventListener("click", toggleReactionPause);
+    }
     els.reactionReset.addEventListener("click", resetReaction);
+    if (els.reactionModeTabs && els.reactionModeTabs.length) {
+      els.reactionModeTabs.forEach(function (tab) {
+        tab.addEventListener("click", function () {
+          setReactionMode(tab.getAttribute("data-reaction-mode"));
+        });
+      });
+    }
     els.reactionTarget.addEventListener("pointerdown", function (event) {
       event.preventDefault();
       handleReactionClick(event);
@@ -4559,6 +5124,7 @@
     els.mathStop.disabled = true;
 
     renderReactionStatus();
+    renderReactionModeUI();
   }
 
   function renderProfile() {
@@ -5319,12 +5885,36 @@
         speed2Audit: [],
         drillLogs: []
       };
+      appState.digit = {
+        current: "",
+        revealTimer: null,
+        feedbackTimer: null,
+        startedAt: 0
+      };
       appState.memory = {
         activePattern: [],
         picks: new Set(),
         revealLock: false,
         revealTimer: null,
-        gridSize: 4
+        gridSize: 4,
+        startedAt: 0
+      };
+      appState.reaction = {
+        timer: null,
+        waiting: false,
+        ready: false,
+        readyAt: 0,
+        trialStartedAt: 0,
+        interrupted: false,
+        mode: "baseline",
+        sessionRunning: false,
+        sessionPaused: false,
+        sessionIndex: 0,
+        sessionRounds: REACTION_SESSION_ROUNDS,
+        sessionPlan: [],
+        sessionResults: [],
+        currentStimulus: "none",
+        awaitingSessionResponse: false
       };
       appState.rms = {
         sequence: [],
@@ -5332,7 +5922,8 @@
         index: 0,
         timer: null,
         running: false,
-        readyForInput: false
+        readyForInput: false,
+        startedAt: 0
       };
       appState.speed = {
         timer: null,
@@ -5342,7 +5933,11 @@
         selected: new Set(),
         deadline: 0,
         durationMs: 0,
-        running: false
+        running: false,
+        roundStartedAt: 0,
+        interactionCount: 0,
+        interrupted: false,
+        submittedTrusted: true
       };
       appState.speed2 = {
         timer: null,
@@ -5352,11 +5947,17 @@
         presenting: false,
         paused: false,
         deadline: 0,
-        remainingMs: 0
+        remainingMs: 0,
+        answerStartedAt: 0,
+        inputKeyCount: 0,
+        interrupted: false,
+        checkTrusted: true,
+        roundStartedAt: 0
       };
       appState.rotation = {
         scenario: null,
-        answered: false
+        answered: false,
+        startedAt: 0
       };
       appState.math = {
         timer: null,
@@ -5366,7 +5967,8 @@
         total: 0,
         correct: 0,
         question: null,
-        recentTypes: []
+        recentTypes: [],
+        startedAt: 0
       };
       appState.concentration = {
         running: false,
@@ -5391,7 +5993,8 @@
         revealTop: false,
         revealBottom: false,
         revealTopTimer: null,
-        revealBottomTimer: null
+        revealBottomTimer: null,
+        roundStartedAt: 0
       };
 
       resetReaction();
