@@ -758,6 +758,33 @@
   max-width: 320px;
 }
 
+.reaction-mode-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.38rem;
+  margin-top: 0.35rem;
+}
+
+.reaction-mode-tab {
+  border: 1px solid var(--border-color);
+  background: var(--bg-color);
+  color: var(--text-color);
+  border-radius: 999px;
+  padding: 0.3rem 0.58rem;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: border-color 0.16s ease, background 0.16s ease, transform 0.16s ease;
+}
+
+.reaction-mode-tab:hover {
+  transform: translateY(-1px);
+}
+
+.reaction-mode-tab.active {
+  border-color: rgba(47, 140, 255, 0.9);
+  background: rgba(47, 140, 255, 0.18);
+}
+
 .reaction-target {
   width: 100%;
   padding: 1.45rem 0.8rem;
@@ -781,6 +808,15 @@
 .reaction-target.too-soon {
   background: rgba(208, 66, 66, 0.2);
   border-color: #be4a4a;
+}
+
+.reaction-target.nogo {
+  background: rgba(199, 55, 55, 0.2);
+  border-color: #bf4444;
+}
+
+.reaction-target.stroop-match {
+  border-width: 2px;
 }
 
 .speed-grid {
@@ -1206,6 +1242,27 @@
     max-width: 100%;
   }
 
+  .reaction-mode-tabs {
+    gap: 0.32rem;
+  }
+
+  .reaction-mode-tab {
+    flex: 1 1 calc(50% - 0.2rem);
+    min-height: 40px;
+    font-size: 0.74rem;
+    padding: 0.34rem 0.42rem;
+  }
+
+  #reaction-card .cog-row {
+    flex-direction: row;
+    gap: 0.35rem;
+  }
+
+  #reaction-card .cog-row .astro-btn {
+    width: auto;
+    flex: 1 1 0;
+  }
+
   .speed-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1258,6 +1315,10 @@
 
   .speed-option {
     font-size: 0.83rem;
+  }
+
+  .reaction-mode-tab {
+    flex: 1 1 100%;
   }
 
   .speed2-grid {

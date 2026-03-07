@@ -325,12 +325,20 @@
 
             <article class="cog-card" id="reaction-card">
               <h3>Reaction Time</h3>
-              <p>Click only when the panel turns green. Early clicks count as false starts.</p>
+              <p>Train reaction control with baseline and challenge modes (go/no-go and color-word matching).</p>
+              <div class="reaction-mode-tabs" role="group" aria-label="Reaction drill modes">
+                <button type="button" class="reaction-mode-tab active" data-reaction-mode="baseline" aria-pressed="true">Baseline</button>
+                <button type="button" class="reaction-mode-tab" data-reaction-mode="go-nogo" aria-pressed="false">Go/No-Go</button>
+                <button type="button" class="reaction-mode-tab" data-reaction-mode="stroop" aria-pressed="false">Text-Color Match</button>
+              </div>
+              <div id="reaction-mode-meta" class="cog-meta">Mode: Baseline | Click only when the panel turns green.</div>
+              <div id="reaction-session-progress" class="cog-meta">Session: 0 / 10</div>
               <div class="reaction-zone">
                 <button id="reaction-target" class="reaction-target" type="button">Press Start</button>
               </div>
               <div class="cog-row" style="margin-top:0.5rem;">
                 <button id="reaction-start" class="astro-btn" type="button">Start Trial</button>
+                <button id="reaction-pause" class="astro-btn" type="button" disabled>Pause</button>
                 <button id="reaction-reset" class="astro-btn" type="button">Reset</button>
               </div>
               <p id="reaction-status" class="astro-status"></p>
