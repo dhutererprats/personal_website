@@ -25,6 +25,8 @@
   <link rel="stylesheet" href="astronaut-training.css" />
   <script src="theme-toggle.js" defer></script>
   <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="astronaut-training-auth-config.js" defer></script>
   <script src="astronaut-training-data.js" defer></script>
   <script src="astronaut-training.js" defer></script>
   <link rel="icon" href="icons/astronaut.ico" type="image/x-icon"/>
@@ -64,7 +66,7 @@
         <h1>Astronaut Training Databank</h1>
         <p>
           Daily micro-training for astronaut-relevant technical and cognitive skills: flashcards, multi-mode quizzes, and memory-focused drills.
-          This version keeps all progress locally on your device for private personal tracking.
+          Sign in with your account to keep authenticated training sessions and optional leaderboard participation.
         </p>
         <div class="astro-pill-row" aria-label="Training focus">
           <span class="astro-pill"><iconify-icon icon="mdi:orbit"></iconify-icon>Astrodynamics</span>
@@ -76,17 +78,25 @@
       </header>
 
       <section id="training-gate" class="astro-gate" aria-labelledby="gate-title">
-        <h2 id="gate-title">Access Lock</h2>
+        <h2 id="gate-title">Sign In</h2>
         <p>
-          Enter your passcode to access this training tab. This is a client-side gate for privacy convenience, not strong security.
+          Use your account credentials to unlock training. If auth is not configured yet, you can continue in local-only mode.
         </p>
         <form class="astro-gate-form" id="gate-form" autocomplete="off">
-          <label for="gate-password">Passcode</label>
-          <input id="gate-password" name="password" type="password" placeholder="Enter passcode" required />
+          <label for="gate-email">Email</label>
+          <input id="gate-email" name="email" type="email" placeholder="you@example.com" required />
+          <label for="gate-password">Password</label>
+          <input id="gate-password" name="password" type="password" placeholder="Enter password" required />
+          <label for="gate-display-name">Display Name (for leaderboard)</label>
+          <input id="gate-display-name" name="display_name" type="text" maxlength="40" placeholder="Daniel Huterer Prats" />
           <div class="cog-row">
-            <button type="submit" class="astro-btn primary">Unlock</button>
-            <button type="button" class="astro-btn" id="gate-clear">Clear</button>
+            <button id="gate-signin" type="submit" class="astro-btn primary">Sign In</button>
+            <button id="gate-signup" type="button" class="astro-btn">Create Account</button>
+            <button id="gate-local" type="button" class="astro-btn">Local-Only Mode</button>
           </div>
+          <p id="gate-mode-note" class="panel-note">
+            Auth backend status: not checked.
+          </p>
           <div id="gate-status" class="astro-status" role="status" aria-live="polite"></div>
         </form>
       </section>
@@ -108,6 +118,10 @@
           <div class="astro-metric">
             <span class="astro-metric-label">Quizzes Completed</span>
             <span id="profile-quiz-count" class="astro-metric-value">0</span>
+          </div>
+          <div class="astro-auth-controls">
+            <span id="auth-user-label" class="astro-auth-user">Mode: local only</span>
+            <button id="auth-signout" class="astro-btn" type="button" hidden>Sign Out</button>
           </div>
         </div>
 

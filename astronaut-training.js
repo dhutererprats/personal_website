@@ -1,6 +1,12 @@
 (function () {
-  var PASSCODE = "astroD";
   var EMAIL_REPORTS_ENABLED = false;
+  var AUTH_CONFIG = window.ASTRO_AUTH_CONFIG || {};
+  var AUTH_PROVIDER = String(AUTH_CONFIG.provider || "").toLowerCase();
+  var supabaseClient = null;
+  var activeAuthSession = null;
+  var activeAuthUser = null;
+  var activeAccessMode = "local";
+  var trainingUiInitialized = false;
 
   var STORE_KEYS = {
     unlocked: "astro_training_unlocked_v1",
@@ -866,9 +872,16 @@
     els.gate = byId("training-gate");
     els.app = byId("training-app");
     els.gateForm = byId("gate-form");
+    els.gateEmail = byId("gate-email");
     els.gatePassword = byId("gate-password");
+    els.gateDisplayName = byId("gate-display-name");
+    els.gateSignIn = byId("gate-signin");
+    els.gateSignUp = byId("gate-signup");
+    els.gateLocal = byId("gate-local");
+    els.gateModeNote = byId("gate-mode-note");
     els.gateStatus = byId("gate-status");
-    els.gateClear = byId("gate-clear");
+    els.authUserLabel = byId("auth-user-label");
+    els.authSignout = byId("auth-signout");
 
     els.profileLevel = byId("profile-level");
     els.profileXp = byId("profile-xp");
@@ -1177,43 +1190,300 @@
     }
   }
 
-  function unlockApp() {
-    sessionStorage.setItem(STORE_KEYS.unlocked, "1");
+  function setGateModeNote(message) {
+    if (!els.gateModeNote) {
+      return;
+    }
+    els.gateModeNote.textContent = message || "";
+  }
+
+  function setGateBusy(isBusy) {
+    var busy = Boolean(isBusy);
+    if (els.gateEmail) {
+      els.gateEmail.disabled = busy;
+    }
+    if (els.gatePassword) {
+      els.gatePassword.disabled = busy;
+    }
+    if (els.gateDisplayName) {
+      els.gateDisplayName.disabled = busy;
+    }
+    if (els.gateSignIn) {
+      els.gateSignIn.disabled = busy;
+    }
+    if (els.gateSignUp) {
+      els.gateSignUp.disabled = busy;
+    }
+    if (els.gateLocal) {
+      els.gateLocal.disabled = busy;
+    }
+  }
+
+  function hasSupabaseAuthConfig() {
+    return (
+      AUTH_PROVIDER === "supabase" &&
+      typeof window.supabase === "object" &&
+      typeof window.supabase.createClient === "function" &&
+      typeof AUTH_CONFIG.supabaseUrl === "string" &&
+      AUTH_CONFIG.supabaseUrl.trim().length > 0 &&
+      typeof AUTH_CONFIG.supabaseAnonKey === "string" &&
+      AUTH_CONFIG.supabaseAnonKey.trim().length > 0
+    );
+  }
+
+  function getSupabaseClient() {
+    if (!hasSupabaseAuthConfig()) {
+      return null;
+    }
+    if (!supabaseClient) {
+      supabaseClient = window.supabase.createClient(
+        AUTH_CONFIG.supabaseUrl.trim(),
+        AUTH_CONFIG.supabaseAnonKey.trim(),
+        {
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true
+          }
+        }
+      );
+    }
+    return supabaseClient;
+  }
+
+  function authDisplayName(user) {
+    if (!user || typeof user !== "object") {
+      return "Unknown user";
+    }
+    var metadata = user.user_metadata && typeof user.user_metadata === "object"
+      ? user.user_metadata
+      : {};
+    var candidate = String(metadata.display_name || metadata.full_name || "").trim();
+    if (candidate) {
+      return candidate;
+    }
+    var email = String(user.email || "").trim();
+    if (email) {
+      return email;
+    }
+    return "Authenticated user";
+  }
+
+  function updateAuthBadge() {
+    if (!els.authUserLabel) {
+      return;
+    }
+    if (activeAccessMode === "supabase" && activeAuthUser) {
+      els.authUserLabel.textContent = "Signed in: " + authDisplayName(activeAuthUser);
+      if (els.authSignout) {
+        els.authSignout.hidden = false;
+      }
+      return;
+    }
+    els.authUserLabel.textContent = "Mode: local only";
+    if (els.authSignout) {
+      els.authSignout.hidden = true;
+    }
+  }
+
+  function lockApp(message) {
+    sessionStorage.removeItem(STORE_KEYS.unlocked);
+    activeAccessMode = "local";
+    activeAuthSession = null;
+    activeAuthUser = null;
+    updateAuthBadge();
+    els.app.hidden = true;
+    els.gate.hidden = false;
+    if (message) {
+      showGateStatus(message, "error");
+    }
+  }
+
+  function unlockApp(mode, session) {
+    var accessMode = mode === "supabase" ? "supabase" : "local";
+    if (accessMode === "local") {
+      sessionStorage.setItem(STORE_KEYS.unlocked, "1");
+      activeAuthSession = null;
+      activeAuthUser = null;
+    } else {
+      sessionStorage.removeItem(STORE_KEYS.unlocked);
+      activeAuthSession = session || null;
+      activeAuthUser = session && session.user ? session.user : null;
+    }
+    activeAccessMode = accessMode;
+    updateAuthBadge();
     els.gate.hidden = true;
     els.app.hidden = false;
     try {
-      initializeTrainingUI();
+      if (!trainingUiInitialized) {
+        initializeTrainingUI();
+        trainingUiInitialized = true;
+      } else {
+        renderProfile();
+        renderProgress();
+      }
     } catch (err) {
       console.error(err);
-      sessionStorage.removeItem(STORE_KEYS.unlocked);
-      els.app.hidden = true;
-      els.gate.hidden = false;
-      showGateStatus("Unable to initialize training app.", "error");
+      trainingUiInitialized = false;
+      lockApp("Unable to initialize training app.");
     }
   }
 
   function initGate() {
-    var alreadyUnlocked = sessionStorage.getItem(STORE_KEYS.unlocked) === "1";
-    if (alreadyUnlocked) {
-      unlockApp();
-      return;
+    var localUnlocked = sessionStorage.getItem(STORE_KEYS.unlocked) === "1";
+    updateAuthBadge();
+
+    if (els.authSignout) {
+      els.authSignout.addEventListener("click", function () {
+        var client = getSupabaseClient();
+        if (!client) {
+          lockApp("Signed out of local session.");
+          return;
+        }
+        setGateBusy(true);
+        client.auth.signOut()
+          .then(function (result) {
+            if (result && result.error) {
+              throw result.error;
+            }
+            lockApp("Signed out.");
+          })
+          .catch(function (err) {
+            console.error(err);
+            showGateStatus("Sign-out failed. Please try again.", "error");
+          })
+          .finally(function () {
+            setGateBusy(false);
+          });
+      });
     }
 
     els.gateForm.addEventListener("submit", function (event) {
       event.preventDefault();
-      var inputValue = String(els.gatePassword.value || "").trim();
-      if (inputValue === PASSCODE) {
-        showGateStatus("Access granted.", "success");
-        unlockApp();
-      } else {
-        showGateStatus("Passcode incorrect.", "error");
+      var client = getSupabaseClient();
+      if (!client) {
+        showGateStatus("Auth backend is not configured. Use Local-Only Mode or configure Supabase.", "error");
+        return;
       }
+      var email = String(els.gateEmail.value || "").trim();
+      var password = String(els.gatePassword.value || "");
+      if (!email || !password) {
+        showGateStatus("Email and password are required.", "error");
+        return;
+      }
+      setGateBusy(true);
+      client.auth.signInWithPassword({ email: email, password: password })
+        .then(function (result) {
+          if (result.error) {
+            throw result.error;
+          }
+          if (result.data && result.data.session) {
+            showGateStatus("Signed in successfully.", "success");
+            unlockApp("supabase", result.data.session);
+            return;
+          }
+          showGateStatus("Sign-in succeeded but no session was returned.", "error");
+        })
+        .catch(function (err) {
+          console.error(err);
+          showGateStatus("Sign-in failed: " + String(err.message || err), "error");
+        })
+        .finally(function () {
+          setGateBusy(false);
+        });
     });
 
-    els.gateClear.addEventListener("click", function () {
-      els.gatePassword.value = "";
-      showGateStatus("");
-      els.gatePassword.focus();
+    if (els.gateSignUp) {
+      els.gateSignUp.addEventListener("click", function () {
+        var client = getSupabaseClient();
+        if (!client) {
+          showGateStatus("Auth backend is not configured. Configure Supabase first.", "error");
+          return;
+        }
+        var email = String(els.gateEmail.value || "").trim();
+        var password = String(els.gatePassword.value || "");
+        var displayName = String(els.gateDisplayName.value || "").trim();
+        if (!email || !password) {
+          showGateStatus("Email and password are required to create an account.", "error");
+          return;
+        }
+        setGateBusy(true);
+        client.auth.signUp({
+          email: email,
+          password: password,
+          options: {
+            data: {
+              display_name: displayName || email
+            }
+          }
+        }).then(function (result) {
+          if (result.error) {
+            throw result.error;
+          }
+          if (result.data && result.data.session) {
+            showGateStatus("Account created and signed in.", "success");
+            unlockApp("supabase", result.data.session);
+            return;
+          }
+          showGateStatus("Account created. Check your email to confirm before signing in.", "success");
+        }).catch(function (err) {
+          console.error(err);
+          showGateStatus("Create-account failed: " + String(err.message || err), "error");
+        }).finally(function () {
+          setGateBusy(false);
+        });
+      });
+    }
+
+    if (els.gateLocal) {
+      els.gateLocal.addEventListener("click", function () {
+        showGateStatus("Local-only mode unlocked on this browser session.", "success");
+        unlockApp("local", null);
+      });
+    }
+
+    if (!hasSupabaseAuthConfig()) {
+      setGateModeNote("Auth backend status: Supabase not configured. Use Local-Only Mode or add credentials in astronaut-training-auth-config.js.");
+      if (localUnlocked) {
+        unlockApp("local", null);
+      }
+      return;
+    }
+
+    setGateModeNote("Auth backend status: Supabase configured. Sign in to unlock account-backed training.");
+    var client = getSupabaseClient();
+    setGateBusy(true);
+    client.auth.getSession()
+      .then(function (result) {
+        if (result && result.error) {
+          throw result.error;
+        }
+        var session = result && result.data ? result.data.session : null;
+        if (session && session.user) {
+          unlockApp("supabase", session);
+          return;
+        }
+        if (localUnlocked) {
+          unlockApp("local", null);
+        }
+      })
+      .catch(function (err) {
+        console.error(err);
+        showGateStatus("Unable to restore auth session; you can still use Local-Only Mode.", "error");
+        if (localUnlocked) {
+          unlockApp("local", null);
+        }
+      })
+      .finally(function () {
+        setGateBusy(false);
+      });
+
+    client.auth.onAuthStateChange(function (_event, session) {
+      if (session && session.user) {
+        unlockApp("supabase", session);
+      } else if (!els.app.hidden && activeAccessMode === "supabase") {
+        lockApp("Session ended. Please sign in again or continue in Local-Only Mode.");
+      }
     });
   }
 

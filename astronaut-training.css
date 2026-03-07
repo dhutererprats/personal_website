@@ -66,7 +66,7 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: 0.6rem;
-  max-width: 420px;
+  max-width: 560px;
 }
 
 .astro-gate-form input,
@@ -163,6 +163,23 @@
   display: grid;
   gap: 0.6rem;
   grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+}
+
+.astro-auth-controls {
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 0.62rem 0.72rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.42rem;
+  background: rgba(47, 140, 255, 0.06);
+}
+
+.astro-auth-user {
+  font-size: 0.88rem;
+  color: var(--muted-text);
+  overflow-wrap: anywhere;
 }
 
 .astro-metric {
@@ -1218,9 +1235,18 @@
     align-items: stretch;
   }
 
+  .astro-gate-form .cog-row {
+    gap: 0.42rem;
+  }
+
   .cog-row .astro-btn,
   .cog-row .cog-input {
     width: 100%;
+  }
+
+  .astro-auth-controls {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .rms-speed-label,
