@@ -270,6 +270,21 @@
   align-items: center;
 }
 
+.pilot-challenge-banner {
+  border: 1px solid color-mix(in oklab, var(--accent-color) 38%, var(--border-color));
+  border-radius: 12px;
+  padding: 0.7rem 0.82rem;
+  margin-bottom: 0.72rem;
+  background: color-mix(in oklab, var(--accent-color) 12%, var(--bg-color));
+  display: grid;
+  gap: 0.5rem;
+}
+
+.pilot-challenge-banner p {
+  margin: 0;
+  line-height: 1.5;
+}
+
 .pilot-result {
   margin-top: 0.7rem;
   border: 1px solid var(--border-color);
@@ -284,6 +299,13 @@
 
 .pilot-result p {
   margin: 0 0 0.55rem;
+}
+
+.pilot-result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.2rem;
 }
 
 .pilot-result ol {

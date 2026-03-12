@@ -10,12 +10,12 @@
   <meta property="og:site_name" content="Daniel Huterer Prats"/>
   <meta property="og:title" content="Pilot Training | Daniel Huterer Prats"/>
   <meta property="og:description" content="Dedicated pilot training page with chapter-based PHAK study and quiz mode."/>
-  <meta property="og:url" content="https://dhutererprats.github.io/pilot-training.html"/>
-  <meta property="og:image" content="https://dhutererprats.github.io/images/research-hero-space.jpg"/>
+  <meta property="og:url" content="https://dhutererprats.github.io/personal_website/pilot-training.html"/>
+  <meta property="og:image" content="https://dhutererprats.github.io/personal_website/images/research-hero-space.jpg"/>
   <meta name="twitter:card" content="summary_large_image"/>
   <meta name="twitter:title" content="Pilot Training | Daniel Huterer Prats"/>
   <meta name="twitter:description" content="Study pilot fundamentals by chapter and track quiz progress."/>
-  <meta name="twitter:image" content="https://dhutererprats.github.io/images/research-hero-space.jpg"/>
+  <meta name="twitter:image" content="https://dhutererprats.github.io/personal_website/images/research-hero-space.jpg"/>
   <meta name="theme-color" content="#0b1c3c"/>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
@@ -28,7 +28,14 @@
   <script src="pilot-training-data.js" defer></script>
   <script src="pilot-training.js" defer></script>
   <link rel="icon" href="icons/astronaut.ico" type="image/x-icon"/>
-  <link rel="canonical" href="https://dhutererprats.github.io/pilot-training.html"/>
+  <link rel="canonical" href="https://dhutererprats.github.io/personal_website/pilot-training.html"/>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-SMHMGJKP9F"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-SMHMGJKP9F');
+  </script>
 </head>
 <body>
   <nav class="site-nav" aria-label="Primary">
@@ -114,6 +121,12 @@
           <h2>Quiz Mode</h2>
           <p>One-tap answering is enabled by default. Distractors are chapter-consistent and topic-similar.</p>
         </div>
+        <div id="pilot-challenge-banner" class="pilot-challenge-banner" hidden>
+          <p id="pilot-challenge-text"></p>
+          <div class="pilot-inline">
+            <button id="pilot-challenge-start" class="astro-btn primary" type="button">Start Challenge</button>
+          </div>
+        </div>
 
         <form id="pilot-quiz-setup" class="pilot-controls">
           <label for="pilot-quiz-mode">
@@ -162,7 +175,11 @@
         <div id="pilot-quiz-result" class="pilot-result" hidden>
           <h3 id="pilot-quiz-score-title">Score</h3>
           <p id="pilot-quiz-score-text"></p>
-          <button id="pilot-quiz-restart" class="astro-btn primary" type="button">Start Another Quiz</button>
+          <div class="pilot-result-actions">
+            <button id="pilot-quiz-restart" class="astro-btn primary" type="button">Start Another Quiz</button>
+            <button id="pilot-share-result" class="astro-btn" type="button">Share Challenge</button>
+          </div>
+          <p id="pilot-share-status" class="pilot-meta" aria-live="polite"></p>
           <ol id="pilot-quiz-review"></ol>
         </div>
       </section>

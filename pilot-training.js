@@ -13,6 +13,8 @@
     flashIndex: 0,
     flashOrder: "series",
     attempts: [],
+    lastResult: null,
+    incomingChallenge: null,
     profile: {
       quizzes: 0,
       lastAt: null
@@ -148,6 +150,55 @@
     }
   }
 
+  function trackEvent(eventName, params) {
+    var payload = params && typeof params === "object" ? params : {};
+    try {
+      if (typeof window.gtag === "function") {
+        window.gtag("event", eventName, payload);
+        return;
+      }
+      if (Array.isArray(window.dataLayer)) {
+        var entry = { event: eventName };
+        Object.keys(payload).forEach(function (key) {
+          entry[key] = payload[key];
+        });
+        window.dataLayer.push(entry);
+      }
+    } catch (err) {
+      // analytics is optional
+    }
+  }
+
+  function fallbackCopyText(text) {
+    try {
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      ta.setAttribute("readonly", "true");
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      ta.style.pointerEvents = "none";
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      var ok = document.execCommand("copy");
+      document.body.removeChild(ta);
+      return ok;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  function copyText(text) {
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+      return navigator.clipboard.writeText(text).then(function () {
+        return true;
+      }).catch(function () {
+        return fallbackCopyText(text);
+      });
+    }
+    return Promise.resolve(fallbackCopyText(text));
+  }
+
   function bindElements() {
     els.chapterGrid = byId("pilot-chapter-grid");
     els.flashChapter = byId("pilot-flash-chapter");
@@ -177,7 +228,12 @@
     els.quizScoreTitle = byId("pilot-quiz-score-title");
     els.quizScoreText = byId("pilot-quiz-score-text");
     els.quizRestart = byId("pilot-quiz-restart");
+    els.shareResult = byId("pilot-share-result");
+    els.shareStatus = byId("pilot-share-status");
     els.quizReview = byId("pilot-quiz-review");
+    els.challengeBanner = byId("pilot-challenge-banner");
+    els.challengeText = byId("pilot-challenge-text");
+    els.challengeStart = byId("pilot-challenge-start");
 
     els.statQuizzes = byId("pilot-stat-quizzes");
     els.statAvg = byId("pilot-stat-avg");
@@ -430,6 +486,159 @@
     };
   }
 
+  function quizModeLabel(mode) {
+    if (mode === "random-chapter") {
+      return "Random chapter";
+    }
+    if (mode === "series-chapter") {
+      return "Series chapter";
+    }
+    return "Random all";
+  }
+
+  function chapterNameById(chapterId) {
+    var chapter = state.chapters.find(function (c) {
+      return c.id === chapterId;
+    });
+    return chapter ? chapter.name : "Selected chapter";
+  }
+
+  function setShareStatus(message) {
+    if (els.shareStatus) {
+      els.shareStatus.textContent = message || "";
+    }
+  }
+
+  function buildChallengeShareUrl(result) {
+    var url = new URL(window.location.href);
+    url.search = "";
+    url.hash = "";
+    url.searchParams.set("challenge", "pilot");
+    url.searchParams.set("mode", result.mode);
+    url.searchParams.set("count", String(clamp(Number(result.total) || 20, 5, 100)));
+    url.searchParams.set("score", String(clamp(Number(result.score) || 0, 0, 100)));
+    if (result.mode === "random-all") {
+      url.searchParams.delete("chapter");
+    } else {
+      url.searchParams.set("chapter", result.chapterId || state.currentChapterId);
+    }
+    return url.toString();
+  }
+
+  function shareChallengeText(result) {
+    var chapterText = result.mode === "random-all" ? "all chapters" : result.chapterName;
+    return "I scored " + result.score + "% on this pilot quiz (" + chapterText + "). Can you beat it?";
+  }
+
+  function copyChallengeLink(url) {
+    return copyText(url).then(function (copied) {
+      setShareStatus(copied ? "Challenge link copied to clipboard." : "Copy failed. Copy this URL manually: " + url);
+    });
+  }
+
+  function shareLatestResult() {
+    if (!state.lastResult) {
+      setShareStatus("Finish a quiz first to share a challenge.");
+      return;
+    }
+
+    var result = state.lastResult;
+    var url = buildChallengeShareUrl(result);
+    var text = shareChallengeText(result);
+
+    setShareStatus("Preparing challenge link...");
+    trackEvent("share_clicked", {
+      surface: "pilot_result",
+      mode: result.mode,
+      score: result.score
+    });
+
+    if (navigator.share && typeof navigator.share === "function") {
+      navigator.share({
+        title: "Pilot Training Challenge",
+        text: text,
+        url: url
+      }).then(function () {
+        setShareStatus("Challenge shared.");
+      }).catch(function (err) {
+        if (err && err.name === "AbortError") {
+          setShareStatus("Share canceled.");
+          return;
+        }
+        copyChallengeLink(url);
+      });
+      return;
+    }
+
+    copyChallengeLink(url);
+  }
+
+  function parseIncomingChallenge() {
+    var params = new URLSearchParams(window.location.search || "");
+    if (params.get("challenge") !== "pilot") {
+      return null;
+    }
+
+    var mode = params.get("mode") || "random-all";
+    if (mode !== "random-all" && mode !== "random-chapter" && mode !== "series-chapter") {
+      mode = "random-all";
+    }
+
+    var chapterId = params.get("chapter") || state.currentChapterId;
+    var chapterExists = state.chapters.some(function (c) {
+      return c.id === chapterId;
+    });
+    if (!chapterExists) {
+      chapterId = state.currentChapterId;
+    }
+
+    return {
+      mode: mode,
+      chapterId: chapterId,
+      count: clamp(Number(params.get("count")) || 20, 5, 100),
+      score: clamp(Number(params.get("score")) || 0, 0, 100)
+    };
+  }
+
+  function applyChallengeSetup(challenge) {
+    if (!challenge) {
+      return;
+    }
+    els.quizMode.value = challenge.mode;
+    els.quizChapter.value = challenge.chapterId;
+    els.quizCount.value = String(challenge.count);
+    setQuizModeUI();
+  }
+
+  function clearChallengeParamsFromUrl() {
+    var url = new URL(window.location.href);
+    ["challenge", "mode", "chapter", "count", "score"].forEach(function (key) {
+      url.searchParams.delete(key);
+    });
+    window.history.replaceState({}, "", url.pathname + url.search + url.hash);
+  }
+
+  function renderIncomingChallenge() {
+    if (!els.challengeBanner || !els.challengeText || !state.incomingChallenge) {
+      if (els.challengeBanner) {
+        els.challengeBanner.hidden = true;
+      }
+      return;
+    }
+
+    var challenge = state.incomingChallenge;
+    var chapterText = challenge.mode === "random-all"
+      ? "all chapters"
+      : chapterNameById(challenge.chapterId);
+    var objective = challenge.score > 0 ? "beat " + challenge.score + "%" : "set a high score";
+
+    els.challengeText.textContent =
+      "Challenge invite: " + objective + " on a " + challenge.count +
+      "-question " + quizModeLabel(challenge.mode).toLowerCase() + " quiz (" + chapterText + ").";
+    els.challengeBanner.hidden = false;
+    applyChallengeSetup(challenge);
+  }
+
   function setQuizModeUI() {
     els.quizChapter.disabled = els.quizMode.value === "random-all";
   }
@@ -485,6 +694,7 @@
 
     els.quizResult.hidden = true;
     els.quizLive.hidden = false;
+    setShareStatus("");
     renderQuizQuestion();
   }
 
@@ -613,9 +823,11 @@
       chapterName = chapter ? chapter.name : "Chapter";
     }
 
+    var timestamp = new Date().toISOString();
     state.attempts.push({
-      timestamp: new Date().toISOString(),
+      timestamp: timestamp,
       mode: quiz.mode,
+      chapterId: quiz.chapterId,
       chapterName: chapterName,
       score: score,
       correct: correct,
@@ -623,7 +835,14 @@
     });
     state.attempts = state.attempts.slice(-300);
     state.profile.quizzes += 1;
-    state.profile.lastAt = new Date().toISOString();
+    state.profile.lastAt = timestamp;
+    state.lastResult = {
+      mode: quiz.mode,
+      chapterId: quiz.chapterId,
+      chapterName: chapterName,
+      score: score,
+      total: total
+    };
     persistState();
 
     state.quiz.running = false;
@@ -632,6 +851,7 @@
 
     els.quizScoreTitle.textContent = "Score: " + score + "%";
     els.quizScoreText.textContent = correct + " / " + total + " correct";
+    setShareStatus("");
 
     els.quizReview.innerHTML = "";
     quiz.records.forEach(function (row) {
@@ -674,6 +894,28 @@
       els.quizResult.hidden = true;
       startQuiz();
     });
+    if (els.shareResult) {
+      els.shareResult.addEventListener("click", shareLatestResult);
+    }
+    if (els.challengeStart) {
+      els.challengeStart.addEventListener("click", function () {
+        if (!state.incomingChallenge) {
+          return;
+        }
+        applyChallengeSetup(state.incomingChallenge);
+        trackEvent("challenge_started", {
+          source: "pilot_challenge_link",
+          mode: state.incomingChallenge.mode,
+          target_score: state.incomingChallenge.score
+        });
+        startQuiz();
+        if (els.challengeBanner) {
+          els.challengeBanner.hidden = true;
+        }
+        state.incomingChallenge = null;
+        clearChallengeParamsFromUrl();
+      });
+    }
   }
 
   function drawChart() {
@@ -786,6 +1028,8 @@
     renderChapters();
     state.flashOrder = els.flashOrder.value;
     prepareFlashDeck();
+    state.incomingChallenge = parseIncomingChallenge();
+    renderIncomingChallenge();
 
     initFlashcards();
     initQuiz();
