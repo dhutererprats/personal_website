@@ -1,55 +1,55 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://dhutererprats.github.io/</loc>
+    <loc>https://dhutererprats.github.io/personal_website/</loc>
     <lastmod>2026-02-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://dhutererprats.github.io/research.html</loc>
+    <loc>https://dhutererprats.github.io/personal_website/research.html</loc>
     <lastmod>2026-02-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://dhutererprats.github.io/publications.html</loc>
+    <loc>https://dhutererprats.github.io/personal_website/publications.html</loc>
     <lastmod>2026-02-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://dhutererprats.github.io/about.html</loc>
+    <loc>https://dhutererprats.github.io/personal_website/about.html</loc>
     <lastmod>2026-02-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://dhutererprats.github.io/files/AMOS_SBSS/Amos_sbss.html</loc>
+    <loc>https://dhutererprats.github.io/personal_website/files/AMOS_SBSS/Amos_sbss.html</loc>
     <lastmod>2026-02-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://dhutererprats.github.io/blog/robust-trajectory-rl.html</loc>
+    <loc>https://dhutererprats.github.io/personal_website/blog/robust-trajectory-rl.html</loc>
     <lastmod>2026-02-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://dhutererprats.github.io/attitude-dynamics.html</loc>
+    <loc>https://dhutererprats.github.io/personal_website/attitude-dynamics.html</loc>
     <lastmod>2026-02-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://dhutererprats.github.io/orbital-elements.html</loc>
+    <loc>https://dhutererprats.github.io/personal_website/orbital-elements.html</loc>
     <lastmod>2026-02-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://dhutererprats.github.io/pilot-training.html</loc>
+    <loc>https://dhutererprats.github.io/personal_website/pilot-training.html</loc>
     <lastmod>2026-02-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>

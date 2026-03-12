@@ -1,5 +1,5 @@
 User-agent: *
 Allow: /
-Disallow: /astronaut-training.html
+Disallow: /personal_website/astronaut-training.html
 
-Sitemap: https://dhutererprats.github.io/sitemap.xml
+Sitemap: https://dhutererprats.github.io/personal_website/sitemap.xml
