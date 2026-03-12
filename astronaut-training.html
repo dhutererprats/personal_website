@@ -84,11 +84,11 @@
         </p>
         <form class="astro-gate-form" id="gate-form" autocomplete="off">
           <label for="gate-email">Email</label>
-          <input id="gate-email" name="email" type="email" placeholder="you@example.com" required />
+          <input id="gate-email" name="email" type="email" maxlength="120" autocapitalize="off" autocorrect="off" spellcheck="false" inputmode="email" autocomplete="username email" placeholder="you@example.com" required />
           <label for="gate-password">Password</label>
-          <input id="gate-password" name="password" type="password" placeholder="Enter password" required />
+          <input id="gate-password" name="password" type="password" minlength="6" maxlength="72" autocomplete="current-password" placeholder="Enter password" required />
           <label for="gate-display-name">Display Name (for leaderboard)</label>
-          <input id="gate-display-name" name="display_name" type="text" maxlength="40" placeholder="Daniel Huterer Prats" />
+          <input id="gate-display-name" name="display_name" type="text" minlength="2" maxlength="40" autocapitalize="words" autocomplete="nickname" placeholder="Daniel Huterer Prats" />
           <div class="cog-row">
             <button id="gate-signin" type="submit" class="astro-btn primary">Sign In</button>
             <button id="gate-signup" type="button" class="astro-btn">Create Account</button>

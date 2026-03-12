@@ -19,9 +19,19 @@
     leaderboardPrefs: "astro_training_leaderboard_prefs_v1",
     leaderboardCache: "astro_training_leaderboard_cache_v1",
     localAccounts: "astro_training_local_accounts_v1",
-    localLastAccount: "astro_training_local_last_account_v1"
+    localLastAccount: "astro_training_local_last_account_v1",
+    authRateLimit: "astro_training_auth_rate_limit_v1"
   };
   var LOCAL_ACCOUNT_PASSWORD_MIN = 6;
+  var LOCAL_ACCOUNT_PASSWORD_MAX = 72;
+  var LOCAL_ACCOUNT_MAX_COUNT = 30;
+  var AUTH_EMAIL_MAX_LENGTH = 120;
+  var AUTH_DISPLAY_NAME_MIN = 2;
+  var AUTH_DISPLAY_NAME_MAX = 40;
+  var AUTH_RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
+  var AUTH_RATE_LIMIT_BLOCK_MS = 15 * 60 * 1000;
+  var AUTH_SIGNIN_MAX_ATTEMPTS = 8;
+  var AUTH_SIGNUP_MAX_ATTEMPTS = 5;
 
   var BADGE_DEFS = [
     { id: "first_docking", label: "First Docking", icon: "L1", check: function (ctx) { return ctx.profile.quizCount >= 1; } },
@@ -1317,6 +1327,140 @@
     return String(email || "").trim().toLowerCase();
   }
 
+  function sanitizeDisplayName(name) {
+    return String(name || "")
+      .replace(/[\u0000-\u001F\u007F]/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function validateAuthInputs(email, password, displayName, mode) {
+    var normalizedEmail = normalizeAuthEmail(email);
+    var secret = String(password || "");
+    var cleanName = sanitizeDisplayName(displayName);
+    var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    var modeKey = String(mode || "signin");
+
+    if (!normalizedEmail || normalizedEmail.length > AUTH_EMAIL_MAX_LENGTH || !emailPattern.test(normalizedEmail)) {
+      return { ok: false, error: "Enter a valid email address." };
+    }
+
+    if (!secret) {
+      return { ok: false, error: "Password is required." };
+    }
+
+    if (secret.length > LOCAL_ACCOUNT_PASSWORD_MAX) {
+      return { ok: false, error: "Password is too long (max " + LOCAL_ACCOUNT_PASSWORD_MAX + " characters)." };
+    }
+
+    if (modeKey === "signup" && secret.length < LOCAL_ACCOUNT_PASSWORD_MIN) {
+      return { ok: false, error: "Password must be at least " + LOCAL_ACCOUNT_PASSWORD_MIN + " characters." };
+    }
+
+    if (modeKey === "signup" && cleanName) {
+      if (cleanName.length < AUTH_DISPLAY_NAME_MIN || cleanName.length > AUTH_DISPLAY_NAME_MAX) {
+        return {
+          ok: false,
+          error: "Display name must be between " + AUTH_DISPLAY_NAME_MIN + " and " + AUTH_DISPLAY_NAME_MAX + " characters."
+        };
+      }
+    }
+
+    return {
+      ok: true,
+      email: normalizedEmail,
+      password: secret,
+      displayName: cleanName
+    };
+  }
+
+  function readAuthRateLimitStore() {
+    var raw = safeRead(STORE_KEYS.authRateLimit, { buckets: {} });
+    if (!raw || typeof raw !== "object") {
+      return { buckets: {} };
+    }
+    if (!raw.buckets || typeof raw.buckets !== "object") {
+      raw.buckets = {};
+    }
+    return raw;
+  }
+
+  function writeAuthRateLimitStore(store) {
+    safeWrite(STORE_KEYS.authRateLimit, store || { buckets: {} });
+  }
+
+  function authRateLimitMaxForAction(action) {
+    return action === "signup" ? AUTH_SIGNUP_MAX_ATTEMPTS : AUTH_SIGNIN_MAX_ATTEMPTS;
+  }
+
+  function authRateLimitBucketKey(action, email) {
+    return String(action || "signin") + ":" + normalizeAuthEmail(email);
+  }
+
+  function pruneAuthRateLimitBuckets(store, nowMs) {
+    var buckets = store && store.buckets ? store.buckets : {};
+    var horizon = AUTH_RATE_LIMIT_WINDOW_MS + AUTH_RATE_LIMIT_BLOCK_MS;
+    Object.keys(buckets).forEach(function (key) {
+      var entry = buckets[key] || {};
+      var firstAt = Number(entry.firstAt) || 0;
+      var blockedUntil = Number(entry.blockedUntil) || 0;
+      if (nowMs - Math.max(firstAt, blockedUntil) > horizon) {
+        delete buckets[key];
+      }
+    });
+  }
+
+  function checkAuthRateLimit(action, email) {
+    var nowMs = Date.now();
+    var store = readAuthRateLimitStore();
+    pruneAuthRateLimitBuckets(store, nowMs);
+    var key = authRateLimitBucketKey(action, email);
+    var entry = store.buckets[key] || {};
+    var blockedUntil = Number(entry.blockedUntil) || 0;
+    if (blockedUntil > nowMs) {
+      writeAuthRateLimitStore(store);
+      return {
+        blocked: true,
+        retryAfterSec: Math.ceil((blockedUntil - nowMs) / 1000)
+      };
+    }
+    writeAuthRateLimitStore(store);
+    return { blocked: false, retryAfterSec: 0 };
+  }
+
+  function registerAuthAttemptFailure(action, email) {
+    var nowMs = Date.now();
+    var store = readAuthRateLimitStore();
+    pruneAuthRateLimitBuckets(store, nowMs);
+    var key = authRateLimitBucketKey(action, email);
+    var entry = store.buckets[key];
+    if (!entry || (Number(entry.firstAt) || 0) + AUTH_RATE_LIMIT_WINDOW_MS < nowMs) {
+      entry = {
+        count: 0,
+        firstAt: nowMs,
+        blockedUntil: 0
+      };
+    }
+    entry.count = Number(entry.count) + 1;
+    var maxAttempts = authRateLimitMaxForAction(action);
+    if (entry.count >= maxAttempts) {
+      entry.blockedUntil = nowMs + AUTH_RATE_LIMIT_BLOCK_MS;
+      entry.count = 0;
+      entry.firstAt = nowMs;
+    }
+    store.buckets[key] = entry;
+    writeAuthRateLimitStore(store);
+  }
+
+  function clearAuthAttemptBucket(action, email) {
+    var store = readAuthRateLimitStore();
+    var key = authRateLimitBucketKey(action, email);
+    if (store.buckets[key]) {
+      delete store.buckets[key];
+      writeAuthRateLimitStore(store);
+    }
+  }
+
   function hashLocalPassword(password) {
     var input = String(password || "");
     var hash = 2166136261; // FNV-1a 32-bit
@@ -1344,7 +1488,7 @@
 
   function buildLocalAuthUser(email, displayName) {
     var normalizedEmail = normalizeAuthEmail(email);
-    var cleanName = String(displayName || "").trim();
+    var cleanName = sanitizeDisplayName(displayName);
     return {
       id: "local:" + normalizedEmail,
       email: normalizedEmail,
@@ -1355,21 +1499,22 @@
   }
 
   function createLocalAccount(email, password, displayName) {
-    var normalizedEmail = normalizeAuthEmail(email);
-    var secret = String(password || "");
-    if (!normalizedEmail) {
-      return { error: "Email is required." };
+    var validated = validateAuthInputs(email, password, displayName, "signup");
+    if (!validated.ok) {
+      return { error: validated.error };
     }
-    if (secret.length < LOCAL_ACCOUNT_PASSWORD_MIN) {
-      return { error: "Password must be at least " + LOCAL_ACCOUNT_PASSWORD_MIN + " characters." };
-    }
+    var normalizedEmail = validated.email;
+    var secret = validated.password;
 
     var store = readLocalAccountsStore();
+    if (Object.keys(store.users).length >= LOCAL_ACCOUNT_MAX_COUNT) {
+      return { error: "Local account limit reached for this device." };
+    }
     if (store.users[normalizedEmail]) {
       return { error: "This local account already exists. Use Sign In." };
     }
 
-    var cleanName = String(displayName || "").trim();
+    var cleanName = validated.displayName;
     store.users[normalizedEmail] = {
       email: normalizedEmail,
       displayName: cleanName || normalizedEmail,
@@ -1385,11 +1530,12 @@
   }
 
   function signInLocalAccount(email, password) {
-    var normalizedEmail = normalizeAuthEmail(email);
-    var secret = String(password || "");
-    if (!normalizedEmail || !secret) {
-      return { error: "Email and password are required." };
+    var validated = validateAuthInputs(email, password, "", "signin");
+    if (!validated.ok) {
+      return { error: validated.error };
     }
+    var normalizedEmail = validated.email;
+    var secret = validated.password;
 
     var store = readLocalAccountsStore();
     var account = store.users[normalizedEmail];
@@ -1418,7 +1564,7 @@
     var metadata = user.user_metadata && typeof user.user_metadata === "object"
       ? user.user_metadata
       : {};
-    var candidate = String(metadata.display_name || metadata.full_name || "").trim();
+    var candidate = sanitizeDisplayName(metadata.display_name || metadata.full_name || "");
     if (candidate) {
       return candidate;
     }
@@ -1542,20 +1688,34 @@
     els.gateForm.addEventListener("submit", function (event) {
       event.preventDefault();
       var client = getSupabaseClient();
-      var email = String(els.gateEmail.value || "").trim();
-      var password = String(els.gatePassword.value || "");
-      if (!email || !password) {
-        showGateStatus("Email and password are required.", "error");
+      var validated = validateAuthInputs(
+        els.gateEmail ? els.gateEmail.value : "",
+        els.gatePassword ? els.gatePassword.value : "",
+        "",
+        "signin"
+      );
+      if (!validated.ok) {
+        showGateStatus(validated.error, "error");
+        return;
+      }
+      var email = validated.email;
+      var password = validated.password;
+
+      var gateCheck = checkAuthRateLimit("signin", email);
+      if (gateCheck.blocked) {
+        showGateStatus("Too many sign-in attempts. Please wait " + gateCheck.retryAfterSec + "s and try again.", "error");
         return;
       }
 
       if (!client) {
         var localResult = signInLocalAccount(email, password);
         if (localResult.error) {
+          registerAuthAttemptFailure("signin", email);
           showGateStatus(localResult.error, "error");
           return;
         }
         if (localResult.user) {
+          clearAuthAttemptBucket("signin", email);
           var localDisplay = authDisplayName(localResult.user);
           if (els.gateDisplayName && !String(els.gateDisplayName.value || "").trim()) {
             els.gateDisplayName.value = localDisplay;
@@ -1576,13 +1736,16 @@
             throw result.error;
           }
           if (result.data && result.data.session) {
+            clearAuthAttemptBucket("signin", email);
             showGateStatus("Signed in successfully.", "success");
             unlockApp("supabase", result.data.session);
             return;
           }
+          registerAuthAttemptFailure("signin", email);
           showGateStatus("Sign-in succeeded but no session was returned.", "error");
         })
         .catch(function (err) {
+          registerAuthAttemptFailure("signin", email);
           console.error(err);
           showGateStatus("Sign-in failed: " + String(err.message || err), "error");
         })
@@ -1594,21 +1757,35 @@
     if (els.gateSignUp) {
       els.gateSignUp.addEventListener("click", function () {
         var client = getSupabaseClient();
-        var email = String(els.gateEmail.value || "").trim();
-        var password = String(els.gatePassword.value || "");
-        var displayName = String(els.gateDisplayName.value || "").trim();
-        if (!email || !password) {
-          showGateStatus("Email and password are required to create an account.", "error");
+        var validated = validateAuthInputs(
+          els.gateEmail ? els.gateEmail.value : "",
+          els.gatePassword ? els.gatePassword.value : "",
+          els.gateDisplayName ? els.gateDisplayName.value : "",
+          "signup"
+        );
+        if (!validated.ok) {
+          showGateStatus(validated.error, "error");
+          return;
+        }
+        var email = validated.email;
+        var password = validated.password;
+        var displayName = validated.displayName;
+
+        var signupCheck = checkAuthRateLimit("signup", email);
+        if (signupCheck.blocked) {
+          showGateStatus("Too many sign-up attempts. Please wait " + signupCheck.retryAfterSec + "s and try again.", "error");
           return;
         }
 
         if (!client) {
           var localCreated = createLocalAccount(email, password, displayName);
           if (localCreated.error) {
+            registerAuthAttemptFailure("signup", email);
             showGateStatus(localCreated.error, "error");
             return;
           }
           if (localCreated.user) {
+            clearAuthAttemptBucket("signup", email);
             var localName = authDisplayName(localCreated.user);
             if (els.gateDisplayName && !String(els.gateDisplayName.value || "").trim()) {
               els.gateDisplayName.value = localName;
@@ -1635,6 +1812,7 @@
           if (result.error) {
             throw result.error;
           }
+          clearAuthAttemptBucket("signup", email);
           if (result.data && result.data.session) {
             showGateStatus("Account created and signed in.", "success");
             unlockApp("supabase", result.data.session);
@@ -1642,6 +1820,7 @@
           }
           showGateStatus("Account created. Check your email to confirm before signing in.", "success");
         }).catch(function (err) {
+          registerAuthAttemptFailure("signup", email);
           console.error(err);
           showGateStatus("Create-account failed: " + String(err.message || err), "error");
         }).finally(function () {
@@ -6690,8 +6869,10 @@
           setLeaderboardStatus("Sign in with a Supabase-backed account to save leaderboard settings.", "error");
           return;
         }
-        var displayName = String((els.leaderboardDisplayName && els.leaderboardDisplayName.value) || "").trim().slice(0, 40);
-        if (!displayName) {
+        var displayName = sanitizeDisplayName(
+          (els.leaderboardDisplayName && els.leaderboardDisplayName.value) || ""
+        ).slice(0, AUTH_DISPLAY_NAME_MAX);
+        if (!displayName || displayName.length < AUTH_DISPLAY_NAME_MIN) {
           setLeaderboardStatus("Display name is required to save leaderboard settings.", "error");
           return;
         }
