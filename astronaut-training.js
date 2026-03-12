@@ -17,8 +17,11 @@
     installationId: "astro_training_installation_id_v1",
     progressPrefs: "astro_training_progress_prefs_v1",
     leaderboardPrefs: "astro_training_leaderboard_prefs_v1",
-    leaderboardCache: "astro_training_leaderboard_cache_v1"
+    leaderboardCache: "astro_training_leaderboard_cache_v1",
+    localAccounts: "astro_training_local_accounts_v1",
+    localLastAccount: "astro_training_local_last_account_v1"
   };
+  var LOCAL_ACCOUNT_PASSWORD_MIN = 6;
 
   var BADGE_DEFS = [
     { id: "first_docking", label: "First Docking", icon: "L1", check: function (ctx) { return ctx.profile.quizCount >= 1; } },
@@ -1310,6 +1313,104 @@
     return supabaseClient;
   }
 
+  function normalizeAuthEmail(email) {
+    return String(email || "").trim().toLowerCase();
+  }
+
+  function hashLocalPassword(password) {
+    var input = String(password || "");
+    var hash = 2166136261; // FNV-1a 32-bit
+    for (var i = 0; i < input.length; i += 1) {
+      hash ^= input.charCodeAt(i);
+      hash = Math.imul(hash, 16777619);
+    }
+    return "fnv1a32:" + (hash >>> 0).toString(16);
+  }
+
+  function readLocalAccountsStore() {
+    var raw = safeRead(STORE_KEYS.localAccounts, { users: {} });
+    if (!raw || typeof raw !== "object") {
+      return { users: {} };
+    }
+    if (!raw.users || typeof raw.users !== "object") {
+      raw.users = {};
+    }
+    return raw;
+  }
+
+  function writeLocalAccountsStore(store) {
+    safeWrite(STORE_KEYS.localAccounts, store || { users: {} });
+  }
+
+  function buildLocalAuthUser(email, displayName) {
+    var normalizedEmail = normalizeAuthEmail(email);
+    var cleanName = String(displayName || "").trim();
+    return {
+      id: "local:" + normalizedEmail,
+      email: normalizedEmail,
+      user_metadata: {
+        display_name: cleanName || normalizedEmail
+      }
+    };
+  }
+
+  function createLocalAccount(email, password, displayName) {
+    var normalizedEmail = normalizeAuthEmail(email);
+    var secret = String(password || "");
+    if (!normalizedEmail) {
+      return { error: "Email is required." };
+    }
+    if (secret.length < LOCAL_ACCOUNT_PASSWORD_MIN) {
+      return { error: "Password must be at least " + LOCAL_ACCOUNT_PASSWORD_MIN + " characters." };
+    }
+
+    var store = readLocalAccountsStore();
+    if (store.users[normalizedEmail]) {
+      return { error: "This local account already exists. Use Sign In." };
+    }
+
+    var cleanName = String(displayName || "").trim();
+    store.users[normalizedEmail] = {
+      email: normalizedEmail,
+      displayName: cleanName || normalizedEmail,
+      passwordHash: hashLocalPassword(secret),
+      createdAt: new Date().toISOString(),
+      lastLoginAt: new Date().toISOString()
+    };
+    writeLocalAccountsStore(store);
+    safeWrite(STORE_KEYS.localLastAccount, normalizedEmail);
+    return {
+      user: buildLocalAuthUser(normalizedEmail, store.users[normalizedEmail].displayName)
+    };
+  }
+
+  function signInLocalAccount(email, password) {
+    var normalizedEmail = normalizeAuthEmail(email);
+    var secret = String(password || "");
+    if (!normalizedEmail || !secret) {
+      return { error: "Email and password are required." };
+    }
+
+    var store = readLocalAccountsStore();
+    var account = store.users[normalizedEmail];
+    if (!account) {
+      return { error: "No local account found. Create one first." };
+    }
+
+    var hash = hashLocalPassword(secret);
+    if (account.passwordHash !== hash) {
+      return { error: "Incorrect password for this local account." };
+    }
+
+    account.lastLoginAt = new Date().toISOString();
+    store.users[normalizedEmail] = account;
+    writeLocalAccountsStore(store);
+    safeWrite(STORE_KEYS.localLastAccount, normalizedEmail);
+    return {
+      user: buildLocalAuthUser(normalizedEmail, account.displayName)
+    };
+  }
+
   function authDisplayName(user) {
     if (!user || typeof user !== "object") {
       return "Unknown user";
@@ -1339,6 +1440,13 @@
       }
       return;
     }
+    if (activeAccessMode === "local-account" && activeAuthUser) {
+      els.authUserLabel.textContent = "Signed in (local): " + authDisplayName(activeAuthUser);
+      if (els.authSignout) {
+        els.authSignout.hidden = false;
+      }
+      return;
+    }
     els.authUserLabel.textContent = "Mode: local only";
     if (els.authSignout) {
       els.authSignout.hidden = true;
@@ -1360,11 +1468,17 @@
   }
 
   function unlockApp(mode, session) {
-    var accessMode = mode === "supabase" ? "supabase" : "local";
+    var accessMode = mode === "supabase"
+      ? "supabase"
+      : (mode === "local-account" ? "local-account" : "local");
     if (accessMode === "local") {
       sessionStorage.setItem(STORE_KEYS.unlocked, "1");
       activeAuthSession = null;
       activeAuthUser = null;
+    } else if (accessMode === "local-account") {
+      sessionStorage.setItem(STORE_KEYS.unlocked, "1");
+      activeAuthSession = null;
+      activeAuthUser = session && session.user ? session.user : null;
     } else {
       sessionStorage.removeItem(STORE_KEYS.unlocked);
       activeAuthSession = session || null;
@@ -1428,16 +1542,33 @@
     els.gateForm.addEventListener("submit", function (event) {
       event.preventDefault();
       var client = getSupabaseClient();
-      if (!client) {
-        showGateStatus("Auth backend is not configured. Use Local-Only Mode or configure Supabase.", "error");
-        return;
-      }
       var email = String(els.gateEmail.value || "").trim();
       var password = String(els.gatePassword.value || "");
       if (!email || !password) {
         showGateStatus("Email and password are required.", "error");
         return;
       }
+
+      if (!client) {
+        var localResult = signInLocalAccount(email, password);
+        if (localResult.error) {
+          showGateStatus(localResult.error, "error");
+          return;
+        }
+        if (localResult.user) {
+          var localDisplay = authDisplayName(localResult.user);
+          if (els.gateDisplayName && !String(els.gateDisplayName.value || "").trim()) {
+            els.gateDisplayName.value = localDisplay;
+          }
+          appState.leaderboard.displayName = localDisplay;
+          showGateStatus("Signed in with local account.", "success");
+          unlockApp("local-account", { user: localResult.user });
+          return;
+        }
+        showGateStatus("Unable to sign in locally. Please try again.", "error");
+        return;
+      }
+
       setGateBusy(true);
       client.auth.signInWithPassword({ email: email, password: password })
         .then(function (result) {
@@ -1463,10 +1594,6 @@
     if (els.gateSignUp) {
       els.gateSignUp.addEventListener("click", function () {
         var client = getSupabaseClient();
-        if (!client) {
-          showGateStatus("Auth backend is not configured. Configure Supabase first.", "error");
-          return;
-        }
         var email = String(els.gateEmail.value || "").trim();
         var password = String(els.gatePassword.value || "");
         var displayName = String(els.gateDisplayName.value || "").trim();
@@ -1474,6 +1601,27 @@
           showGateStatus("Email and password are required to create an account.", "error");
           return;
         }
+
+        if (!client) {
+          var localCreated = createLocalAccount(email, password, displayName);
+          if (localCreated.error) {
+            showGateStatus(localCreated.error, "error");
+            return;
+          }
+          if (localCreated.user) {
+            var localName = authDisplayName(localCreated.user);
+            if (els.gateDisplayName && !String(els.gateDisplayName.value || "").trim()) {
+              els.gateDisplayName.value = localName;
+            }
+            appState.leaderboard.displayName = localName;
+            showGateStatus("Local account created on this device and signed in.", "success");
+            unlockApp("local-account", { user: localCreated.user });
+            return;
+          }
+          showGateStatus("Unable to create local account. Please try again.", "error");
+          return;
+        }
+
         setGateBusy(true);
         client.auth.signUp({
           email: email,
@@ -1510,7 +1658,13 @@
     }
 
     if (!hasSupabaseAuthConfig()) {
-      setGateModeNote("Auth backend status: Supabase not configured. Use Local-Only Mode or add credentials in astronaut-training-auth-config.js.");
+      setGateModeNote(
+        "Auth backend status: Supabase not configured. You can still Create Account locally on this device, Sign In to that local account, or continue in Local-Only Mode."
+      );
+      var rememberedLocalEmail = String(safeRead(STORE_KEYS.localLastAccount, "") || "").trim();
+      if (rememberedLocalEmail && els.gateEmail && !String(els.gateEmail.value || "").trim()) {
+        els.gateEmail.value = rememberedLocalEmail;
+      }
       if (localUnlocked) {
         unlockApp("local", null);
       }
