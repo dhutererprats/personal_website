@@ -146,14 +146,14 @@
             Number of questions
             <input id="pilot-quiz-count" type="number" min="5" max="100" step="1" value="20" />
           </label>
-          <label for="pilot-quiz-instant">
+          <label for="pilot-quiz-instant" class="pilot-answer-mode">
             Answer mode
             <span class="pilot-inline">
               <input id="pilot-quiz-instant" type="checkbox" checked />
               <span>One-tap answer</span>
             </span>
           </label>
-          <div class="pilot-inline" style="align-self:end;">
+          <div class="pilot-inline pilot-quiz-start-wrap">
             <button id="pilot-quiz-start" class="astro-btn primary" type="button">Start Quiz</button>
           </div>
         </form>
@@ -199,7 +199,7 @@
         <div class="pilot-chart-wrap">
           <canvas id="pilot-chart" width="860" height="260" aria-label="Pilot quiz score chart"></canvas>
         </div>
-        <div class="history-table-wrap" style="margin-top:0.7rem;">
+        <div class="history-table-wrap pilot-history-wrap">
           <table class="history-table">
             <thead>
               <tr>
