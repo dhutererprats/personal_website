@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; script-src 'self' 'unsafe-inline' https://code.iconify.design https://cdn.jsdelivr.net https://www.googletagmanager.com https://www.gstatic.com https://unpkg.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; img-src 'self' data: blob: https:; font-src 'self' data: https://cdnjs.cloudflare.com; connect-src 'self' https://api.nasa.gov https://api.wheretheiss.at https://api.allorigins.win https://nominatim.openstreetmap.org https://api.openalex.org https://cdn.jsdelivr.net https://www.google-analytics.com https://region1.google-analytics.com https://*.supabase.co; media-src 'self' blob: https:; frame-src 'self' https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com; worker-src 'self' blob:; manifest-src 'self'; form-action 'self'; upgrade-insecure-requests;"/>
   <title>Reinforcement Learning for Space-to-Space Imaging (AMOS 2025)</title>
   <link rel="stylesheet" href="../../style.css"/>
   <script src="../../theme-toggle.js" defer></script>
@@ -415,17 +416,46 @@
       return head.includes("git-lfs.github.com/spec/v1");
     }
 
+    function sanitizeYouTubeEmbedUrl(rawUrl) {
+      if (!rawUrl) return null;
+      try {
+        const parsed = new URL(rawUrl, window.location.href);
+        const allowedHosts = new Set([
+          "www.youtube.com",
+          "youtube.com",
+          "www.youtube-nocookie.com",
+          "youtube-nocookie.com"
+        ]);
+        if (parsed.protocol !== "https:") return null;
+        if (!allowedHosts.has(parsed.hostname)) return null;
+        if (!parsed.pathname.startsWith("/embed/")) return null;
+        return parsed.toString();
+      } catch (error) {
+        console.warn("Invalid fallback video URL:", error);
+        return null;
+      }
+    }
+
     function replaceVideoWithFallback(videoElement) {
-      const youtube = videoElement.dataset.youtube;
+      const youtube = sanitizeYouTubeEmbedUrl(videoElement.dataset.youtube);
       const fallback = document.createElement("div");
       fallback.className = "video-fallback";
       if (youtube) {
-        fallback.innerHTML = `
-          <iframe src="${youtube}" title="Fallback video from YouTube" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-          <p>Using YouTube fallback because the local video file is stored as a Git LFS pointer in this static site build.</p>
-        `;
+        const frame = document.createElement("iframe");
+        frame.src = youtube;
+        frame.title = "Fallback video from YouTube";
+        frame.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+        frame.referrerPolicy = "strict-origin-when-cross-origin";
+        frame.allowFullscreen = true;
+
+        const note = document.createElement("p");
+        note.textContent = "Using YouTube fallback because the local video file is stored as a Git LFS pointer in this static site build.";
+
+        fallback.append(frame, note);
       } else {
-        fallback.innerHTML = "<p>Video is unavailable in this build.</p>";
+        const note = document.createElement("p");
+        note.textContent = "Video is unavailable in this build.";
+        fallback.appendChild(note);
       }
       videoElement.replaceWith(fallback);
     }

@@ -1259,44 +1259,53 @@ function showFeedback(message, targetId) {
 }
 
 // Add this function after showFeedback
+function normalizeErrorMessage(errorMessage) {
+    if (errorMessage == null) {
+        return "Unknown visualization error.";
+    }
+    return String(errorMessage).replace(/\s+/g, " ").trim();
+}
+
 function showError(container, errorMessage, canRetry = true) {
     if (!container) return;
-    
-    const errorHtml = `
-        <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; 
-                   height: 100%; color: white; padding: 20px; background-color: #111; text-align: center;">
-            <div style="font-size: 18px; margin-bottom: 10px; color: #ff4444;">
-                <div style="font-size: 40px; margin-bottom: 10px;">⚠️</div>
-                Visualization Error
-            </div>
-            <div style="margin: 15px 0; max-width: 400px;">${errorMessage}</div>
-            ${canRetry ? `
-                <button id="retry-visualization" style="padding: 8px 16px; margin-top: 15px; 
-                        background-color: #0071e3; color: white; border: none; 
-                        border-radius: 5px; cursor: pointer; font-weight: bold;">
-                    Retry Loading
-                </button>
-            ` : ''}
-        </div>
-    `;
-    
-    container.innerHTML = errorHtml;
-    
+
+    const wrapper = document.createElement("div");
+    wrapper.style.cssText = "display:flex;flex-direction:column;justify-content:center;align-items:center;height:100%;color:white;padding:20px;background-color:#111;text-align:center;";
+
+    const titleBlock = document.createElement("div");
+    titleBlock.style.cssText = "font-size:18px;margin-bottom:10px;color:#ff4444;";
+
+    const icon = document.createElement("div");
+    icon.style.cssText = "font-size:40px;margin-bottom:10px;";
+    icon.textContent = "⚠️";
+
+    const titleText = document.createElement("div");
+    titleText.textContent = "Visualization Error";
+
+    titleBlock.append(icon, titleText);
+
+    const message = document.createElement("div");
+    message.style.cssText = "margin:15px 0;max-width:400px;";
+    message.textContent = normalizeErrorMessage(errorMessage);
+
+    wrapper.append(titleBlock, message);
+
     if (canRetry) {
-        setTimeout(() => {
-            const retryButton = document.getElementById('retry-visualization');
-            if (retryButton) {
-                retryButton.addEventListener('click', () => {
-                    showLoading();
-                    setTimeout(() => {
-                        // Reset the initialization flag
-                        initialized = false;
-                        loadThreeJS();
-                    }, 100);
-                });
-            }
-        }, 10);
+        const retryButton = document.createElement("button");
+        retryButton.style.cssText = "padding:8px 16px;margin-top:15px;background-color:#0071e3;color:white;border:none;border-radius:5px;cursor:pointer;font-weight:bold;";
+        retryButton.textContent = "Retry Loading";
+        retryButton.addEventListener("click", () => {
+            showLoading();
+            setTimeout(() => {
+                // Reset the initialization flag
+                initialized = false;
+                loadThreeJS();
+            }, 100);
+        });
+        wrapper.appendChild(retryButton);
     }
+
+    container.replaceChildren(wrapper);
 }
 
 // Update the clearLoadingUI function to be more aggressive in fixing the display
