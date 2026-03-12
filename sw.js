@@ -1,5 +1,5 @@
-const STATIC_CACHE_NAME = "dhp-static-v1";
-const RUNTIME_CACHE_NAME = "dhp-runtime-v1";
+const STATIC_CACHE_NAME = "dhp-static-v2";
+const RUNTIME_CACHE_NAME = "dhp-runtime-v2";
 const OFFLINE_FALLBACK = "./astronaut-training.html";
 
 const STATIC_ASSETS = [
@@ -36,6 +36,13 @@ function isStaticAsset(pathname) {
 
 async function cacheResponse(cacheName, request, response) {
   if (!response || response.status !== 200) {
+    return response;
+  }
+  const cacheControl = String(response.headers.get("cache-control") || "").toLowerCase();
+  if (cacheControl.includes("no-store") || cacheControl.includes("private")) {
+    return response;
+  }
+  if (response.headers.has("set-cookie")) {
     return response;
   }
   const cache = await caches.open(cacheName);
@@ -75,9 +82,7 @@ self.addEventListener("fetch", (event) => {
 
   if (!sameOrigin) {
     event.respondWith(
-      fetch(request)
-        .then((response) => cacheResponse(RUNTIME_CACHE_NAME, request, response))
-        .catch(() => caches.match(request))
+      fetch(request).catch(() => Response.error())
     );
     return;
   }

@@ -12,10 +12,20 @@ This page now supports real account login instead of a hardcoded client-side pas
 
 In `Authentication -> URL Configuration`, add:
 
-- `https://dhutererprats.github.io`
-- `https://dhutererprats.github.io/astronaut-training.html`
+- `https://dhutererprats.github.io/personal_website/`
+- `https://dhutererprats.github.io/personal_website/astronaut-training.html`
 
-## 3) Configure this repository
+## 3) Enable anti-bot + abuse protections (recommended)
+
+In Supabase Auth settings, enable:
+
+- email confirmation
+- bot protection (Cloudflare Turnstile or hCaptcha)
+- rate limits for signup/signin/reset endpoints
+
+This is the primary defense against scripted mass account creation when auth is public.
+
+## 4) Configure this repository
 
 Edit [astronaut-training-auth-config.js](/Users/dahu1128/Library/CloudStorage/OneDrive-UCB-O365/Documents/Daniel/Personal_Website/HutererPrats.github.io-main/astronaut-training-auth-config.js):
 
@@ -31,18 +41,22 @@ Notes:
 - The anon key is safe to expose in a client app.
 - Keep service role keys out of the frontend.
 
-## 4) Test login
+## 5) Test login
 
 1. Open `astronaut-training.html`.
 2. Create account with email + password.
 3. If confirmation is enabled, verify email and sign in.
 4. Confirm top bar shows `Signed in: ...` and `Sign Out` appears.
 
-## 5) Fallback behavior
+## 6) Fallback behavior
 
-If Supabase config is missing/empty, the page stays usable in `Local-Only Mode`.
+If Supabase config is missing/empty, the page stays usable with:
 
-## 6) Leaderboard schema
+- `Create Account` (local account on that device only)
+- `Sign In` (to that local account)
+- `Local-Only Mode` (guest mode for current browser session)
+
+## 7) Leaderboard schema
 
 To enable optional leaderboard sync, apply the SQL in:
 [astronaut-training-leaderboard-setup.md](/Users/dahu1128/Library/CloudStorage/OneDrive-UCB-O365/Documents/Daniel/Personal_Website/HutererPrats.github.io-main/docs/astronaut-training-leaderboard-setup.md)
