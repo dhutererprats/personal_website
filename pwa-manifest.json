@@ -1,9 +1,9 @@
 {
-  "id": "./astronaut-training.html",
+  "id": "./index.html",
   "name": "Daniel Huterer Prats",
   "short_name": "DHP Space",
-  "description": "Personal website with astronaut and pilot training that can be installed for offline use.",
-  "start_url": "./astronaut-training.html",
+  "description": "Personal website for Daniel Huterer Prats: autonomous space operations, astrodynamics, publications, and research updates.",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",

@@ -25,6 +25,7 @@
   <link rel="apple-touch-icon" href="icons/pwa-192.png"/>
   <link rel="stylesheet" href="style.css" />
   <script src="theme-toggle.js" defer></script>
+  <script src="progressive-images.js" defer></script>
   <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js" defer></script>
@@ -1238,8 +1239,6 @@
     <a href="research.html">Research</a>
     <a href="about.html">About Me</a>
     <a href="publications.html">Publications</a>
-    <a href="astronaut-training.html">Astronaut Training</a>
-    <a href="pilot-training.html">Pilot Training</a>
     <button class="theme-toggle" aria-label="Toggle theme">
       <span class="theme-toggle-icon" aria-hidden="true">◑</span>
       <span class="theme-toggle-text">Dark mode</span>
@@ -1295,7 +1294,7 @@
 
         <aside class="home-hero-art" aria-label="Profile and mission context">
           <button type="button" class="home-profile-trigger" id="headshot-open" aria-controls="headshot-modal" aria-expanded="false" aria-label="Expand headshot">
-            <img class="home-profile-circle" src="images/home-headshot.jpg" alt="Daniel Huterer Prats" width="960" height="880" fetchpriority="high" />
+            <img class="home-profile-circle" src="images/optimized/home-headshot-480.jpg" data-full-src="images/home-headshot.jpg" alt="Daniel Huterer Prats" width="960" height="880" fetchpriority="high" />
           </button>
           <p class="home-hero-caption">
             Based in Boulder, CO, collaborating across research and industry to build robust autonomous space systems.
@@ -1306,7 +1305,7 @@
       <section class="home-latest" aria-labelledby="latest-title">
         <div class="home-section-head">
           <h2 id="latest-title">Latest</h2>
-          <p class="home-section-note">Most recent conference activity and preview media.</p>
+          <p class="home-section-note">Most recent conference activity and manuscript pipeline.</p>
         </div>
         <div class="home-latest-grid">
           <a class="home-latest-media" href="https://www.youtube.com/watch?v=o_yLNhcnVEM" target="_blank" rel="noopener" aria-label="Watch the AAS GN&C 2026 talk video">
@@ -1317,6 +1316,7 @@
             <h3>LEO-to-Any Autonomous Imaging Scheduling</h3>
             <p>
               Latest public update: autonomous space-based imaging with reinforcement-learning scheduling under downlink latency and onboard resource constraints, presented at the AAS Rocky Mountain GN&amp;C Conference.
+              Current follow-on work includes a submitted AMOS journal extension, a new AMOS 2026 conference paper, an upcoming communications-architecture manuscript, and a journal expansion of the Breckenridge GN&amp;C work.
             </p>
             <div class="home-latest-links">
               <a class="home-latest-link" href="https://hanspeterschaub.info/Papers/HutererPrats2026.pdf" target="_blank" rel="noopener">Paper PDF</a>
@@ -1429,7 +1429,7 @@
           <details class="home-project-card home-project-expandable">
             <summary class="home-project-summary">
               <div class="home-project-media">
-                <img src="files/AMOS_SBSS/Daniel_presenting_AMOS2.PNG" alt="AMOS 2025 presentation photo" loading="lazy" decoding="async" />
+                <img src="images/optimized/amos-presenting-960.jpg" data-full-src="files/AMOS_SBSS/Daniel_presenting_AMOS2.PNG" alt="AMOS 2025 presentation photo" loading="lazy" decoding="async" />
               </div>
               <div class="home-project-content">
                 <span class="home-project-type">AMOS 2025 • Conference</span>
@@ -1442,7 +1442,7 @@
               <p>Focused on high-frequency target imaging in LEO with onboard power/data limits, eclipse constraints, and latency-aware downlink windows.</p>
               <div class="home-project-preview">
                 <a href="files/AMOS_SBSS/Amos_sbss.html">
-                  <img src="images/StSS_BostonAbstract.png" alt="AMOS 2025 RL imaging abstract preview" loading="lazy" decoding="async" />
+                  <img src="images/optimized/stss-abstract-720.jpg" data-full-src="images/StSS_BostonAbstract.png" alt="AMOS 2025 RL imaging abstract preview" loading="lazy" decoding="async" />
                 </a>
               </div>
               <div class="home-project-links">
@@ -1483,7 +1483,7 @@
           <details class="home-project-card home-project-expandable">
             <summary class="home-project-summary">
               <div class="home-project-media">
-                <img src="images/home-darkmatter-collision.jpg" alt="Two colliding galaxies" loading="lazy" decoding="async" />
+                <img src="images/optimized/home-darkmatter-collision-720.jpg" data-full-src="images/home-darkmatter-collision.jpg" alt="Two colliding galaxies" loading="lazy" decoding="async" />
               </div>
               <div class="home-project-content">
                 <span class="home-project-type">Journal (MNRAS)</span>
@@ -1496,7 +1496,7 @@
               <p>This study connects simulated tidal stripping dynamics with observed low dark-matter signatures in dwarf galaxies.</p>
               <div class="home-project-preview">
                 <a href="https://arxiv.org/pdf/2010.02245" target="_blank" rel="noopener">
-                  <img src="images/galaxies_lacking_dark_matter_thumbnail.png" alt="Dark matter paper preview" loading="lazy" decoding="async" />
+                  <img src="images/optimized/galaxies-lacking-darkmatter-720.jpg" data-full-src="images/galaxies_lacking_dark_matter_thumbnail.png" alt="Dark matter paper preview" loading="lazy" decoding="async" />
                 </a>
               </div>
               <div class="home-project-links">
@@ -1522,7 +1522,7 @@
               <p>The optimization pipeline orders planetary flybys and timing windows to discover efficient and non-intuitive interplanetary transfers.</p>
               <div class="home-project-preview">
                 <a href="files/MGA_Paper.pdf" target="_blank" rel="noopener">
-                  <img src="images/interplanetary_trajectory_final.png" alt="MGA trajectory paper preview plot" loading="lazy" decoding="async" />
+                  <img src="images/optimized/interplanetary-trajectory-720.jpg" data-full-src="images/interplanetary_trajectory_final.png" alt="MGA trajectory paper preview plot" loading="lazy" decoding="async" />
                 </a>
               </div>
               <div class="home-project-links">
@@ -1534,7 +1534,7 @@
           <details class="home-project-card home-project-expandable">
             <summary class="home-project-summary">
               <div class="home-project-media">
-                <img src="images/SEVIR.png" alt="Moon and Mars water purification concept visual" loading="lazy" decoding="async" />
+                <img src="images/optimized/sevir-720.jpg" data-full-src="images/SEVIR.png" alt="Moon and Mars water purification concept visual" loading="lazy" decoding="async" />
               </div>
               <div class="home-project-content">
                 <span class="home-project-type">Systems Study</span>
@@ -1639,7 +1639,7 @@
             <h3 id="apod-title-heading">Space Image of the Week</h3>
             <p>Automatically refreshed from NASA APOD, with a local fallback visual when APIs are unavailable.</p>
             <figure class="apod-frame">
-              <img id="apod-image" src="images/research-hero-space.jpg" alt="Space image of the week"/>
+              <img id="apod-image" src="images/optimized/research-hero-space-900.jpg" alt="Space image of the week"/>
               <figcaption class="apod-caption" id="apod-credit">Loading NASA APOD...</figcaption>
             </figure>
             <p class="apod-meta" id="apod-meta"><strong>Loading title...</strong></p>
@@ -2547,7 +2547,7 @@
           apodCredit.textContent = "NASA APOD - " + (data.date || "current week") + (data.copyright ? " - " + data.copyright : "");
           apodLink.href = data.hdurl || data.url || "https://apod.nasa.gov/apod/astropix.html";
         } catch (error) {
-          apodImage.src = "images/research-hero-space.jpg";
+          apodImage.src = "images/optimized/research-hero-space-900.jpg";
           apodImage.alt = "Space-themed fallback image";
           apodMeta.textContent = "NASA APOD feed unavailable right now. Open the APOD archive to browse current and recent astronomy images.";
           apodCredit.textContent = "Fallback visual from this website.";

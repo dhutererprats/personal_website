@@ -73,6 +73,60 @@
       gap: 1rem;
     }
 
+    .pub-pipeline {
+      margin: 0 0 1.25rem;
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      background: var(--card-bg);
+      padding: 1rem;
+    }
+
+    .pub-pipeline h2 {
+      margin: 0 0 0.65rem;
+      font-size: 1.08rem;
+    }
+
+    .pipeline-list {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+    }
+
+    .pipeline-item {
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      background: var(--bg-color);
+      padding: 0.75rem;
+    }
+
+    .pipeline-status {
+      display: inline-block;
+      margin-bottom: 0.28rem;
+      font-size: 0.78rem;
+      opacity: 0.82;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .pipeline-item h3 {
+      margin: 0 0 0.28rem;
+      font-size: 0.98rem;
+      line-height: 1.35;
+    }
+
+    .pipeline-item p {
+      margin: 0;
+      line-height: 1.52;
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+
+    @media (min-width: 860px) {
+      .pipeline-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
     @media (min-width: 980px) {
       .pub-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -169,8 +223,6 @@
     <a href="research.html">Research</a>
     <a href="about.html">About Me</a>
     <a href="publications.html" class="active" aria-current="page">Publications</a>
-    <a href="astronaut-training.html">Astronaut Training</a>
-    <a href="pilot-training.html">Pilot Training</a>
     <button class="theme-toggle" aria-label="Toggle theme">
       <span class="theme-toggle-icon" aria-hidden="true">◑</span>
       <span class="theme-toggle-text">Dark mode</span>
@@ -186,13 +238,39 @@
         </p>
       </section>
 
+      <section class="pub-pipeline" aria-labelledby="pipeline-title">
+        <h2 id="pipeline-title">Current Pipeline</h2>
+        <div class="pipeline-list">
+          <article class="pipeline-item">
+            <span class="pipeline-status">Submitted journal manuscript</span>
+            <h3>AMOS space-to-space surveillance journal extension</h3>
+            <p>Journal-length expansion of the AMOS space-to-space imaging work, reframing the conference result with a deeper treatment of autonomy, resource constraints, and scheduling behavior.</p>
+          </article>
+          <article class="pipeline-item">
+            <span class="pipeline-status">Conference 2026</span>
+            <h3>AMOS 2026 autonomous RSO imaging follow-on</h3>
+            <p>New AMOS 2026 contribution extending responsive catalog-maintenance and imaging objectives across broader orbital regimes.</p>
+          </article>
+          <article class="pipeline-item">
+            <span class="pipeline-status">Upcoming manuscript</span>
+            <h3>Communications architecture for autonomous surveillance missions</h3>
+            <p>Paper in preparation around tasking, data delivery, downlink latency, and communications-architecture decisions for autonomous space-based surveillance.</p>
+          </article>
+          <article class="pipeline-item">
+            <span class="pipeline-status">Journal target</span>
+            <h3>Breckenridge GN&amp;C work to journal article</h3>
+            <p>The AAS Rocky Mountain GN&amp;C 2026 result is positioned as the conference foundation for a more complete journal manuscript.</p>
+          </article>
+        </div>
+      </section>
+
       <section class="pub-grid">
         <article class="pub-card">
           <span class="pub-type">Conference • 2026</span>
           <h2>Autonomous Space-Based Imaging: Reinforcement Learning Scheduling with Downlink Latency and Resource-Aware Actions</h2>
           <p class="pub-meta">AAS Rocky Mountain GN&amp;C Conference, Breckenridge, Colorado, Jan. 31-Feb. 4, 2026</p>
           <p class="pub-authors"><strong>Daniel Huterer Prats</strong>, Hanspeter Schaub</p>
-          <p class="pub-desc">Presents a POMDP-based RL scheduler for autonomous RSO imaging under line-of-sight, lighting, battery, wheel-momentum, and downlink constraints in a high-fidelity Basilisk simulation.</p>
+          <p class="pub-desc">Presents a POMDP-based RL scheduler for autonomous RSO imaging under line-of-sight, lighting, battery, wheel-momentum, and downlink constraints in a high-fidelity Basilisk simulation. This Breckenridge GN&amp;C paper is the foundation for a planned journal-length version.</p>
           <div class="pub-links">
             <a class="pub-link" href="https://hanspeterschaub.info/Papers/HutererPrats2026.pdf" target="_blank" rel="noopener">PDF</a>
             <a class="pub-link" href="https://www.xcdsystem.com/aas/program/w8LRlcl/index.cfm" target="_blank" rel="noopener">Conference Program</a>
@@ -239,7 +317,7 @@
           <h2>Responsive Autonomous RSO Imaging and Catalog Maintenance Using Reinforcement Learning Across Orbital Regimes</h2>
           <p class="pub-meta">Advanced Maui Optical and Space Surveillance Technologies Conference, Maui, Hawaii, Sept. 15-18, 2026</p>
           <p class="pub-authors"><strong>D. Huterer Prats</strong>, H. Schaub</p>
-          <p class="pub-desc">Upcoming paper teaser: extends autonomous RSO imaging to broader orbital-regime coverage with catalog maintenance objectives and reinforcement-learning-based responsive scheduling.</p>
+          <p class="pub-desc">New 2026 AMOS conference paper: extends autonomous RSO imaging to broader orbital-regime coverage with catalog maintenance objectives and reinforcement-learning-based responsive scheduling.</p>
           <div class="pub-links">
             <a class="pub-link" href="https://amostech.com/" target="_blank" rel="noopener">Conference Site</a>
             <a class="pub-link scholar" href="https://scholar.google.com/scholar?q=Responsive+Autonomous+RSO+Imaging+and+Catalog+Maintenance+Using+Reinforcement+Learning+Across+Orbital+Regimes" target="_blank" rel="noopener" aria-label="Google Scholar result">

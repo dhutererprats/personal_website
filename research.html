@@ -25,6 +25,7 @@
   <link rel="apple-touch-icon" href="icons/pwa-192.png"/>
   <link rel="stylesheet" href="style.css" />
   <script src="theme-toggle.js" defer></script>
+  <script src="progressive-images.js" defer></script>
   <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
   <link rel="icon" href="icons/astronaut.ico" type="image/x-icon"/>
   <link rel="canonical" href="https://dhutererprats.github.io/personal_website/research.html"/>
@@ -51,9 +52,12 @@
       overflow: hidden;
       border-radius: 18px;
       border: 1px solid var(--border-color);
-      background:
+      background-image:
         linear-gradient(140deg, rgba(12, 21, 58, 0.9), rgba(22, 63, 118, 0.8)),
-        url("images/reentry-traj.png") center/cover;
+        var(--progressive-bg, url("images/optimized/reentry-traj-1200.jpg"));
+      background-position: center, center;
+      background-size: auto, cover;
+      background-repeat: no-repeat;
       color: #fff;
       display: grid;
       grid-template-columns: 1fr;
@@ -189,8 +193,6 @@
     <a href="research.html" class="active" aria-current="page">Research</a>
     <a href="about.html">About Me</a>
     <a href="publications.html">Publications</a>
-    <a href="astronaut-training.html">Astronaut Training</a>
-    <a href="pilot-training.html">Pilot Training</a>
     <button class="theme-toggle" aria-label="Toggle theme">
       <span class="theme-toggle-icon" aria-hidden="true">◑</span>
       <span class="theme-toggle-text">Dark mode</span>
@@ -199,7 +201,7 @@
 
   <div class="homepage-container">
     <main class="research-main">
-      <header class="research-hero">
+      <header class="research-hero" data-full-bg="images/reentry-traj.png">
         <div>
           <h1>Research</h1>
           <p>
@@ -215,7 +217,7 @@
           <p class="research-location">Boulder, CO</p>
         </div>
         <aside class="research-hero-art" aria-label="Research visual collage">
-          <img src="images/research-hero-space.jpg" alt="View of Earth from low-Earth orbit with Pacific Ocean and cloud systems" loading="lazy" decoding="async" />
+          <img src="images/optimized/research-hero-space-900.jpg" data-full-src="images/research-hero-space.jpg" alt="View of Earth from low-Earth orbit with Pacific Ocean and cloud systems" loading="lazy" decoding="async" />
           <div class="research-icons" aria-hidden="true">
             <span>🌌</span>
             <span>🚀</span>
@@ -243,19 +245,19 @@
 
           <article class="project-item">
             <a class="image-container" href="files/AMOS_SBSS/Amos_sbss.html">
-              <img src="files/AMOS_SBSS/Daniel_presenting_AMOS2.PNG" alt="AMOS 2025 space-to-space imaging presentation" loading="lazy" decoding="async"/>
+              <img src="images/optimized/amos-presenting-960.jpg" data-full-src="files/AMOS_SBSS/Daniel_presenting_AMOS2.PNG" alt="AMOS 2025 space-to-space imaging presentation" loading="lazy" decoding="async"/>
               <div class="overlay">
                 <div class="overlay-text">AMOS 2025: RL for Space-to-Space Imaging</div>
                 <div class="expand-arrow">↗</div>
               </div>
             </a>
-            <p>Actor-critic scheduling for autonomous RSO imaging in Basilisk/BSK-RL, presented at AMOS 2025.</p>
+            <p>Actor-critic scheduling for autonomous RSO imaging in Basilisk/BSK-RL, presented at AMOS 2025 and now extended through a submitted journal manuscript and AMOS 2026 follow-on work.</p>
             <p><a class="underline" href="files/AMOS_SBSS/Amos_sbss.html">Open full AMOS page</a></p>
           </article>
 
           <article class="project-item expandable">
             <div class="image-container" onclick="toggleProject(this)">
-              <img src="images/space_to_space_surveillance.png" alt="Space-to-space surveillance project" />
+              <img src="images/optimized/space-to-space-surveillance-720.jpg" data-full-src="images/space_to_space_surveillance.png" alt="Space-to-space surveillance project" />
               <div class="overlay">
                 <div class="overlay-text">Space-to-Space Surveillance for SSA</div>
                 <div class="expand-arrow">▼</div>
@@ -278,7 +280,7 @@
               <div class="media-block abstract-thumbnail">
                 <h4>Abstract: Space-to-Space Surveillance</h4>
                 <div class="thumbnail-hover">
-                  <img src="images/StSS_BostonAbstract.png" alt="Space-to-space surveillance abstract thumbnail" />
+                  <img src="images/optimized/stss-abstract-720.jpg" data-full-src="images/StSS_BostonAbstract.png" alt="Space-to-space surveillance abstract thumbnail" />
                   <div class="hover-text">
                     <a href="files/StSS_BostonAbstract.pdf" download>Download Abstract</a>
                   </div>
@@ -289,18 +291,18 @@
 
           <article class="project-item expandable">
             <div class="image-container" onclick="toggleProject(this)">
-              <img src="images/RSO-inspection_illustration.png" alt="RL-based RSO inspection project" />
+              <img src="images/optimized/rso-inspection-900.jpg" data-full-src="images/RSO-inspection_illustration.png" alt="RL-based RSO inspection project" />
               <div class="overlay">
                 <div class="overlay-text">RL-Based RSO Inspection</div>
                 <div class="expand-arrow">▼</div>
               </div>
             </div>
             <div class="project-description">
-              <p>Reinforcement learning scheduler for autonomous RSO inspection with safety and illumination constraints. The environment includes battery, wheel desaturation, data storage, and eclipse/LOS observability effects.</p>
+            <p>Reinforcement learning scheduler for autonomous RSO inspection with safety and illumination constraints. The environment includes battery, wheel desaturation, data storage, and eclipse/LOS observability effects; the Breckenridge GN&amp;C work is a natural base for a journal-length version.</p>
               <div class="media-block abstract-thumbnail">
                 <h4>Paper: Autonomous Satellite Inspection</h4>
                 <div class="thumbnail-hover">
-                  <img src="images/Research_Paper_Thumbnail.png" alt="Autonomous satellite inspection paper thumbnail" />
+                  <img src="images/optimized/research-paper-thumbnail-720.jpg" data-full-src="images/Research_Paper_Thumbnail.png" alt="Autonomous satellite inspection paper thumbnail" />
                   <div class="hover-text">
                     <a href="https://hanspeterschaub.info/Papers/Stephenson2025a.pdf" target="_blank" rel="noopener">Download Paper</a>
                   </div>
@@ -311,7 +313,7 @@
 
           <article class="project-item">
             <div class="image-container">
-              <img src="images/galaxies_lacking_dark_matter_thumbnail.png" alt="Dark matter and galaxy formation research" />
+              <img src="images/optimized/galaxies-lacking-darkmatter-720.jpg" data-full-src="images/galaxies_lacking_dark_matter_thumbnail.png" alt="Dark matter and galaxy formation research" />
               <div class="overlay">
                 <div class="overlay-text">Dark Matter & Galaxy Formation</div>
               </div>
@@ -322,7 +324,7 @@
 
           <article class="project-item expandable" id="MGA">
             <div class="image-container" onclick="toggleProject(this)">
-              <img src="images/interplanetary_trajectory_final.png" alt="Multi-gravity assist trajectory optimization" />
+              <img src="images/optimized/interplanetary-trajectory-720.jpg" data-full-src="images/interplanetary_trajectory_final.png" alt="Multi-gravity assist trajectory optimization" />
               <div class="overlay">
                 <div class="overlay-text">Multi-Gravity Assist Trajectory Optimization</div>
                 <div class="expand-arrow">▼</div>

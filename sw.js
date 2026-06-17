@@ -1,6 +1,6 @@
-const STATIC_CACHE_NAME = "dhp-static-v2";
-const RUNTIME_CACHE_NAME = "dhp-runtime-v2";
-const OFFLINE_FALLBACK = "./astronaut-training.html";
+const STATIC_CACHE_NAME = "dhp-static-v3";
+const RUNTIME_CACHE_NAME = "dhp-runtime-v3";
+const OFFLINE_FALLBACK = "./index.html";
 
 const STATIC_ASSETS = [
   "./",
@@ -8,22 +8,16 @@ const STATIC_ASSETS = [
   "./about.html",
   "./research.html",
   "./publications.html",
-  "./astronaut-training.html",
-  "./pilot-training.html",
   "./style.css",
-  "./astronaut-training.css",
-  "./astronaut-training.js",
-  "./astronaut-training-data.js",
-  "./pilot-training.css",
-  "./pilot-training.js",
-  "./pilot-training-data.js",
   "./theme-toggle.js",
+  "./progressive-images.js",
   "./script.js",
   "./icons/astronaut.ico",
   "./icons/pwa-192.png",
   "./icons/pwa-512.png",
-  "./images/home-headshot.jpg",
-  "./images/research-hero-space.jpg"
+  "./images/optimized/home-headshot-480.jpg",
+  "./images/optimized/research-hero-space-900.jpg",
+  "./images/optimized/amos-presenting-960.jpg"
 ];
 
 function toAbsoluteUrl(path) {

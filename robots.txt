@@ -1,5 +1,6 @@
 User-agent: *
 Allow: /
 Disallow: /personal_website/astronaut-training.html
+Disallow: /personal_website/pilot-training.html
 
 Sitemap: https://dhutererprats.github.io/personal_website/sitemap.xml

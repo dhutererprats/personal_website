@@ -25,6 +25,7 @@
   <link rel="apple-touch-icon" href="icons/pwa-192.png"/>
   <link rel="stylesheet" href="style.css" />
   <script src="theme-toggle.js" defer></script>
+  <script src="progressive-images.js" defer></script>
   <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js" defer></script>
@@ -276,8 +277,6 @@
     <a href="research.html">Research</a>
     <a href="about.html" class="active" aria-current="page">About Me</a>
     <a href="publications.html">Publications</a>
-    <a href="astronaut-training.html">Astronaut Training</a>
-    <a href="pilot-training.html">Pilot Training</a>
     <button class="theme-toggle" aria-label="Toggle theme">
       <span class="theme-toggle-icon" aria-hidden="true">◑</span>
       <span class="theme-toggle-text">Dark mode</span>
@@ -298,7 +297,7 @@
           A global path across Europe, the Middle East, and the U.S. shaped how I approach space systems, autonomy, and mission design.
         </p>
       </div>
-      <img src="Headshot-photo-NYU.png" alt="Daniel Huterer Prats" class="profile-image">
+      <img src="images/optimized/headshot-photo-720.jpg" data-full-src="Headshot-photo-NYU.png" alt="Daniel Huterer Prats" class="profile-image">
     </header>
 
     <main class="about-main">
@@ -368,6 +367,12 @@
           </aside>
         </div>
       </section>
+
+      <nav class="quiet-access" aria-label="Low-key side project access">
+        <a href="astronaut-training.html" rel="nofollow">Mission prep</a>
+        <span aria-hidden="true">/</span>
+        <a href="pilot-training.html" rel="nofollow">Flight notes</a>
+      </nav>
     </main>
 
     <footer>
