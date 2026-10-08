@@ -5,3 +5,7 @@
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Local website data/test helpers.
+/scripts/__pycache__/
+/tests/__pycache__/

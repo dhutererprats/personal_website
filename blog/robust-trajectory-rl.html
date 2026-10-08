@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Deep Dive: Robust Interplanetary Trajectory Design with RL (PPO)</title>
-  <link rel="stylesheet" href="../style.css" />
+  <title>Reading Notes: Robust Trajectory Design with RL | Daniel Huterer Prats</title>
+  <link rel="stylesheet" href="../style.css?v=20261007-media" />
   <script src="../theme-toggle.js" defer></script>
   <link rel="icon" href="../icons/astronaut.ico" type="image/x-icon"/>
   <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
@@ -16,6 +16,11 @@
   <style>
     /* Blog-page specific helpers that blend with your CSS variables */
     .blog-container { max-width: 1000px; margin: 0 auto; padding: 1rem; }
+    .blog-container main, .blog-container section, .blog-container .widget { min-width: 0; }
+    .blog-container canvas { max-width: 100%; height: auto !important; }
+    .blog-container mjx-container { display: inline-block; max-width: 100%; overflow-x: auto; overflow-y: hidden; }
+    .blog-container mjx-container[display="true"] { display: block; }
+    .blog-container p, .blog-container li { overflow-wrap: anywhere; }
     .lede { font-size: 1.15rem; line-height: 1.8; background: var(--card-bg); padding: 1rem 1.25rem; border-radius: 12px; border: 1px solid var(--border-color); }
     .toc { margin: 1rem 0; padding: 0.5rem 0.75rem; border-left: 3px solid var(--accent-color); }
     .toc a { text-decoration: none; }
@@ -23,8 +28,8 @@
     .figure { margin: 1.25rem 0; text-align: center; }
     .figure img, .figure video, .figure canvas, .figure svg { max-width: 100%; border-radius: 12px; }
     .badge { display:inline-block; padding: 0.15rem 0.5rem; font-size: 0.8rem; border-radius: 999px; border:1px solid var(--border-color); }
-    .grid-2 { display: grid; grid-template-columns: 1fr; gap: 1rem; }
-    @media (min-width: 900px){ .grid-2 { grid-template-columns: 1fr 1fr; } }
+    .grid-2 { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; }
+    @media (min-width: 900px){ .grid-2 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
     .subtle { opacity: 0.9; }
     .hr { border-top: 1px solid var(--border-color); margin: 1.5rem 0; }
     .footnotes { font-size: 0.95rem; }
@@ -32,7 +37,9 @@
     /* Interactive PPO visual */
     .widget { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 1rem; }
     .widget label { font-size: 0.9rem; }
-    .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 0.5rem; }
+    .controls { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0.75rem; margin-top: 0.5rem; }
+    .controls label { min-width: 0; }
+    .controls input { width: 100%; min-width: 0; box-sizing: border-box; }
 
     /* Impulse-timeline (bar strip) */
     .impulse-strip{
@@ -58,7 +65,7 @@
     .pill { display:inline-flex; align-items:center; gap:0.35rem; padding:0.3rem 0.6rem; border-radius:999px; border:1px solid var(--border-color); }
     
     /* Pretty, bordered tables */
-    .tbl{ width:100%; border-collapse: collapse; }
+    .tbl{ display: block; max-width: 100%; overflow-x: auto; width:100%; border-collapse: collapse; }
     .tbl th, .tbl td{ border:1px solid var(--border-color); padding:.55rem .65rem; vertical-align: top; }
     .tbl thead th{ background: var(--card-bg); }
     .tbl tbody tr:nth-child(even){ background: rgba(0,0,0,0.03); }
@@ -80,8 +87,8 @@
   <div class="homepage-container blog-container">
     <header>
       <div class="header-text">
-        <h1>Deep Dive: Robust Interplanetary Trajectory Design with RL</h1>
-        <p class="subtle">How PPO learns closed-loop guidance that survives noise, execution errors, and missed thrust events.</p>
+        <h1>Reading Notes: Robust Trajectory Design with RL</h1>
+        <p class="subtle">An explainer of Zavoli and Federici's interplanetary guidance study, written for ASEN 6519.</p>
         <div class="pill" title="Course/Context">
           <iconify-icon icon="mdi:school"></iconify-icon>
           ASEN 6519 – Decision Making under Uncertainty (Blog Post Assignment)

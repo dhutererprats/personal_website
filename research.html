@@ -2,192 +2,45 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; script-src 'self' 'unsafe-inline' https://code.iconify.design https://cdn.jsdelivr.net https://www.googletagmanager.com https://www.gstatic.com https://unpkg.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; img-src 'self' data: blob: https:; font-src 'self' data: https://cdnjs.cloudflare.com; connect-src 'self' https://api.nasa.gov https://api.wheretheiss.at https://api.allorigins.win https://nominatim.openstreetmap.org https://api.openalex.org https://cdn.jsdelivr.net https://www.google-analytics.com https://region1.google-analytics.com https://*.supabase.co; media-src 'self' blob: https:; frame-src 'self' https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com; worker-src 'self' blob:; manifest-src 'self'; form-action 'self'; upgrade-insecure-requests;" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self'; worker-src 'self' blob:; manifest-src 'self'; form-action 'self'; upgrade-insecure-requests;" />
   <title>Research | Daniel Huterer Prats</title>
-  <meta name="description" content="Research highlights by Daniel Huterer Prats in autonomous space operations, astrodynamics, reinforcement learning, and safety-critical spacecraft planning."/>
-  <meta name="robots" content="index,follow,max-image-preview:large"/>
-  <meta property="og:type" content="website"/>
-  <meta property="og:site_name" content="Daniel Huterer Prats"/>
-  <meta property="og:title" content="Research | Daniel Huterer Prats"/>
-  <meta property="og:description" content="Autonomous space ops, space-to-space surveillance, guidance and astrodynamics research at CU Boulder AVS Lab."/>
-  <meta property="og:url" content="https://dhutererprats.github.io/personal_website/research.html"/>
-  <meta property="og:image" content="https://dhutererprats.github.io/personal_website/images/research-hero-space.jpg"/>
-  <meta property="og:image:alt" content="Research hero visual with space and orbital imagery"/>
-  <meta name="twitter:card" content="summary_large_image"/>
-  <meta name="twitter:title" content="Research | Daniel Huterer Prats"/>
-  <meta name="twitter:description" content="Autonomous space operations and astrodynamics research highlights."/>
-  <meta name="twitter:image" content="https://dhutererprats.github.io/personal_website/images/research-hero-space.jpg"/>
-  <meta name="theme-color" content="#0b1c3c"/>
-  <meta name="apple-mobile-web-app-capable" content="yes"/>
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-  <link rel="manifest" href="pwa-manifest.json"/>
-  <link rel="apple-touch-icon" href="icons/pwa-192.png"/>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="description" content="Daniel Huterer Prats researches autonomous spacecraft imaging, catalog maintenance, communications-aware scheduling, and safe satellite inspection at CU Boulder." />
+  <meta name="robots" content="index,follow,max-image-preview:large" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Daniel Huterer Prats" />
+  <meta property="og:title" content="Research | Daniel Huterer Prats" />
+  <meta property="og:description" content="Space-to-space imaging and autonomous tasking, with papers, talks, and earlier work." />
+  <meta property="og:url" content="https://dhutererprats.github.io/personal_website/research.html" />
+  <meta property="og:image" content="https://dhutererprats.github.io/personal_website/images/space_to_space_surveillance.png" />
+  <meta property="og:image:alt" content="Space-to-space surveillance simulation" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Research | Daniel Huterer Prats" />
+  <meta name="twitter:description" content="Research on spacecraft imaging, catalog maintenance, and safe inspection." />
+  <meta name="twitter:image" content="https://dhutererprats.github.io/personal_website/images/space_to_space_surveillance.png" />
+  <meta name="theme-color" content="#ffffff" />
+  <link rel="manifest" href="pwa-manifest.json" />
+  <link rel="apple-touch-icon" href="icons/pwa-192.png" />
+  <link rel="stylesheet" href="style.css?v=20261007-media" />
   <script src="theme-toggle.js" defer></script>
   <script src="progressive-images.js" defer></script>
-  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
-  <link rel="icon" href="icons/astronaut.ico" type="image/x-icon"/>
-  <link rel="canonical" href="https://dhutererprats.github.io/personal_website/research.html"/>
+  <script type="module" src="vendor/iconify/icons.mjs?v=research"></script>
+  <link rel="icon" href="icons/astronaut.ico" type="image/x-icon" />
+  <link rel="canonical" href="https://dhutererprats.github.io/personal_website/research.html" />
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": "Research | Daniel Huterer Prats",
     "url": "https://dhutererprats.github.io/personal_website/research.html",
-    "about": {
-      "@type": "Person",
-      "name": "Daniel Huterer Prats"
-    },
-    "description": "Research highlights in autonomous space operations, astrodynamics, and machine learning."
+    "about": { "@type": "Person", "name": "Daniel Huterer Prats" },
+    "dateModified": "2026-10-07",
+    "description": "Spacecraft imaging, catalog maintenance, communications-aware tasking, and earlier research."
   }
   </script>
-  <style>
-    .research-main {
-      padding-top: 1.25rem;
-    }
-
-    .research-hero {
-      position: relative;
-      overflow: hidden;
-      border-radius: 18px;
-      border: 1px solid var(--border-color);
-      background-image:
-        linear-gradient(140deg, rgba(12, 21, 58, 0.9), rgba(22, 63, 118, 0.8)),
-        var(--progressive-bg, url("images/optimized/reentry-traj-1200.jpg"));
-      background-position: center, center;
-      background-size: auto, cover;
-      background-repeat: no-repeat;
-      color: #fff;
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 1.2rem;
-      padding: 1.25rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .research-hero h1 {
-      margin: 0 0 0.45rem;
-      color: #fff;
-      font-size: clamp(1.7rem, 4vw, 2.6rem);
-    }
-
-    .research-hero p {
-      margin: 0;
-      line-height: 1.65;
-      max-width: 72ch;
-      color: rgba(255, 255, 255, 0.94);
-    }
-
-    .research-pill-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.45rem;
-      margin-top: 0.85rem;
-    }
-
-    .research-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      border: 1px solid rgba(255, 255, 255, 0.32);
-      border-radius: 999px;
-      padding: 0.26rem 0.68rem;
-      font-size: 0.85rem;
-      background: rgba(255, 255, 255, 0.1);
-    }
-
-    .research-hero-art {
-      border-radius: 14px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      background: rgba(0, 0, 0, 0.25);
-      padding: 0.85rem;
-      display: grid;
-      gap: 0.7rem;
-      align-content: start;
-    }
-
-    .research-hero-art img {
-      width: 100%;
-      height: 190px;
-      object-fit: cover;
-      object-position: center center;
-      border-radius: 10px;
-      border: 1px solid rgba(255, 255, 255, 0.24);
-    }
-
-    .research-icons {
-      display: flex;
-      justify-content: space-between;
-      font-size: 1.45rem;
-      opacity: 0.92;
-    }
-
-    .research-location {
-      margin-top: 0.45rem;
-      font-size: 0.95rem;
-      opacity: 0.94;
-    }
-
-    .research-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 1.2rem;
-      align-items: start;
-    }
-
-    .research-grid .project-item {
-      margin: 0;
-      max-width: none;
-      text-align: left;
-      transform: none;
-    }
-
-    .research-grid .project-item:hover {
-      transform: none;
-    }
-
-    .research-grid .image-container {
-      max-height: 230px;
-      border-radius: 10px;
-    }
-
-    .research-grid .image-container img {
-      height: 230px;
-      object-fit: cover;
-    }
-
-    .project-note {
-      margin-top: 0.6rem;
-      font-size: 0.92rem;
-      opacity: 0.88;
-    }
-
-    @media (min-width: 930px) {
-      .research-hero {
-        grid-template-columns: 1.5fr 1fr;
-        padding: 1.7rem;
-      }
-    }
-
-    @media (min-width: 1080px) {
-      .research-grid {
-        display: block;
-        column-count: 2;
-        column-gap: 1.2rem;
-      }
-
-      .research-grid .project-item {
-        display: inline-block;
-        width: 100%;
-        margin: 0 0 1.2rem;
-        break-inside: avoid;
-        -webkit-column-break-inside: avoid;
-      }
-    }
-  </style>
+  <link rel="stylesheet" href="research.css?v=20261007-paper-visuals2" />
 </head>
-<body>
+<body class="research-page">
   <nav class="site-nav" aria-label="Primary">
     <a href="index.html">Home</a>
     <a href="research.html" class="active" aria-current="page">Research</a>
@@ -198,173 +51,255 @@
       <span class="theme-toggle-text">Dark mode</span>
     </button>
   </nav>
-
   <div class="homepage-container">
     <main class="research-main">
-      <header class="research-hero" data-full-bg="images/reentry-traj.png">
-        <div>
-          <h1>Research</h1>
-          <p>
-            My work sits at the intersection of autonomy, astrodynamics, and machine learning. At CU Boulder's Autonomous Vehicle Systems Lab, I focus on RL-driven scheduling and guidance for space-to-space surveillance and spacecraft inspection under real mission constraints (power, observability, pointing, and onboard resources). In parallel, I work on robust interplanetary trajectory design, inspection safety methods, and optimization tools for complex gravity-assist transfers.
-          </p>
-          <div class="research-pill-row" aria-label="Research themes">
-            <span class="research-pill"><iconify-icon icon="mdi:satellite-variant"></iconify-icon>Autonomous Space Ops</span>
-            <span class="research-pill"><iconify-icon icon="mdi:brain"></iconify-icon>Reinforcement Learning</span>
-            <span class="research-pill"><iconify-icon icon="mdi:orbit"></iconify-icon>Astrodynamics</span>
-            <span class="research-pill"><iconify-icon icon="mdi:star-four-points-circle"></iconify-icon>Astrophysics</span>
-            <span class="research-pill"><iconify-icon icon="mdi:shield-check"></iconify-icon>Safety-Critical Planning</span>
-          </div>
-          <p class="research-location">Boulder, CO</p>
-        </div>
-        <aside class="research-hero-art" aria-label="Research visual collage">
-          <img src="images/optimized/research-hero-space-900.jpg" data-full-src="images/research-hero-space.jpg" alt="View of Earth from low-Earth orbit with Pacific Ocean and cloud systems" loading="lazy" decoding="async" />
-          <div class="research-icons" aria-hidden="true">
-            <span>🌌</span>
-            <span>🚀</span>
-            <span>🛰️</span>
-            <span>🌕</span>
-            <span>🤖</span>
-          </div>
-        </aside>
+      <header class="research-intro">
+        <h1>Research</h1>
+        <p class="research-lead">Autonomous decision-making for spacecraft.</p>
+        <p>I study reinforcement learning for space-based space surveillance and onboard tasking at CU Boulder's <a href="https://hanspeterschaub.info/AVSlab.html" target="_blank" rel="noopener">Autonomous Vehicle Systems Lab</a>, advised by Hanspeter Schaub.</p>
+        <nav class="research-index" aria-label="Research topics">
+          <a href="#current-research-title">Space surveillance</a>
+          <a href="#work-in-progress">Constellation tasking</a>
+          <a href="#inspection-title">Proximity operations</a>
+          <a href="#earlier-research-title">Earlier work</a>
+          <a href="publications.html">All publications <span aria-hidden="true">↗</span></a>
+        </nav>
       </header>
 
-      <section class="projects">
-        <h2>Selected Projects & Papers</h2>
-        <div class="research-grid">
-          <article class="project-item">
-            <a class="image-container" href="blog/robust-trajectory-rl.html">
-              <img src="images/blog/traj_compare.png" alt="Trajectories under robust policies (Earth to Mars)" loading="lazy" decoding="async"/>
-              <div class="overlay">
-                <div class="overlay-text">Deep Dive: Robust Interplanetary Trajectory Design with RL</div>
-                <div class="expand-arrow">↗</div>
-              </div>
-            </a>
-            <p>A blog-style deep dive into PPO-based robust Earth-to-Mars low-thrust guidance with equations, implementation notes, and interactive visuals.</p>
-            <p><a class="underline" href="blog/robust-trajectory-rl.html">Read the post</a></p>
-          </article>
-
-          <article class="project-item">
-            <a class="image-container" href="files/AMOS_SBSS/Amos_sbss.html">
-              <img src="images/optimized/amos-presenting-960.jpg" data-full-src="files/AMOS_SBSS/Daniel_presenting_AMOS2.PNG" alt="AMOS 2025 space-to-space imaging presentation" loading="lazy" decoding="async"/>
-              <div class="overlay">
-                <div class="overlay-text">AMOS 2025: RL for Space-to-Space Imaging</div>
-                <div class="expand-arrow">↗</div>
-              </div>
-            </a>
-            <p>Actor-critic scheduling for autonomous RSO imaging in Basilisk/BSK-RL, presented at AMOS 2025 and now extended through a submitted journal manuscript and AMOS 2026 follow-on work.</p>
-            <p><a class="underline" href="files/AMOS_SBSS/Amos_sbss.html">Open full AMOS page</a></p>
-          </article>
-
-          <article class="project-item expandable">
-            <div class="image-container" onclick="toggleProject(this)">
-              <img src="images/optimized/space-to-space-surveillance-720.jpg" data-full-src="images/space_to_space_surveillance.png" alt="Space-to-space surveillance project" />
-              <div class="overlay">
-                <div class="overlay-text">Space-to-Space Surveillance for SSA</div>
-                <div class="expand-arrow">▼</div>
-              </div>
+      <section class="research-section" aria-labelledby="current-research-title">
+        <div class="research-overview">
+          <div>
+            <p class="research-label">Space domain awareness</p>
+            <h2 id="current-research-title">Space-based space surveillance</h2>
+            <p>An orbiting optical sensor must track moving targets while managing its own attitude, power, storage, and communications. I develop closed-loop tasking policies that couple these spacecraft constraints with the geometry and illumination of resident space objects.</p>
+            <p>This research progresses from LEO-to-LEO imaging to observations across orbital regimes, then to persistent catalog maintenance with revisits and changing target priorities. The studies use Basilisk and BSK-RL spacecraft simulation.</p>
+            <div class="research-links">
+              <a href="https://avslab.github.io/basilisk/" target="_blank" rel="noopener">Basilisk</a>
+              <a href="https://avslab.github.io/bsk_rl/" target="_blank" rel="noopener">BSK-RL</a>
             </div>
-            <div class="project-description">
-              <p><strong>RL-Driven Scheduling for Autonomous Space-to-Space Surveillance</strong></p>
-              <p>This project trains an RL policy to select imaging and downlink actions for Resident Space Objects while respecting line-of-sight, power, wheel momentum, and data constraints in a high-fidelity Basilisk simulation.</p>
-              <div class="media-block">
-                <h4>Video Summary</h4>
-                <iframe
-                  src="https://www.youtube.com/embed/Aas0z43uS9M"
-                  title="AVS Lab: RL for Space-to-Space Imaging"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  referrerpolicy="strict-origin-when-cross-origin"
-                  allowfullscreen
-                  style="width:100%; min-height:320px; border:0; border-radius:12px;"></iframe>
-                <p class="project-note">Hosted on YouTube to avoid large-file playback issues on static hosting.</p>
+          </div>
+          <figure class="research-media">
+            <video controls playsinline preload="none" poster="images/amos-2026/simulation-preview.jpg" width="1920" height="1252" aria-label="AMOS 2026 catalog-maintenance simulation">
+              <source src="media/research/amos-2026-catalog-simulation.mp4" type="video/mp4" />
+              <a href="media/research/amos-2026-catalog-simulation.mp4">Open the AMOS 2026 simulation video</a>.
+            </video>
+            <figcaption>Space-to-space imaging simulation from the AMOS 2026 presentation.</figcaption>
+          </figure>
+        </div>
+
+        <h3 class="related-heading" id="research-results-title">Related papers</h3>
+        <div class="paper-list">
+          <article class="research-paper" id="catalog-maintenance" data-paper="amos-2026">
+            <figure class="paper-preview">
+              <a href="images/research-results/amos-2026-training-full.png" target="_blank" rel="noopener" aria-label="Enlarge AMOS 2026 training-catalog comparison">
+                <img src="images/research-results/amos-2026-training-preview.png" data-full-src="images/research-results/amos-2026-training-full.png" alt="AMOS 2026 Figure 2 comparing LEO-only and mixed-regime training." width="646" height="380" loading="lazy" decoding="async" />
+              </a>
+              <figcaption>Training-catalog comparison · <a href="https://hanspeterschaub.info/Papers/HutererPrats2026b.pdf#page=9" target="_blank" rel="noopener">Fig. 2</a></figcaption>
+            </figure>
+            <p class="paper-venue">AMOS<br /><strong>2026</strong></p>
+            <div class="paper-body">
+              <h4><a href="https://hanspeterschaub.info/Papers/HutererPrats2026b.pdf" target="_blank" rel="noopener">Responsive Autonomous Resident Space Object Imaging and Catalog Maintenance Using Reinforcement Learning Across Orbital Regimes</a></h4>
+              <p class="paper-authors">Daniel Huterer Prats and Hanspeter Schaub</p>
+              <p class="paper-abstract">Persistent, priority-aware catalog maintenance by a single LEO observer imaging targets in LEO, MEO, and GEO. The formulation supports repeated observations, online target-priority promotions, and variable-duration imaging and downlink actions. The study adapts a target-wise attention policy and evaluates training-catalog composition, acquisition–delivery rewards, catalog-size transfer, and response to changing priorities.</p>
+              <div class="paper-links">
+                <a href="https://hanspeterschaub.info/Papers/HutererPrats2026b.pdf" target="_blank" rel="noopener"><iconify-icon icon="mdi:file-document-outline" aria-hidden="true"></iconify-icon>Paper PDF</a>
+                <a href="https://www.youtube.com/watch?v=JxrfOed4s1Q" target="_blank" rel="noopener"><iconify-icon icon="mdi:play" aria-hidden="true"></iconify-icon>Recorded talk</a>
+                <a href="publications.html#amos-2026">Citation</a>
               </div>
-              <div class="media-block abstract-thumbnail">
-                <h4>Abstract: Space-to-Space Surveillance</h4>
-                <div class="thumbnail-hover">
-                  <img src="images/optimized/stss-abstract-720.jpg" data-full-src="images/StSS_BostonAbstract.png" alt="Space-to-space surveillance abstract thumbnail" />
-                  <div class="hover-text">
-                    <a href="files/StSS_BostonAbstract.pdf" download>Download Abstract</a>
-                  </div>
+              <details class="paper-details" id="result-amos-2026">
+                <summary>Figures and presentation media</summary>
+                <div class="paper-evidence">
+                  <figure class="result-figure">
+                    <a href="images/research-results/amos-2026-training-full.png" target="_blank" rel="noopener" aria-label="Open full-resolution AMOS 2026 training comparison">
+                      <img src="images/research-results/amos-2026-training-preview.png" data-full-src="images/research-results/amos-2026-training-full.png" alt="Figure 2: delivered ground value across reward weights for LEO-only and mixed-regime training." width="646" height="380" loading="lazy" decoding="async" />
+                    </a>
+                    <figcaption>Training-catalog comparison in matched mixed-regime simulations. <a href="https://hanspeterschaub.info/Papers/HutererPrats2026b.pdf#page=9" target="_blank" rel="noopener">Figure 2, PDF page 9</a>.</figcaption>
+                  </figure>
+                  <figure class="research-media photo">
+                    <a href="index.html#selected-amos-2026" aria-label="AMOS 2026 presentation photos and simulation">
+                      <img src="images/amos-2026/presentation-preview.jpg" data-full-src="images/amos-2026/presentation-full.jpg" alt="Daniel presenting the AMOS 2026 research in Maui." width="1320" height="751" loading="lazy" decoding="async" />
+                    </a>
+                    <figcaption><a href="index.html#selected-amos-2026">Presentation photos and simulation</a>.</figcaption>
+                  </figure>
                 </div>
-              </div>
+              </details>
             </div>
           </article>
 
-          <article class="project-item expandable">
-            <div class="image-container" onclick="toggleProject(this)">
-              <img src="images/optimized/rso-inspection-900.jpg" data-full-src="images/RSO-inspection_illustration.png" alt="RL-based RSO inspection project" />
-              <div class="overlay">
-                <div class="overlay-text">RL-Based RSO Inspection</div>
-                <div class="expand-arrow">▼</div>
+          <article class="research-paper" id="imaging-downlink" data-paper="gnc-2026">
+            <figure class="paper-preview">
+              <a href="images/research-results/gnc-2026-delivery-full.png" target="_blank" rel="noopener" aria-label="Enlarge GN&C 2026 imaging and downlink tradeoff figure">
+                <img src="images/research-results/gnc-2026-delivery-preview.png" data-full-src="images/research-results/gnc-2026-delivery-full.png" alt="GN&C 2026 Figure 4 showing imaging and downlink tradeoffs across reward weights." width="467" height="265" loading="lazy" decoding="async" />
+              </a>
+              <figcaption>Imaging–downlink tradeoffs · <a href="https://hanspeterschaub.info/Papers/HutererPrats2026.pdf#page=16" target="_blank" rel="noopener">Fig. 4</a></figcaption>
+            </figure>
+            <p class="paper-venue">GN&amp;C<br /><strong>2026</strong><span>AAS 26-052</span></p>
+            <div class="paper-body">
+              <h4><a href="https://hanspeterschaub.info/Papers/HutererPrats2026.pdf" target="_blank" rel="noopener">Autonomous Space-Based Imaging: Reinforcement Learning Scheduling with Imaging–Downlink Tradeoffs Across Orbital Regimes</a></h4>
+              <p class="paper-authors">Daniel Huterer Prats and Hanspeter Schaub</p>
+              <p class="paper-abstract">Resource-aware scheduling for a LEO spacecraft observing objects across LEO, MEO, and GEO. A tunable acquisition–delivery objective connects imaging with data return to the ground. The study examines transfer of LEO-trained policies to mixed-orbit catalogs without retraining, alongside illumination-dependent tasking during eclipse.</p>
+              <div class="paper-links">
+                <a href="https://hanspeterschaub.info/Papers/HutererPrats2026.pdf" target="_blank" rel="noopener"><iconify-icon icon="mdi:file-document-outline" aria-hidden="true"></iconify-icon>Paper PDF</a>
+                <a href="https://www.youtube.com/watch?v=o_yLNhcnVEM" target="_blank" rel="noopener"><iconify-icon icon="mdi:play" aria-hidden="true"></iconify-icon>Recorded talk</a>
+                <a href="publications.html#gnc-2026">Citation</a>
               </div>
-            </div>
-            <div class="project-description">
-            <p>Reinforcement learning scheduler for autonomous RSO inspection with safety and illumination constraints. The environment includes battery, wheel desaturation, data storage, and eclipse/LOS observability effects; the Breckenridge GN&amp;C work is a natural base for a journal-length version.</p>
-              <div class="media-block abstract-thumbnail">
-                <h4>Paper: Autonomous Satellite Inspection</h4>
-                <div class="thumbnail-hover">
-                  <img src="images/optimized/research-paper-thumbnail-720.jpg" data-full-src="images/Research_Paper_Thumbnail.png" alt="Autonomous satellite inspection paper thumbnail" />
-                  <div class="hover-text">
-                    <a href="https://hanspeterschaub.info/Papers/Stephenson2025a.pdf" target="_blank" rel="noopener">Download Paper</a>
-                  </div>
+              <p class="journal-note">Related journal manuscript: <a href="publications.html#jais-imaging-downlink"><em>Journal of Aerospace Information Systems</em> · Submitted</a>.</p>
+              <details class="paper-details" id="result-gnc-2026">
+                <summary>Figure from the paper</summary>
+                <div class="paper-evidence single-figure">
+                  <figure class="result-figure">
+                    <a href="images/research-results/gnc-2026-delivery-full.png" target="_blank" rel="noopener" aria-label="Open full-resolution GN&C 2026 imaging and downlink tradeoff figure">
+                      <img src="images/research-results/gnc-2026-delivery-preview.png" data-full-src="images/research-results/gnc-2026-delivery-full.png" alt="Figure 4: illuminated images delivered and storage cleared per downlink across reward weights." width="467" height="265" loading="lazy" decoding="async" />
+                    </a>
+                    <figcaption>Imaging–downlink reward trade study in mixed-orbit simulations. <a href="https://hanspeterschaub.info/Papers/HutererPrats2026.pdf#page=16" target="_blank" rel="noopener">Figure 4, PDF page 16</a>.</figcaption>
+                  </figure>
                 </div>
-              </div>
+              </details>
             </div>
           </article>
 
-          <article class="project-item">
-            <div class="image-container">
-              <img src="images/optimized/galaxies-lacking-darkmatter-720.jpg" data-full-src="images/galaxies_lacking_dark_matter_thumbnail.png" alt="Dark matter and galaxy formation research" />
-              <div class="overlay">
-                <div class="overlay-text">Dark Matter & Galaxy Formation</div>
+          <article class="research-paper" id="leo-imaging" data-paper="amos-2025">
+            <figure class="paper-preview">
+              <a href="images/research-results/amos-2025-resources-full.png" target="_blank" rel="noopener" aria-label="Enlarge AMOS 2025 spacecraft resource timeline">
+                <img src="images/research-results/amos-2025-resources-preview.png" data-full-src="images/research-results/amos-2025-resources-full.png" alt="AMOS 2025 Figure 5 showing spacecraft resources and image delivery during an example mission." width="735" height="369" loading="lazy" decoding="async" />
+              </a>
+              <figcaption>Example mission resource history · <a href="https://hanspeterschaub.info/Papers/Prats2025.pdf#page=11" target="_blank" rel="noopener">Fig. 5</a></figcaption>
+            </figure>
+            <p class="paper-venue">AMOS<br /><strong>2025</strong></p>
+            <div class="paper-body">
+              <h4><a href="https://hanspeterschaub.info/Papers/Prats2025.pdf" target="_blank" rel="noopener">Reinforcement Learning for Space-to-Space Surveillance: Autonomous Scheduling for Resident Space Object Imaging</a></h4>
+              <p class="paper-authors">Daniel Huterer Prats, Hanspeter Schaub, and Chris Wheeler</p>
+              <p class="paper-abstract">LEO-to-LEO optical imaging formulated as a partially observable decision process, coupling dynamic target selection with onboard resource management. An actor–critic policy is trained in Basilisk and BSK-RL and compared with a heuristic scheduler under spacecraft, line-of-sight, and illumination constraints.</p>
+              <div class="paper-links">
+                <a href="https://hanspeterschaub.info/Papers/Prats2025.pdf" target="_blank" rel="noopener"><iconify-icon icon="mdi:file-document-outline" aria-hidden="true"></iconify-icon>Paper PDF</a>
+                <a href="https://www.youtube.com/watch?v=nU8sa1a_Ijs" target="_blank" rel="noopener"><iconify-icon icon="mdi:play" aria-hidden="true"></iconify-icon>Recorded talk</a>
+                <a href="publications.html#amos-2025">Citation</a>
+                <a href="files/AMOS_SBSS/Amos_sbss.html">Project and slides</a>
               </div>
-            </div>
-            <p>Co-authored work on dwarf galaxy dark matter depletion, published in MNRAS (2021).</p>
-            <p><a href="https://arxiv.org/pdf/2010.02245" target="_blank" rel="noopener" class="underline">View Paper</a></p>
-          </article>
-
-          <article class="project-item expandable" id="MGA">
-            <div class="image-container" onclick="toggleProject(this)">
-              <img src="images/optimized/interplanetary-trajectory-720.jpg" data-full-src="images/interplanetary_trajectory_final.png" alt="Multi-gravity assist trajectory optimization" />
-              <div class="overlay">
-                <div class="overlay-text">Multi-Gravity Assist Trajectory Optimization</div>
-                <div class="expand-arrow">▼</div>
-              </div>
-            </div>
-            <div class="project-description">
-              <p>Genetic-algorithm-based optimization for interplanetary trajectories with gravity assists and impulsive maneuvers, balancing low delta-v against transfer time.</p>
-              <p><a href="files/MGA_Paper.pdf" target="_blank" rel="noopener" class="underline">Download Paper</a></p>
+              <p class="journal-note">Related journal manuscript: <a href="publications.html#jas-leo-imaging"><em>Journal of the Astronautical Sciences</em> · Under review</a>.</p>
+              <details class="paper-details" id="result-amos-2025">
+                <summary>Figure and simulation</summary>
+                <div class="paper-evidence">
+                  <figure class="result-figure">
+                    <a href="images/research-results/amos-2025-resources-full.png" target="_blank" rel="noopener" aria-label="Open full-resolution AMOS 2025 resource timeline">
+                      <img src="images/research-results/amos-2025-resources-preview.png" data-full-src="images/research-results/amos-2025-resources-full.png" alt="Figure 5: spacecraft resources, illumination, downlink access, and image delivery during one example rollout." width="735" height="369" loading="lazy" decoding="async" />
+                    </a>
+                    <figcaption>Resource history from one representative simulated mission. <a href="https://hanspeterschaub.info/Papers/Prats2025.pdf#page=11" target="_blank" rel="noopener">Figure 5, PDF page 11</a>.</figcaption>
+                  </figure>
+                  <figure class="research-media">
+                    <video controls playsinline preload="none" poster="media/research/amos-2025-polaris-poster.jpg" width="1920" height="1384" aria-label="AMOS 2025 Polaris spacecraft simulation">
+                      <source src="media/research/amos-2025-polaris-simulation.mp4" type="video/mp4" />
+                      <a href="media/research/amos-2025-polaris-simulation.mp4">Open the AMOS 2025 simulation video</a>.
+                    </video>
+                    <figcaption>Polaris visualization from the AMOS 2025 presentation.</figcaption>
+                  </figure>
+                </div>
+              </details>
             </div>
           </article>
         </div>
       </section>
+
+      <section class="research-section" id="work-in-progress" aria-labelledby="progress-title">
+        <div class="research-overview progress-overview">
+          <div>
+            <p class="research-label">Ongoing research</p>
+            <h2 id="progress-title">Constellation tasking and communications</h2>
+          </div>
+          <p>I am extending space-based imaging to decentralized multi-spacecraft catalog maintenance and tasking that accounts for communication quality. These projects are in progress.</p>
+        </div>
+        <ul class="research-submissions">
+          <li>
+            <figure class="submission-preview">
+              <a href="#catalog-maintenance" aria-label="Related AMOS 2026 catalog-maintenance research">
+                <img src="images/amos-2026/simulation-preview.jpg" data-full-src="images/amos-2026/simulation-poster.jpg" alt="Spacecraft imaging simulation from the related AMOS 2026 study." width="1920" height="1252" loading="lazy" decoding="async" />
+              </a>
+              <figcaption>Related simulation · AMOS 2026</figcaption>
+            </figure>
+            <span class="research-status">In progress · GN&amp;C 2027</span><a href="publications.html#gnc-2027-catalog">Decentralized Multi-Spacecraft Tasking for Persistent Resident Space Object Catalog Maintenance</a>
+          </li>
+          <li>
+            <figure class="submission-preview scientific-preview">
+              <a href="#imaging-downlink" aria-label="Related GN&C 2026 imaging and downlink research">
+                <img src="images/research-results/gnc-2026-delivery-preview.png" data-full-src="images/research-results/gnc-2026-delivery-full.png" alt="Imaging and downlink tradeoff figure from the related GN&C 2026 study." width="467" height="265" loading="lazy" decoding="async" />
+              </a>
+              <figcaption>Related imaging–downlink study · GN&amp;C 2026</figcaption>
+            </figure>
+            <span class="research-status">In progress · GN&amp;C 2027</span><a href="publications.html#gnc-2027-communications">Communication Quality-Aware Autonomous Tasking for Space-Based Resident Space Object Imaging</a>
+          </li>
+        </ul>
+        <span id="communications" class="section-anchor" aria-hidden="true"></span>
+      </section>
+
+      <section class="research-section" aria-labelledby="inspection-title">
+        <div class="research-overview">
+          <div>
+            <p class="research-label">Rendezvous and proximity operations</p>
+            <h2 id="inspection-title">Autonomous satellite inspection</h2>
+            <p>Close-range inspection requires a spacecraft to maneuver around an object, observe illuminated surfaces, and avoid collision. In co-authored work with Mark Stephenson and Hanspeter Schaub, we study closed-loop maneuver selection with an optimization-based safety shield.</p>
+          </div>
+          <figure class="research-media illustration">
+            <img src="images/optimized/rso-inspection-900.jpg" data-full-src="images/RSO-inspection_illustration.png" alt="Illustration of a spacecraft inspecting a nearby resident space object" width="900" height="675" loading="lazy" decoding="async" />
+          </figure>
+        </div>
+        <article class="research-paper" id="inspection" data-paper="iwpss-2025">
+          <figure class="paper-preview">
+            <a href="images/research-results/inspection-2025-performance-full.png" target="_blank" rel="noopener" aria-label="Enlarge shielded satellite inspection evaluation figure">
+              <img src="images/research-results/inspection-2025-performance-preview.png" data-full-src="images/research-results/inspection-2025-performance-full.png" alt="IWPSS 2025 Figure 8 showing inspection fuel consumption, duration, and evaluation outcomes." width="365" height="342" loading="lazy" decoding="async" />
+            </a>
+            <figcaption>Shielded inspection evaluation · <a href="https://hanspeterschaub.info/Papers/Stephenson2025a.pdf#page=8" target="_blank" rel="noopener">Fig. 8</a></figcaption>
+          </figure>
+          <p class="paper-venue">IWPSS<br /><strong>2025</strong></p>
+          <div class="paper-body">
+            <h3><a href="https://hanspeterschaub.info/Papers/Stephenson2025a.pdf" target="_blank" rel="noopener">Autonomous Satellite Inspection in Low Earth Orbit with Optimization-Based Safety Guarantees</a></h3>
+            <p class="paper-authors">Mark Stephenson, Daniel Huterer Prats, and Hanspeter Schaub</p>
+            <p class="paper-abstract">A semi-Markov inspection formulation combines learned impulsive-maneuver decisions with an optimization-based collision-avoidance shield. The policy responds to the current relative spacecraft state rather than following a fixed offline maneuver sequence. The shield's guarantees are defined within the adopted Clohessy–Wiltshire–Hill relative-motion model.</p>
+            <div class="paper-links">
+              <a href="https://hanspeterschaub.info/Papers/Stephenson2025a.pdf" target="_blank" rel="noopener"><iconify-icon icon="mdi:file-document-outline" aria-hidden="true"></iconify-icon>Paper PDF</a>
+              <a href="https://www.youtube.com/watch?v=CvMnRqVkKTU" target="_blank" rel="noopener"><iconify-icon icon="mdi:play" aria-hidden="true"></iconify-icon>Recorded talk</a>
+              <a href="publications.html#iwpss-2025">Citation</a>
+            </div>
+            <details class="paper-details" id="result-inspection-2025">
+              <summary>Figure from the paper</summary>
+              <div class="paper-evidence single-figure">
+                <figure class="result-figure inspection-figure">
+                  <a href="images/research-results/inspection-2025-performance-full.png" target="_blank" rel="noopener" aria-label="Open full-resolution shielded inspection evaluation figure">
+                    <img src="images/research-results/inspection-2025-performance-preview.png" data-full-src="images/research-results/inspection-2025-performance-full.png" alt="Figure 8: inspection fuel consumption and duration, with evaluation outcome distributions." width="365" height="342" loading="lazy" decoding="async" />
+                  </a>
+                  <figcaption>Shielded inspection evaluation under the paper's relative-motion model. <a href="https://hanspeterschaub.info/Papers/Stephenson2025a.pdf#page=8" target="_blank" rel="noopener">Figure 8, PDF page 8</a>.</figcaption>
+                </figure>
+              </div>
+            </details>
+          </div>
+        </article>
+      </section>
+
+      <section class="research-section" aria-labelledby="earlier-research-title">
+        <p class="research-label">Earlier work</p>
+        <h2 id="earlier-research-title">Trajectory design and astrophysics</h2>
+        <div class="earlier-research-grid">
+          <article class="earlier-entry" id="MGA">
+            <figure class="research-media illustration">
+              <img src="images/optimized/interplanetary-trajectory-720.jpg" data-full-src="images/interplanetary_trajectory_final.png" alt="Interplanetary trajectory with multiple planetary gravity assists" width="720" height="540" loading="lazy" decoding="async" />
+            </figure>
+            <p class="research-label">Master's project · UPC</p>
+            <h3>Multi-gravity-assist trajectory optimization</h3>
+            <p>I developed a genetic-algorithm approach to selecting gravity-assist sequences and transfer timing, comparing flight duration with total delta-v.</p>
+            <div class="research-links"><a href="files/MGA_Paper.pdf" target="_blank" rel="noopener">Project report</a><a href="blog/robust-trajectory-rl.html">Trajectory-design reading notes</a></div>
+          </article>
+          <article class="earlier-entry" id="galaxy-formation">
+            <figure class="research-media illustration">
+              <img src="images/optimized/galaxies-lacking-darkmatter-720.jpg" data-full-src="images/galaxies_lacking_dark_matter_thumbnail.png" alt="Figure from the dark matter and galaxy formation study" width="720" height="540" loading="lazy" decoding="async" />
+            </figure>
+            <p class="research-label">MNRAS 2021 · NYU Abu Dhabi</p>
+            <h3>Dark-matter-deficient galaxies</h3>
+            <p>My earlier research used galaxy simulations to examine tidal stripping. Our co-authored MNRAS paper studies how encounters with larger galaxies can leave dwarf galaxies with much less dark matter.</p>
+            <div class="research-links"><a href="https://doi.org/10.1093/mnras/staa3716" target="_blank" rel="noopener">Journal article</a><a href="https://arxiv.org/pdf/2010.02245" target="_blank" rel="noopener">Open PDF</a></div>
+          </article>
+        </div>
+      </section>
     </main>
-
-    <footer>
-      <p>© 2025 Daniel Huterer Prats. Built from scratch with care 🛰️</p>
-    </footer>
+    <footer><p>© 2026 Daniel Huterer Prats</p></footer>
   </div>
-
-  <script>
-    function toggleProject(el) {
-      const parent = el.closest(".project-item.expandable");
-      parent.classList.toggle("active");
-      const arrow = parent.querySelector(".expand-arrow");
-      arrow.textContent = parent.classList.contains("active") ? "▲" : "▼";
-    }
-
-    (function markActiveNav() {
-      const here = (location.pathname.split("/").pop() || "index.html").toLowerCase();
-      document.querySelectorAll(".site-nav a").forEach(a => {
-        const href = (a.getAttribute("href") || "").toLowerCase();
-        if (href.endsWith(here)) {
-          a.classList.add("active");
-          a.setAttribute("aria-current", "page");
-        } else {
-          a.classList.remove("active");
-          a.removeAttribute("aria-current");
-        }
-      });
-    })();
-  </script>
 </body>
 </html>

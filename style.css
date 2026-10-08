@@ -205,28 +205,6 @@ main {
   color: #fff;
 }
 
-/* Hover text replacement */
-.cv-link::after {
-  content: "Request via email";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  color: #fff;
-  text-align: center;
-  line-height: 38px; /* adjust for vertical alignment */
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.cv-link:hover::after {
-  opacity: 1;
-}
-
-.cv-link:hover {
-  color: transparent;
-}
 
 .icon-logo {
   width: 52px;
@@ -649,6 +627,23 @@ footer {
 @media (min-width: 761px) {
   .mobile-theme-toggle {
     display: none !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .site-nav {
+    gap: 0.12rem;
+    padding-inline: 0.25rem;
+  }
+
+  .site-nav a {
+    padding-inline: 0.3rem;
+    font-size: 0.78rem;
+  }
+
+  .site-nav .theme-toggle {
+    min-width: 2rem;
+    padding-inline: 0.3rem;
   }
 }
 

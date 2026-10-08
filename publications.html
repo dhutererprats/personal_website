@@ -2,218 +2,59 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; script-src 'self' 'unsafe-inline' https://code.iconify.design https://cdn.jsdelivr.net https://www.googletagmanager.com https://www.gstatic.com https://unpkg.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; img-src 'self' data: blob: https:; font-src 'self' data: https://cdnjs.cloudflare.com; connect-src 'self' https://api.nasa.gov https://api.wheretheiss.at https://api.allorigins.win https://nominatim.openstreetmap.org https://api.openalex.org https://cdn.jsdelivr.net https://www.google-analytics.com https://region1.google-analytics.com https://*.supabase.co; media-src 'self' blob: https:; frame-src 'self' https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com; worker-src 'self' blob:; manifest-src 'self'; form-action 'self'; upgrade-insecure-requests;" />
   <title>Publications | Daniel Huterer Prats</title>
-  <meta name="description" content="Conference and journal publications authored or co-authored by Daniel Huterer Prats across autonomous space operations, astrodynamics, and astrophysics."/>
-  <meta name="robots" content="index,follow,max-image-preview:large"/>
-  <meta property="og:type" content="website"/>
-  <meta property="og:site_name" content="Daniel Huterer Prats"/>
-  <meta property="og:title" content="Publications | Daniel Huterer Prats"/>
-  <meta property="og:description" content="Selected conference and journal papers with links to papers, conference pages, and references."/>
-  <meta property="og:url" content="https://dhutererprats.github.io/personal_website/publications.html"/>
-  <meta property="og:image" content="https://dhutererprats.github.io/personal_website/images/research-hero-space.jpg"/>
-  <meta property="og:image:alt" content="Publications page visual"/>
-  <meta name="twitter:card" content="summary_large_image"/>
-  <meta name="twitter:title" content="Publications | Daniel Huterer Prats"/>
-  <meta name="twitter:description" content="Conference and journal papers in space systems, autonomous operations, and astrophysics."/>
-  <meta name="twitter:image" content="https://dhutererprats.github.io/personal_website/images/research-hero-space.jpg"/>
-  <meta name="theme-color" content="#0b1c3c"/>
-  <meta name="apple-mobile-web-app-capable" content="yes"/>
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-  <link rel="manifest" href="pwa-manifest.json"/>
-  <link rel="apple-touch-icon" href="icons/pwa-192.png"/>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="description" content="Papers by Daniel Huterer Prats: spacecraft imaging and inspection, reinforcement learning, and galaxy formation. Published work and submitted manuscripts." />
+  <meta name="robots" content="index,follow,max-image-preview:large" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Daniel Huterer Prats" />
+  <meta property="og:title" content="Publications | Daniel Huterer Prats" />
+  <meta property="og:description" content="Journal manuscripts, conference papers, and published work, with papers and recorded talks." />
+  <meta property="og:url" content="https://dhutererprats.github.io/personal_website/publications.html" />
+  <meta property="og:image" content="https://dhutererprats.github.io/personal_website/files/AMOS_SBSS/Daniel_presenting_AMOS2-1400.jpg" />
+  <meta property="og:image:alt" content="Daniel Huterer Prats presenting at AMOS 2025" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Publications | Daniel Huterer Prats" />
+  <meta name="twitter:description" content="Papers and recorded talks on spacecraft autonomy, inspection, and galaxy formation." />
+  <meta name="twitter:image" content="https://dhutererprats.github.io/personal_website/files/AMOS_SBSS/Daniel_presenting_AMOS2-1400.jpg" />
+  <meta name="theme-color" content="#ffffff" />
+  <link rel="manifest" href="pwa-manifest.json" />
+  <link rel="apple-touch-icon" href="icons/pwa-192.png" />
+  <link rel="stylesheet" href="style.css?v=20261007-media" />
   <script src="theme-toggle.js" defer></script>
-  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
-  <link rel="icon" href="icons/astronaut.ico" type="image/x-icon"/>
-  <link rel="canonical" href="https://dhutererprats.github.io/personal_website/publications.html"/>
+  <link rel="icon" href="icons/astronaut.ico" type="image/x-icon" />
+  <link rel="canonical" href="https://dhutererprats.github.io/personal_website/publications.html" />
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": "Publications | Daniel Huterer Prats",
     "url": "https://dhutererprats.github.io/personal_website/publications.html",
-    "about": {
-      "@type": "Person",
-      "name": "Daniel Huterer Prats"
-    },
-    "description": "Conference and journal publications authored or co-authored by Daniel Huterer Prats."
+    "about": { "@type": "Person", "name": "Daniel Huterer Prats" },
+    "dateModified": "2026-10-07",
+    "description": "Published papers, conference contributions, and submitted manuscripts."
   }
   </script>
   <style>
-    .pub-main {
-      padding-top: 1.2rem;
-    }
-
-    .pub-intro {
-      background: linear-gradient(150deg, #122344 0%, #1f4278 100%);
-      color: #fff;
-      border-radius: 16px;
-      padding: 1.2rem 1.3rem;
-      border: 1px solid rgba(255, 255, 255, 0.25);
-      margin-bottom: 1.3rem;
-    }
-
-    .pub-intro h1 {
-      margin: 0 0 0.45rem;
-      color: #fff;
-    }
-
-    .pub-intro p {
-      margin: 0;
-      line-height: 1.6;
-      max-width: 78ch;
-      color: rgba(255, 255, 255, 0.94);
-    }
-
-    .pub-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 1rem;
-    }
-
-    .pub-pipeline {
-      margin: 0 0 1.25rem;
-      border: 1px solid var(--border-color);
-      border-radius: 14px;
-      background: var(--card-bg);
-      padding: 1rem;
-    }
-
-    .pub-pipeline h2 {
-      margin: 0 0 0.65rem;
-      font-size: 1.08rem;
-    }
-
-    .pipeline-list {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 0.75rem;
-    }
-
-    .pipeline-item {
-      border: 1px solid var(--border-color);
-      border-radius: 10px;
-      background: var(--bg-color);
-      padding: 0.75rem;
-    }
-
-    .pipeline-status {
-      display: inline-block;
-      margin-bottom: 0.28rem;
-      font-size: 0.78rem;
-      opacity: 0.82;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-
-    .pipeline-item h3 {
-      margin: 0 0 0.28rem;
-      font-size: 0.98rem;
-      line-height: 1.35;
-    }
-
-    .pipeline-item p {
-      margin: 0;
-      line-height: 1.52;
-      font-size: 0.9rem;
-      opacity: 0.9;
-    }
-
-    @media (min-width: 860px) {
-      .pipeline-list {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-    }
-
-    @media (min-width: 980px) {
-      .pub-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-    }
-
-    .pub-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 14px;
-      padding: 1rem;
-      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
-    }
-
-    .pub-type {
-      display: inline-block;
-      border: 1px solid var(--border-color);
-      border-radius: 999px;
-      padding: 0.2rem 0.55rem;
-      font-size: 0.78rem;
-      margin-bottom: 0.45rem;
-    }
-
-    .pub-card h2 {
-      margin: 0.1rem 0 0.4rem;
-      font-size: 1.08rem;
-      line-height: 1.35;
-    }
-
-    .pub-meta {
-      margin: 0 0 0.45rem;
-      font-size: 0.9rem;
-      opacity: 0.86;
-    }
-
-    .pub-authors {
-      margin: 0 0 0.6rem;
-      font-size: 0.92rem;
-      line-height: 1.5;
-    }
-
-    .pub-desc {
-      margin: 0 0 0.75rem;
-      line-height: 1.6;
-      font-size: 0.95rem;
-    }
-
-    .pub-links {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      align-items: center;
-      margin-bottom: 0.65rem;
-    }
-
-    .pub-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      padding: 0.3rem 0.62rem;
-      border-radius: 999px;
-      border: 1px solid var(--border-color);
-      background: var(--bg-color);
-      font-size: 0.86rem;
-      text-decoration: none;
-      color: var(--text-color);
-    }
-
-    .pub-link:hover {
-      border-color: var(--accent-color);
-      text-decoration: none;
-    }
-
-    .pub-link.scholar {
-      width: 2rem;
-      justify-content: center;
-      padding: 0.3rem;
-      font-size: 1rem;
-    }
-
-    .citation {
-      display: inline-block;
-      font-size: 0.82rem;
-      opacity: 0.82;
-      border-top: 1px dashed var(--border-color);
-      padding-top: 0.55rem;
-      width: 100%;
+    .pub-main { max-width: 960px; margin: 0 auto; padding-top: 2rem; }
+    .pub-intro { display: block; background: none; padding: 0 0 1.5rem; }
+    .pub-intro h1 { margin: 0 0 0.65rem; font-size: 2rem; }
+    .pub-intro p { margin: 0; max-width: 65ch; line-height: 1.6; }
+    .pub-jump { display: flex; flex-wrap: wrap; gap: 0.7rem 1.3rem; margin: 1.25rem 0 0; }
+    .pub-section { margin-top: 2.5rem; scroll-margin-top: 6rem; }
+    .pub-section > h2 { font-size: 1.25rem; margin-bottom: 0.9rem; }
+    .pub-entry { padding: 1.4rem 0; border-top: 1px solid var(--border-color); scroll-margin-top: 6rem; }
+    .pub-entry h3 { margin: 0.45rem 0; font-size: 1.1rem; line-height: 1.45; overflow-wrap: anywhere; }
+    .pub-status { margin: 0; font-size: 0.83rem; color: var(--text-color); font-weight: 600; }
+    .pub-meta, .pub-authors { margin: 0.45rem 0; font-size: 0.93rem; line-height: 1.6; }
+    .pub-desc { margin: 0.65rem 0; max-width: 78ch; line-height: 1.65; }
+    .pub-links { display: flex; flex-wrap: wrap; gap: 0.6rem 1.2rem; margin-top: 0.75rem; }
+    .pub-links a { text-decoration: underline; text-underline-offset: 0.18rem; }
+    .pub-source { margin: 2.5rem 0 0; padding-top: 1rem; border-top: 1px solid var(--border-color); font-size: 0.85rem; line-height: 1.65; }
+    @media (max-width: 600px) {
+      .pub-main { padding: 1.5rem 1rem; }
+      .pub-entry h3 { font-size: 1.03rem; }
     }
   </style>
 </head>
@@ -228,151 +69,133 @@
       <span class="theme-toggle-text">Dark mode</span>
     </button>
   </nav>
-
   <div class="homepage-container">
     <main class="pub-main">
-      <section class="pub-intro">
+      <header class="pub-intro">
         <h1>Publications</h1>
-        <p>
-          This page is a curated overview of my research papers and conference contributions in space autonomy, astrodynamics, and astrophysics. If you are visiting for the first time, this is the best place to quickly see what I have published, where it appeared, and where to read or watch each contribution.
-        </p>
-      </section>
+        <p>I work on spacecraft imaging, autonomous scheduling, and inspection. My earlier research was in galaxy formation.</p>
+        <nav class="pub-jump" aria-label="Publication sections">
+          <a href="#journal-manuscripts">Journal manuscripts</a>
+          <a href="#conference-papers">Conference papers</a>
+          <a href="#conference-submissions">Conference submissions</a>
+          <a href="#published-journals">Published journals</a>
+        </nav>
+      </header>
 
-      <section class="pub-pipeline" aria-labelledby="pipeline-title">
-        <h2 id="pipeline-title">Current Pipeline</h2>
-        <div class="pipeline-list">
-          <article class="pipeline-item">
-            <span class="pipeline-status">Submitted journal manuscript</span>
-            <h3>AMOS space-to-space surveillance journal extension</h3>
-            <p>Journal-length expansion of the AMOS space-to-space imaging work, reframing the conference result with a deeper treatment of autonomy, resource constraints, and scheduling behavior.</p>
-          </article>
-          <article class="pipeline-item">
-            <span class="pipeline-status">Conference 2026</span>
-            <h3>AMOS 2026 autonomous RSO imaging follow-on</h3>
-            <p>New AMOS 2026 contribution extending responsive catalog-maintenance and imaging objectives across broader orbital regimes.</p>
-          </article>
-          <article class="pipeline-item">
-            <span class="pipeline-status">Upcoming manuscript</span>
-            <h3>Communications architecture for autonomous surveillance missions</h3>
-            <p>Paper in preparation around tasking, data delivery, downlink latency, and communications-architecture decisions for autonomous space-based surveillance.</p>
-          </article>
-          <article class="pipeline-item">
-            <span class="pipeline-status">Journal target</span>
-            <h3>Breckenridge GN&amp;C work to journal article</h3>
-            <p>The AAS Rocky Mountain GN&amp;C 2026 result is positioned as the conference foundation for a more complete journal manuscript.</p>
-          </article>
-        </div>
-      </section>
-
-      <section class="pub-grid">
-        <article class="pub-card">
-          <span class="pub-type">Conference • 2026</span>
-          <h2>Autonomous Space-Based Imaging: Reinforcement Learning Scheduling with Downlink Latency and Resource-Aware Actions</h2>
-          <p class="pub-meta">AAS Rocky Mountain GN&amp;C Conference, Breckenridge, Colorado, Jan. 31-Feb. 4, 2026</p>
+      <section class="pub-section" id="journal-manuscripts" aria-labelledby="journal-title">
+        <h2 id="journal-title">Journal manuscripts</h2>
+        <article class="pub-entry" id="jas-leo-imaging">
+          <p class="pub-status">Under review · Reviewer feedback received</p>
+          <h3>Autonomous LEO-to-LEO Resident Space Object Imaging with Reinforcement Learning</h3>
           <p class="pub-authors"><strong>Daniel Huterer Prats</strong>, Hanspeter Schaub</p>
-          <p class="pub-desc">Presents a POMDP-based RL scheduler for autonomous RSO imaging under line-of-sight, lighting, battery, wheel-momentum, and downlink constraints in a high-fidelity Basilisk simulation. This Breckenridge GN&amp;C paper is the foundation for a planned journal-length version.</p>
+          <p class="pub-meta"><em>Journal of the Astronautical Sciences</em></p>
+          <p class="pub-desc">Journal extension of the AMOS 2025 space-to-space imaging study. A public manuscript PDF is not linked in the lab's listing.</p>
           <div class="pub-links">
-            <a class="pub-link" href="https://hanspeterschaub.info/Papers/HutererPrats2026.pdf" target="_blank" rel="noopener">PDF</a>
-            <a class="pub-link" href="https://www.xcdsystem.com/aas/program/w8LRlcl/index.cfm" target="_blank" rel="noopener">Conference Program</a>
-            <a class="pub-link" href="https://www.youtube.com/watch?v=o_yLNhcnVEM" target="_blank" rel="noopener"><iconify-icon icon="mdi:youtube"></iconify-icon>Talk Video</a>
-            <a class="pub-link scholar" href="https://scholar.google.com/scholar?q=Autonomous+Space-Based+Imaging%3A+Reinforcement+Learning+Scheduling+with+Downlink+Latency+and+Resource-Aware+Actions" target="_blank" rel="noopener" aria-label="Google Scholar result">
-              <iconify-icon icon="simple-icons:googlescholar"></iconify-icon>
-            </a>
+            <a href="https://hanspeterschaub.info/journals.html" target="_blank" rel="noopener">Lab journal listing</a>
+            <a href="#amos-2025">Related AMOS 2025 paper</a>
           </div>
         </article>
-
-        <article class="pub-card">
-          <span class="pub-type">Conference • 2025</span>
-          <h2>Reinforcement Learning for Space-to-Space Surveillance: Autonomous Scheduling for Resident Space Object Imaging</h2>
-          <p class="pub-meta">Advanced Maui Optical and Space Surveillance Technologies Conference, Maui, Hawaii, Sept. 16-19, 2025</p>
-          <p class="pub-authors"><strong>Daniel Huterer Prats</strong>, Hanspeter Schaub, Chris Wheeler</p>
-          <p class="pub-desc">Investigates RL-based scheduling for autonomous space-based imaging in dynamic orbital environments, including observation opportunities, downlink latency, and onboard resource limits.</p>
+        <article class="pub-entry" id="jais-imaging-downlink">
+          <p class="pub-status">Submitted</p>
+          <h3>Autonomous Space-Based Imaging: Reinforcement Learning Scheduling with Imaging–Downlink Tradeoffs Across Orbital Regimes</h3>
+          <p class="pub-authors"><strong>Daniel Huterer Prats</strong>, Hanspeter Schaub</p>
+          <p class="pub-meta"><em>Journal of Aerospace Information Systems</em></p>
+          <p class="pub-desc">Journal extension of the Breckenridge GN&amp;C 2026 work on imaging and ground delivery across orbital regimes. A public manuscript PDF is not linked in the lab's listing.</p>
           <div class="pub-links">
-            <a class="pub-link" href="https://amostech.com/TechnicalPapers/2025/Machine-Learning-for-SDA-Applications/Huterer%20Prats.pdf" target="_blank" rel="noopener">PDF</a>
-            <a class="pub-link" href="https://amostech.space/amos/2025/" target="_blank" rel="noopener">Technical Library</a>
-            <a class="pub-link" href="https://www.youtube.com/watch?v=nU8sa1a_Ijs" target="_blank" rel="noopener"><iconify-icon icon="mdi:youtube"></iconify-icon>Talk Video</a>
-            <a class="pub-link scholar" href="https://scholar.google.com/scholar?q=Reinforcement+Learning+for+Space-to-Space+Surveillance%3A+Autonomous+Scheduling+for+Resident+Space+Object+Imaging" target="_blank" rel="noopener" aria-label="Google Scholar result">
-              <iconify-icon icon="simple-icons:googlescholar"></iconify-icon>
-            </a>
+            <a href="https://hanspeterschaub.info/journals.html" target="_blank" rel="noopener">Lab journal listing</a>
+            <a href="#gnc-2026">Related GN&amp;C 2026 paper</a>
           </div>
-        </article>
-
-        <article class="pub-card">
-          <span class="pub-type">Conference • 2025</span>
-          <h2>Autonomous Satellite Inspection in Low Earth Orbit with Optimization-Based Safety Guarantees</h2>
-          <p class="pub-meta">International Workshop on Planning &amp; Scheduling for Space, Toulouse, France, April 28-30, 2025</p>
-          <p class="pub-authors">M. Stephenson, <strong>D. Huterer Prats</strong>, H. Schaub</p>
-          <p class="pub-desc">Introduces a shielded MDP framework for autonomous LEO inspection planning that balances task completion and safety constraints in dynamic operational scenarios.</p>
-          <div class="pub-links">
-            <a class="pub-link" href="https://hanspeterschaub.info/Papers/Stephenson2025a.pdf" target="_blank" rel="noopener">PDF</a>
-            <a class="pub-link" href="https://iwpss.org/program/" target="_blank" rel="noopener">Workshop Program</a>
-            <a class="pub-link scholar" href="https://scholar.google.com/scholar?q=Autonomous+Satellite+Inspection+in+Low+Earth+Orbit+with+Optimization-Based+Safety+Guarantees" target="_blank" rel="noopener" aria-label="Google Scholar result">
-              <iconify-icon icon="simple-icons:googlescholar"></iconify-icon>
-            </a>
-          </div>
-        </article>
-
-        <article class="pub-card">
-          <span class="pub-type">Upcoming • 2026</span>
-          <h2>Responsive Autonomous RSO Imaging and Catalog Maintenance Using Reinforcement Learning Across Orbital Regimes</h2>
-          <p class="pub-meta">Advanced Maui Optical and Space Surveillance Technologies Conference, Maui, Hawaii, Sept. 15-18, 2026</p>
-          <p class="pub-authors"><strong>D. Huterer Prats</strong>, H. Schaub</p>
-          <p class="pub-desc">New 2026 AMOS conference paper: extends autonomous RSO imaging to broader orbital-regime coverage with catalog maintenance objectives and reinforcement-learning-based responsive scheduling.</p>
-          <div class="pub-links">
-            <a class="pub-link" href="https://amostech.com/" target="_blank" rel="noopener">Conference Site</a>
-            <a class="pub-link scholar" href="https://scholar.google.com/scholar?q=Responsive+Autonomous+RSO+Imaging+and+Catalog+Maintenance+Using+Reinforcement+Learning+Across+Orbital+Regimes" target="_blank" rel="noopener" aria-label="Google Scholar result">
-              <iconify-icon icon="simple-icons:googlescholar"></iconify-icon>
-            </a>
-          </div>
-        </article>
-
-        <article class="pub-card">
-          <span class="pub-type">Journal • 2021</span>
-          <h2>Creating a galaxy lacking dark matter in a dark matter dominated universe</h2>
-          <p class="pub-meta">Monthly Notices of the Royal Astronomical Society (MNRAS), 501, 693</p>
-          <p class="pub-authors">Andrea V. Macciò, <strong>Daniel Huterer Prats</strong>, Keri L. Dixon, Tobias Buck, Stefan Waterval, Nikhil Arora, Stéphane Courteau, Xi Kang</p>
-          <p class="pub-desc">Hydrodynamical cosmological simulations show that tidal interactions can produce galaxies that appear dark-matter deficient even in a dark-matter-dominated universe. After a strong radial pericentric passage, dwarfs can lose up to about 80% of dark matter, with central dark-matter-to-stellar ratios dropping toward values reported for NGC1052-DF2 and NGC1052-DF4.</p>
-          <div class="pub-links">
-            <a class="pub-link" href="https://ui.adsabs.harvard.edu/abs/2021MNRAS.501..693M/abstract" target="_blank" rel="noopener">ADS Abstract</a>
-            <a class="pub-link" href="https://arxiv.org/abs/2010.02245" target="_blank" rel="noopener">arXiv</a>
-            <a class="pub-link" href="https://doi.org/10.48550/arXiv.2010.02245" target="_blank" rel="noopener">arXiv DOI</a>
-            <a class="pub-link" href="https://doi.org/10.1093/mnras/staa3716" target="_blank" rel="noopener">Journal DOI</a>
-            <a class="pub-link scholar" href="https://scholar.google.com/scholar?q=Creating+a+galaxy+lacking+dark+matter+in+a+dark+matter+dominated+universe" target="_blank" rel="noopener" aria-label="Google Scholar result">
-              <iconify-icon icon="simple-icons:googlescholar"></iconify-icon>
-            </a>
-          </div>
-          <span class="citation" data-doi="10.1093/mnras/staa3716">Citations: loading live count...</span>
         </article>
       </section>
+
+      <section class="pub-section" id="conference-papers" aria-labelledby="conference-title">
+        <h2 id="conference-title">Conference papers</h2>
+        <article class="pub-entry" id="amos-2026">
+          <p class="pub-status">AMOS · September 2026</p>
+          <h3>Responsive Autonomous Resident Space Object Imaging and Catalog Maintenance Using Reinforcement Learning Across Orbital Regimes</h3>
+          <p class="pub-authors"><strong>Daniel Huterer Prats</strong>, Hanspeter Schaub</p>
+          <p class="pub-meta">Advanced Maui Optical and Space Surveillance Technologies Conference, Maui, Hawaii, September 15–18, 2026</p>
+          <p class="pub-desc">Studies repeated imaging, changing target priorities, and ground delivery for catalogs spanning LEO, MEO, and GEO. The scheduler uses variable-duration actions and a target-wise attention policy.</p>
+          <div class="pub-links">
+            <a href="https://hanspeterschaub.info/Papers/HutererPrats2026b.pdf" target="_blank" rel="noopener">Paper PDF</a>
+            <a href="https://www.youtube.com/watch?v=JxrfOed4s1Q" target="_blank" rel="noopener">Recorded talk</a>
+          </div>
+        </article>
+        <article class="pub-entry" id="gnc-2026">
+          <p class="pub-status">AAS GN&amp;C · 2026 · AAS 26-052</p>
+          <h3>Autonomous Space-Based Imaging: Reinforcement Learning Scheduling with Imaging–Downlink Tradeoffs Across Orbital Regimes</h3>
+          <p class="pub-authors"><strong>Daniel Huterer Prats</strong>, Hanspeter Schaub</p>
+          <p class="pub-meta">AAS Rocky Mountain GN&amp;C Conference, Breckenridge, Colorado, January 31–February 4, 2026</p>
+          <p class="pub-desc">Examines the tradeoff between collecting images and delivering them to the ground, including transfer from LEO-only training to mixed-orbit targets.</p>
+          <div class="pub-links">
+            <a href="https://hanspeterschaub.info/Papers/HutererPrats2026.pdf" target="_blank" rel="noopener">Paper PDF</a>
+            <a href="https://www.youtube.com/watch?v=o_yLNhcnVEM" target="_blank" rel="noopener">Recorded talk</a>
+            <a href="#jais-imaging-downlink">Journal manuscript</a>
+          </div>
+        </article>
+        <article class="pub-entry" id="amos-2025">
+          <p class="pub-status">AMOS · September 2025</p>
+          <h3>Reinforcement Learning for Space-to-Space Surveillance: Autonomous Scheduling for Resident Space Object Imaging</h3>
+          <p class="pub-authors"><strong>Daniel Huterer Prats</strong>, Hanspeter Schaub, Chris Wheeler</p>
+          <p class="pub-meta">Advanced Maui Optical and Space Surveillance Technologies Conference, Maui, Hawaii, September 16–19, 2025</p>
+          <p class="pub-desc">Learns target-selection and resource-management decisions for space-to-space imaging using Basilisk and BSK-RL.</p>
+          <div class="pub-links">
+            <a href="https://hanspeterschaub.info/Papers/Prats2025.pdf" target="_blank" rel="noopener">Paper PDF</a>
+            <a href="https://www.youtube.com/watch?v=nU8sa1a_Ijs" target="_blank" rel="noopener">Recorded talk</a>
+            <a href="files/AMOS_SBSS/Amos_sbss.html">Project and presentation</a>
+            <a href="#jas-leo-imaging">Journal manuscript</a>
+          </div>
+        </article>
+        <article class="pub-entry" id="iwpss-2025">
+          <p class="pub-status">IWPSS · April 2025</p>
+          <h3>Autonomous Satellite Inspection in Low Earth Orbit with Optimization-Based Safety Guarantees</h3>
+          <p class="pub-authors">Mark Stephenson, <strong>Daniel Huterer Prats</strong>, Hanspeter Schaub</p>
+          <p class="pub-meta">International Workshop on Planning &amp; Scheduling for Space, Toulouse, France, April 28–30, 2025</p>
+          <p class="pub-desc">Combines reinforcement learning with a collision-avoidance shield for inspecting a nearby spacecraft using impulsive maneuvers.</p>
+          <div class="pub-links">
+            <a href="https://hanspeterschaub.info/Papers/Stephenson2025a.pdf" target="_blank" rel="noopener">Paper PDF</a>
+            <a href="https://www.youtube.com/watch?v=CvMnRqVkKTU" target="_blank" rel="noopener">Recorded talk</a>
+          </div>
+        </article>
+      </section>
+
+      <section class="pub-section" id="conference-submissions" aria-labelledby="submissions-title">
+        <h2 id="submissions-title">Work in progress</h2>
+        <article class="pub-entry" id="gnc-2027-catalog">
+          <p class="pub-status">In progress · GN&amp;C 2027</p>
+          <h3>Decentralized Multi-Spacecraft Tasking for Persistent Resident Space Object Catalog Maintenance</h3>
+          <p class="pub-authors"><strong>Daniel Huterer Prats</strong>, Hanspeter Schaub</p>
+          <p class="pub-meta">AAS Guidance and Control Conference, Breckenridge, Colorado, February 5–10, 2027</p>
+          <div class="pub-links"><a href="https://hanspeterschaub.info/conferences.html" target="_blank" rel="noopener">Lab conference listing</a></div>
+        </article>
+        <article class="pub-entry" id="gnc-2027-communications">
+          <p class="pub-status">In progress · GN&amp;C 2027</p>
+          <h3>Communication Quality-Aware Autonomous Tasking for Space-Based Resident Space Object Imaging</h3>
+          <p class="pub-authors"><strong>Daniel Huterer Prats</strong>, Hanspeter Schaub</p>
+          <p class="pub-meta">AAS Guidance and Control Conference, Breckenridge, Colorado, February 5–10, 2027</p>
+          <div class="pub-links"><a href="https://hanspeterschaub.info/conferences.html" target="_blank" rel="noopener">Lab conference listing</a></div>
+        </article>
+      </section>
+
+      <section class="pub-section" id="published-journals" aria-labelledby="published-title">
+        <h2 id="published-title">Published journal articles</h2>
+        <article class="pub-entry" id="mnras-2021">
+          <p class="pub-status">MNRAS · 2021</p>
+          <h3>Creating a galaxy lacking dark matter in a dark matter-dominated universe</h3>
+          <p class="pub-authors">Andrea V. Macciò, <strong>Daniel Huterer Prats</strong>, Keri L. Dixon, Tobias Buck, Stefan Waterval, Nikhil Arora, Stéphane Courteau, Xi Kang</p>
+          <p class="pub-meta"><em>Monthly Notices of the Royal Astronomical Society</em>, 501(1), 693–700. DOI: 10.1093/mnras/staa3716</p>
+          <p class="pub-desc">Uses galaxy simulations to examine how tidal encounters can remove dark matter from dwarf galaxies.</p>
+          <div class="pub-links">
+            <a href="https://doi.org/10.1093/mnras/staa3716" target="_blank" rel="noopener">Journal article</a>
+            <a href="https://arxiv.org/pdf/2010.02245" target="_blank" rel="noopener">Open PDF</a>
+            <a href="https://ui.adsabs.harvard.edu/abs/2021MNRAS.501..693M/abstract" target="_blank" rel="noopener">ADS</a>
+          </div>
+        </article>
+      </section>
+
+      <p class="pub-source">Manuscript and submission statuses checked against the AVS Lab <a href="https://hanspeterschaub.info/journals.html" target="_blank" rel="noopener">journal</a> and <a href="https://hanspeterschaub.info/conferences.html" target="_blank" rel="noopener">conference</a> listings on <time datetime="2026-10-07">October 7, 2026</time>.</p>
     </main>
-
-    <footer>
-      <p>© 2025 Daniel Huterer Prats. Built from scratch with care 🛰️</p>
-    </footer>
+    <footer><p>© 2026 Daniel Huterer Prats</p></footer>
   </div>
-
-  <script>
-    async function loadCitationCounts() {
-      const targets = document.querySelectorAll(".citation[data-doi]");
-      for (const target of targets) {
-        const doi = target.getAttribute("data-doi");
-        try {
-          const url = "https://api.openalex.org/works/https://doi.org/" + encodeURIComponent(doi);
-          const response = await fetch(url);
-          if (!response.ok) {
-            target.remove();
-            continue;
-          }
-          const data = await response.json();
-          const count = Number(data.cited_by_count || 0);
-          target.textContent = "Citations: " + count.toLocaleString() + " (live via OpenAlex)";
-        } catch (err) {
-          target.remove();
-        }
-      }
-    }
-
-    loadCitationCounts();
-  </script>
 </body>
 </html>

@@ -1,0 +1,20 @@
+export {
+  AmbientLight,
+  BufferGeometry,
+  CatmullRomCurve3,
+  Color,
+  DirectionalLight,
+  Mesh,
+  MeshBasicMaterial,
+  MeshPhongMaterial,
+  PerspectiveCamera,
+  Scene,
+  SphereGeometry,
+  Spherical,
+  SRGBColorSpace,
+  TextureLoader,
+  TubeGeometry,
+  Vector3,
+  WebGLRenderer,
+} from "three";
+export { OrbitControls } from "three/addons/controls/OrbitControls.js";

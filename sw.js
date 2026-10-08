@@ -1,5 +1,5 @@
-const STATIC_CACHE_NAME = "dhp-static-v3";
-const RUNTIME_CACHE_NAME = "dhp-runtime-v3";
+const STATIC_CACHE_NAME = "dhp-static-v18";
+const RUNTIME_CACHE_NAME = "dhp-runtime-v18";
 const OFFLINE_FALLBACK = "./index.html";
 
 const STATIC_ASSETS = [
@@ -8,9 +8,15 @@ const STATIC_ASSETS = [
   "./about.html",
   "./research.html",
   "./publications.html",
-  "./style.css",
+  "./style.css?v=20261007-media",
   "./theme-toggle.js",
   "./progressive-images.js",
+  "./research.css?v=20261007-paper-visuals2",
+  "./about-globe.js?v=20261007-bio",
+  "./space-widgets.css?v=20261007-globe",
+  "./space-widgets.mjs?v=20261008-apod",
+  "./station-orbits.mjs",
+  "./station-pass-worker.mjs",
   "./script.js",
   "./icons/astronaut.ico",
   "./icons/pwa-192.png",
@@ -25,7 +31,7 @@ function toAbsoluteUrl(path) {
 }
 
 function isStaticAsset(pathname) {
-  return /\.(?:css|js|json|png|jpg|jpeg|webp|svg|ico|woff2?)$/i.test(pathname);
+  return /\.(?:css|m?js|json|png|jpg|jpeg|webp|svg|ico|woff2?)$/i.test(pathname);
 }
 
 async function cacheResponse(cacheName, request, response) {
@@ -48,7 +54,7 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
       .open(STATIC_CACHE_NAME)
-      .then((cache) => cache.addAll(STATIC_ASSETS.map(toAbsoluteUrl)))
+      .then((cache) => cache.addAll(STATIC_ASSETS.map((path) => new Request(toAbsoluteUrl(path), { cache: "reload" }))))
       .then(() => self.skipWaiting())
   );
 });
@@ -74,6 +80,11 @@ self.addEventListener("fetch", (event) => {
   const requestUrl = new URL(request.url);
   const sameOrigin = requestUrl.origin === self.location.origin;
 
+  // Let the browser stream media and byte ranges without caching whole videos.
+  if (request.headers.has("range") || /\.(?:mp4|mov|webm)$/i.test(requestUrl.pathname)) {
+    return;
+  }
+
   if (!sameOrigin) {
     event.respondWith(
       fetch(request).catch(() => Response.error())
@@ -96,6 +107,16 @@ self.addEventListener("fetch", (event) => {
           }
           return Response.error();
         })
+    );
+    return;
+  }
+
+  // Dated NASA/orbit snapshots must refresh, not remain in the static cache.
+  if (/\/data\/(?:apod|stations)\.json$/.test(requestUrl.pathname)) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => cacheResponse(RUNTIME_CACHE_NAME, request, response))
+        .catch(() => caches.match(request).then((cached) => cached || Response.error()))
     );
     return;
   }

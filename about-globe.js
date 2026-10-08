@@ -42,8 +42,8 @@
       name: "Abu Dhabi, UAE",
       lat: 24.4539,
       lon: 54.3773,
-      short: "BSc Physics at NYU Abu Dhabi.",
-      details: "Completed undergraduate studies in Physics at NYU Abu Dhabi.",
+      short: "Physics and Mathematics at NYU Abu Dhabi.",
+      details: "Completed undergraduate studies in Physics and Mathematics at NYU Abu Dhabi.",
       links: [
         { label: "NYU Abu Dhabi", url: "https://nyuad.nyu.edu/" }
       ]
@@ -78,8 +78,8 @@
       name: "Toulouse, France",
       lat: 43.6047,
       lon: 1.4442,
-      short: "Aerospace consultant and GNC roles.",
-      details: "Worked in the aerospace sector in Toulouse as an aerospace consultant and GNC/systems engineer.",
+      short: "Aerospace consulting and systems engineering.",
+      details: "Worked at ALTEN as an aerospace consultant and at Infinite Orbits as a systems engineer.",
       links: [
         { label: "ALTEN", url: "https://www.alten.com/" },
         { label: "Infinite Orbits", url: "https://www.infiniteorbits.io/" }
@@ -95,7 +95,7 @@
       details: "Current base for PhD research in Aerospace Engineering at CU Boulder AVS Lab.",
       links: [
         { label: "CU Aerospace", url: "https://www.colorado.edu/aerospace/" },
-        { label: "AVS Lab", url: "https://hanspeterschaub.info/AVS/index.html" }
+        { label: "AVS Lab", url: "https://hanspeterschaub.info/AVSlab.html" }
       ]
     }
   ];
@@ -326,17 +326,17 @@
       })
     );
 
+    focusStop(STOP_BY_ID.boulder || STOPS[0]);
+
     d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json")
       .then(function (world) {
         if (world && world.objects && world.objects.countries) {
           countryGeo = topojson.feature(world, world.objects.countries);
         }
         render();
-        focusStop(STOP_BY_ID.boulder || STOPS[0]);
       })
       .catch(function () {
         render();
-        focusStop(STOP_BY_ID.boulder || STOPS[0]);
       });
   }
 

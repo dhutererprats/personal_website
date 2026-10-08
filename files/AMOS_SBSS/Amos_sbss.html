@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; script-src 'self' 'unsafe-inline' https://code.iconify.design https://cdn.jsdelivr.net https://www.googletagmanager.com https://www.gstatic.com https://unpkg.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; img-src 'self' data: blob: https:; font-src 'self' data: https://cdnjs.cloudflare.com; connect-src 'self' https://api.nasa.gov https://api.wheretheiss.at https://api.allorigins.win https://nominatim.openstreetmap.org https://api.openalex.org https://cdn.jsdelivr.net https://www.google-analytics.com https://region1.google-analytics.com https://*.supabase.co; media-src 'self' blob: https:; frame-src 'self' https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com; worker-src 'self' blob:; manifest-src 'self'; form-action 'self'; upgrade-insecure-requests;"/>
   <title>Reinforcement Learning for Space-to-Space Imaging (AMOS 2025)</title>
-  <link rel="stylesheet" href="../../style.css"/>
+  <link rel="stylesheet" href="../../style.css?v=20261007-media"/>
   <script src="../../theme-toggle.js" defer></script>
   <script src="../../progressive-images.js" defer></script>
   <link rel="icon" href="../../icons/astronaut.ico" type="image/x-icon"/>
@@ -22,9 +22,11 @@
 
     .hero {
       position: relative;
+      display: block;
+      padding: 0;
       height: 56vh;
       min-height: 380px;
-      border-radius: 14px;
+      border-radius: 8px;
       overflow: hidden;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
       margin: 1rem 0 1.25rem;
@@ -47,6 +49,10 @@
 
     .hero .overlay {
       position: absolute;
+      display: block;
+      width: auto;
+      box-sizing: border-box;
+      font-weight: 400;
       inset: auto 0 0 0;
       padding: 1.25rem 1.25rem 1.4rem;
       color: #fff;
@@ -56,6 +62,8 @@
     .hero h1 {
       margin: 0 0 .2rem;
       color: #fff;
+      font-size: 2rem;
+      line-height: 1.25;
     }
 
     .hero .kicker {
@@ -91,12 +99,17 @@
 
     .media video {
       width: 100%;
+      height: auto;
       display: block;
     }
 
     .subtle {
       opacity: 0.86;
     }
+
+    .paper-result-figure { margin: 1rem 0; max-width: 850px; }
+    .paper-result-figure img { display: block; width: 100%; height: auto; background: #fff; filter: none; }
+    .paper-result-figure figcaption { margin-top: 0.7rem; font-size: 0.9rem; line-height: 1.6; }
 
     .two-col {
       display: grid;
@@ -234,7 +247,7 @@
   <nav class="site-nav" aria-label="Primary">
     <a href="../../index.html">Home</a>
     <a href="../../research.html">Research</a>
-    <a href="../../about.html">About</a>
+    <a href="../../about.html">About Me</a>
     <a href="../../publications.html">Publications</a>
     <button class="theme-toggle" aria-label="Toggle theme">
       <span class="theme-toggle-icon" aria-hidden="true">◑</span>
@@ -247,7 +260,7 @@
       <img src="./Daniel_presenting_AMOS2-1400.jpg" data-full-src="./Daniel_presenting_AMOS2.PNG" alt="Presenting at AMOS" class="active" loading="eager" fetchpriority="high" decoding="sync">
       <img src="./group_picture_with_Schaub_and_Mark-1400.jpg" data-full-src="./group_picture_with_Schaub_and%20Mark.PNG" alt="With Dr. Hanspeter Schaub and Mark" loading="eager" decoding="async">
       <div class="overlay">
-        <h1>Reinforcement Learning for Space-to-Space Imaging</h1>
+        <h1>Reinforcement Learning for Space-to-Space Surveillance</h1>
         <div class="kicker">Autonomous scheduling for imaging Resident Space Objects (RSOs) • AMOS 2025 • CU Boulder AVS Lab • Daniel Huterer Prats</div>
       </div>
     </header>
@@ -271,29 +284,37 @@
       <h2>Overview & motivation</h2>
       <p>
         Space-based SSA is unlike Earth imaging. Targets move fast, access windows are brief, and power, pointing,
-        and downlink are tightly constrained. The goal is a flight policy that decides <em>which</em> RSO to image and
+        and downlink are tightly constrained. The goal is a scheduling policy that decides <em>which</em> RSO to image and
         <em>when</em> to downlink, while keeping the spacecraft healthy for the next opportunity.
       </p>
       <p>
-        The main study focuses on <strong>LEO to LEO imaging</strong>, which is the hardest regime: large relative motion, long eclipse
-        periods, and frequent geometry changes, including complete target eclipses.
+        The main study focuses on <strong>LEO-to-LEO imaging</strong>, with rapidly changing relative motion, visibility,
+        and illumination. Targets may be in eclipse even when the observing spacecraft is illuminated.
+      </p>
+      <p>
+        The journal extension, <em>Autonomous LEO-to-LEO Resident Space Object Imaging with Reinforcement Learning</em>,
+        is under review at the Journal of the Astronautical Sciences. Later work examines
+        <a href="../../publications.html#gnc-2026">imaging–downlink tradeoffs</a> and
+        <a href="../../publications.html#amos-2026">responsive catalog maintenance at AMOS 2026</a>.
       </p>
     </section>
 
     <section id="scenario">
       <h2>Scenario & simulator</h2>
       <div class="media">
-        <video class="lfs-aware-video" preload="none" controls poster="../../images/optimized/space-to-space-surveillance-720.jpg" data-youtube="https://www.youtube.com/embed/Aas0z43uS9M?start=0">
-          <source src="./LEO-RSO%20set%20up.mp4" type="video/mp4">
+        <video preload="none" controls playsinline poster="../../media/research/amos-2025-polaris-poster.jpg" width="1920" height="1384" aria-label="AMOS 2025 Polaris spacecraft simulation">
+          <source src="../../media/research/amos-2025-polaris-simulation.mp4" type="video/mp4">
+          <a href="../../media/research/amos-2025-polaris-simulation.mp4">Open the AMOS 2025 simulation video</a>.
         </video>
       </div>
-      <p class="subtle">Setup clip: LEO chaser with power/thermal/storage constraints imaging catalogued RSOs.</p>
+      <p class="subtle">Polaris visualization from the AMOS 2025 presentation: a LEO observer imaging catalogued RSOs. Full 87-second simulation clip.</p>
     </section>
 
     <section id="pomdp">
       <h2>Formulating SBSS as a POMDP</h2>
       <p>
-        The task is posed as a POMDP: noisy observations of orbital geometry, battery, storage, visibility and ground-station windows; actions choose targets and downlink decisions; rewards balance useful imagery delivery, health margins, and constraint satisfaction.
+        The task is posed as a POMDP with observations of target geometry, spacecraft resources, and access opportunities.
+        Target orbits are assumed known for scheduling. Actions select imaging, downlink, charging, or momentum-management tasks.
       </p>
     </section>
 
@@ -306,33 +327,26 @@
       </div>
       <p class="subtle">Representative rollout segment showing target-selection and downlink behavior while respecting LOS, battery, and onboard data constraints.</p>
       <p>
-        PPO trains over many randomized orbital seeds. Two repeating phases:
-        <strong>rollouts</strong> in \(n_{\text{env}}\) parallel environments for \(n_b\) episodes each, then
-        <strong>updates</strong> over the fresh on-policy data for \(n_{\text{opt}}\) epochs. Total steps \(T\) imply
-        \(N_{\text{upd}} = T/(n_{\text{env}} n_b N)\) policy updates. Typical runs used a few hundred million steps on a single workstation.
-        Exact settings per experiment are in Table 4 of the paper; full source is linked below.
+        An actor-critic policy learns target-selection and resource-management decisions through simulated rollouts.
+        The conference paper describes the observation, action, reward, and training setup; the clips here illustrate the simulated task.
       </p>
     </section>
 
     <section id="results">
       <h2>Results: behaviors & plots</h2>
-      <div class="plot-grid">
-        <article class="plot-card">
-          <h3>Battery, storage, and cumulative reward timeline</h3>
-          <iframe class="plot-frame" src="./seed20_latest_obsv7_1e_5lr_batch5000_gamma9997_40d60i+SHIELD_battery_storage_reward_over_time_1.pdf#view=FitH" title="Battery, storage, and cumulative reward timeline"></iframe>
-          <a class="plot-link" href="./seed20_latest_obsv7_1e_5lr_batch5000_gamma9997_40d60i+SHIELD_battery_storage_reward_over_time_1.pdf" target="_blank" rel="noopener">Open full-resolution PDF</a>
-        </article>
-        <article class="plot-card">
-          <h3>Azimuth/elevation pointing and downlink windows</h3>
-          <iframe class="plot-frame" src="./seed20_latest_obsv7_1e_5lr_batch5000_gamma9997_40d60i+SHIELD_azimuth_and_elevation_pointing_over_time_1.pdf#view=FitH" title="Azimuth and elevation pointing and downlink windows"></iframe>
-          <a class="plot-link" href="./seed20_latest_obsv7_1e_5lr_batch5000_gamma9997_40d60i+SHIELD_azimuth_and_elevation_pointing_over_time_1.pdf" target="_blank" rel="noopener">Open full-resolution PDF</a>
-        </article>
-      </div>
+      <figure class="paper-result-figure">
+        <a href="../../images/research-results/amos-2025-resources-full.png" target="_blank" rel="noopener" aria-label="Open the full-resolution resource timeline">
+          <img src="../../images/research-results/amos-2025-resources-preview.png" data-full-src="../../images/research-results/amos-2025-resources-full.png" alt="Battery and storage levels, eclipse intervals, ground-station windows, and cumulative images delivered during one RL rollout" width="735" height="369" loading="lazy" decoding="async" />
+        </a>
+        <figcaption>Figure 5 from the <a href="https://hanspeterschaub.info/Papers/Prats2025.pdf#page=11" target="_blank" rel="noopener">AMOS 2025 paper, page 11</a>: one representative simulated rollout, not an aggregate comparison.</figcaption>
+      </figure>
+      <p>The resource-constrained Monte Carlo comparison reports 22.82 mean shield interventions for the heuristic and 3.26 for RL over 100 runs per policy. The heuristic collects slightly more illuminated images on average; see Table 6, page 10, in the paper.</p>
       <ul>
         <li><strong>Energy/storage habits:</strong> preserves health margins while opportunistically imaging valid targets.</li>
         <li><strong>Opportunistic imaging:</strong> adapts target choice to short-term geometry instead of rigid preplanned schedules.</li>
-        <li><strong>Timely delivery:</strong> executes downlink when windows open, improving delivered-image freshness.</li>
+        <li><strong>Ground delivery:</strong> selects downlink tasks to transfer collected images during access opportunities.</li>
       </ul>
+      <p>Additional illustrative simulation plots: <a href="./seed20_latest_obsv7_1e_5lr_batch5000_gamma9997_40d60i+SHIELD_battery_storage_reward_over_time_1.pdf" target="_blank" rel="noopener">battery and storage timeline</a> and <a href="./seed20_latest_obsv7_1e_5lr_batch5000_gamma9997_40d60i+SHIELD_azimuth_and_elevation_pointing_over_time_1.pdf" target="_blank" rel="noopener">pointing and downlink windows</a>.</p>
     </section>
 
     <section id="generalization">
@@ -351,8 +365,11 @@
     <section id="media">
       <h2>Paper, slides & videos</h2>
       <div class="pills" style="margin-bottom:.75rem">
-        <a class="pill" href="./Huterer_AMOS_Paper_SBSS.pdf" target="_blank" rel="noopener">Paper manuscript (PDF)</a>
+        <a class="pill" href="https://hanspeterschaub.info/Papers/Prats2025.pdf" target="_blank" rel="noopener">AMOS 2025 paper (PDF)</a>
         <a class="pill" href="./AMOS_SBSS_presentation.pdf" target="_blank" rel="noopener">AMOS presentation slides (PDF)</a>
+        <a class="pill" href="https://www.youtube.com/watch?v=nU8sa1a_Ijs" target="_blank" rel="noopener">Recorded conference talk</a>
+        <a class="pill" href="../../media/research/amos-2025-polaris-simulation.mp4" target="_blank" rel="noopener">Polaris simulation video</a>
+        <a class="pill" href="../../publications.html#jas-leo-imaging">Journal manuscript status</a>
       </div>
 
       <div class="media" style="margin-top:.5rem">
@@ -390,12 +407,14 @@
     <section id="conclusion">
       <h2>Conclusion</h2>
       <p>
-        RL-enabled scheduling learns practical resource-management behavior, balances imaging and downlink decisions under constraints, and generalizes across orbital seeds and mixed-orbit target sets. This supports scalable onboard autonomy for future SSA missions.
+        The study demonstrates learned imaging and resource-management behavior in simulation.
+        The <a href="../../publications.html#amos-2026">AMOS 2026 paper</a> extends this research to repeat observations,
+        changing priorities, and catalog maintenance across orbital regimes.
       </p>
     </section>
 
     <footer style="margin:2rem 0 0">
-      <p>© 2025 Daniel Huterer Prats • AVS Lab • AMOS SBSS</p>
+      <p>© 2026 Daniel Huterer Prats · AVS Lab · AMOS 2025</p>
     </footer>
   </main>
 
@@ -447,12 +466,12 @@
         frame.allowFullscreen = true;
 
         const note = document.createElement("p");
-        note.textContent = "Using YouTube fallback because the local video file is stored as a Git LFS pointer in this static site build.";
+        note.textContent = "Simulation video from the AVS Lab.";
 
         fallback.append(frame, note);
       } else {
         const note = document.createElement("p");
-        note.textContent = "Video is unavailable in this build.";
+        note.textContent = "This video is currently unavailable.";
         fallback.appendChild(note);
       }
       videoElement.replaceWith(fallback);
